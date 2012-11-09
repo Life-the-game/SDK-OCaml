@@ -7,8 +7,8 @@
 ## ########################################################################## ##
 
 NAME		=	api_example_ocaml
-SRC		=	dateTime.ml api.ml apiConf.ml apiUser.ml example.ml
-SRCI		=	dateTime.mli api.mli apiConf.mli apiUser.mli
+SRC		=	api.ml apiConf.ml apiUser.ml example.ml
+SRCI		=	apiTypes.ml api.mli apiConf.mli apiUser.mli
 SRCDOC		=	api.ml
 PACKS		=	curl,yojson,calendar
 

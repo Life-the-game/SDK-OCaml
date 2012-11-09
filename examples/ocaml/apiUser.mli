@@ -8,15 +8,18 @@
 type user =
     {
       id                : int;
-      creation_time     : DateTime.t;
-      modification_time : DateTime.t;
+      creation_time     : ApiTypes.DateTime.t;
+      modification_time : ApiTypes.DateTime.t;
       login             : string;
       firstname         : string;
       surname           : string;
-      gender            : string;
-      birthdate         : DateTime.date;
+      gender            : ApiTypes.Gender.t;
+      birthdate         : ApiTypes.Date.t;
       email             : string;
     }
 
 val get_user : string -> user
 
+val create_user :
+  string -> string -> string -> ApiTypes.Gender.t
+  -> ApiTypes.Date.t -> string -> string -> unit
