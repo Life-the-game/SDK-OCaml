@@ -19,6 +19,7 @@ sig
   val of_string : string -> t
 
   val now : unit -> t
+  val is_past : t -> bool
 end
 
 (* Only date                                                                  *)
@@ -58,6 +59,8 @@ struct
     CalendarLib.Printer.Calendar.from_fstring format str_date
 
   let now () = CalendarLib.Calendar.now ()
+  let is_past date =
+    CalendarLib.Calendar.compare (now ()) date >= 0
 end
 
 (* ************************************************************************** *)
