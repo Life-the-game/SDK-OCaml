@@ -7,7 +7,7 @@
 ## ########################################################################## ##
 
 NAME		=	api_example_ocaml
-SRC		=	api.ml apiConf.ml apiUser.ml example.ml
+SRC		=	api.ml apiConf.ml apiAuth.ml apiUser.ml example.ml
 SRCI		=	apiTypes.ml api.mli apiConf.mli apiUser.mli
 SRCDOC		=	api.ml
 PACKS		=	curl,yojson,calendar

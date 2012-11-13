@@ -38,8 +38,21 @@ let get_text_form_url ?(auth=None) url =
   let _ = Curl.global_cleanup () in
   text
 
+type 'a result = Success of 'a | Failure of string
+
 (* string -> json                                                             *)
 (* Take a url, get the page and return a json tree                            *)
 let curljson url =
   let result = get_text_form_url url in
   Yojson.Basic.from_string result
+
+let check_error tree =
+  let open Yojson.Basic.Util in
+  match tree with
+    | `Assoc l ->
+      (try (if (fst (List.hd l)) = "error"
+	then Some ((snd (List.hd l)) |> to_string)
+	else None)
+       with _ -> None)
+    | _ -> None
+ 
