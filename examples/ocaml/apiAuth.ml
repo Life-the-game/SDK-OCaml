@@ -10,20 +10,25 @@ open Api
 
 type auth =
     {
+      login  : string;
       token  : string;
       expire : ApiTypes.DateTime.t;
     }
 
 let login login password =
-  let tree = curljson (ApiConf.base_url ^ "auth/login"
-			   ^ "?login=" ^ login
-			   ^ "&password=" ^ password) in
+  let tree =
+    let url =
+      ApiConf.base_url ^ "auth/login"
+      ^ "?login=" ^ login
+      ^ "&password=" ^ password in
+    curljson url in
   let error = check_error tree in
   match error with
     | Some e -> Failure e
     | None   ->
       Success
 	{
+	  login  = login;
 	  token  = tree |> member "token"  |> to_string;
 	  expire = ApiTypes.DateTime.of_string
 	    (tree |> member "expire" |> to_string);
