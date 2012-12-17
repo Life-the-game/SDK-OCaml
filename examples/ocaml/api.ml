@@ -5,6 +5,17 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
+(* ************************************************************************** *)
+(* Configuration                                                              *)
+(* ************************************************************************** *)
+
+(* The URL of the API                                                         *)
+let base_url = "http://life.paysdu42.fr:2000"
+
+(* ************************************************************************** *)
+(* Curl                                                                       *)
+(* ************************************************************************** *)
+
 (* ?auth:((string * string) option) -> string -> string                       *)
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
 let get_text_form_url ?(auth=None) url =
@@ -23,36 +34,51 @@ let get_text_form_url ?(auth=None) url =
        Curl.set_url connection url;
        
        (match auth with
-	 | Some (username, password) ->
-	   (Curl.set_httpauth connection [Curl.CURLAUTH_BASIC];
-	    Curl.set_userpwd connection (username ^ ":" ^ password))
-	 | _ -> ());
+         | Some (username, password) ->
+           (Curl.set_httpauth connection [Curl.CURLAUTH_BASIC];
+            Curl.set_userpwd connection (username ^ ":" ^ password))
+         | _ -> ());
 
        Curl.perform connection;
        Curl.cleanup connection;
        Buffer.contents result)
     with
       | Curl.CurlException (_, _, _) ->
-	raise (Failure ("Error: " ^ !errorBuffer))
+        raise (Failure ("Error: " ^ !errorBuffer))
       | Failure s -> raise (Failure s) in
   let _ = Curl.global_cleanup () in
   text
 
-type 'a result = Success of 'a | Failure of string
-
-(* string -> json                                                             *)
+(* string -> Yojson.Basic.json                                                *)
 (* Take a url, get the page and return a json tree                            *)
 let curljson url =
   let result = get_text_form_url url in
   Yojson.Basic.from_string result
 
-let check_error tree =
+(* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+type ('a, 'b) result = Success of 'a | Failure of 'b
+type errors = ApiRsp.t list
+
+(* Yojson.Basic.json -> (Yojson.Basic.json, errors) result                    *)
+(* Take a response tree, check error and return the result or the error(s)    *)
+let get_content tree =
   let open Yojson.Basic.Util in
-  match tree with
-    | `Assoc l ->
-      (try (if (fst (List.hd l)) = "error"
-	then Some ((snd (List.hd l)) |> to_string)
-	else None)
-       with _ -> None)
-    | _ -> None
- 
+      let rspcode = tree |> member "rspcode" |> to_int
+      and rspmsg  = tree |> member "rspmsg"  |> to_string
+      and content = tree |> member "content" in
+      if rspcode = 0
+      then Success content
+      else Failure [(rspcode, rspmsg)] (* todo: multiple errors *)
+
+(* ?parents:(string list) -> ?get:((string * string) list) -> ?url:string     *)
+(*  -> unit -> string                                                         *)
+(* Generate a formatted URL with get parameters                               *)
+let url ?(parents = []) ?(get = []) ?(url = base_url) () =
+  let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
+  and get =
+    let url = (List.fold_left (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) "" get) in
+    if (String.length url) = 0 then url else (String.set url 0 '?'; url) in
+  url ^ parents ^ get

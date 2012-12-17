@@ -5,8 +5,6 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Api
-
 (* ************************************************************************** *)
 (* Type User                                                                  *)
 (* ************************************************************************** *)
@@ -28,13 +26,14 @@ type user =
 (* Api Methods                                                                *)
 (* ************************************************************************** *)
 
-val get_user         : string -> user result
-val get_user_from_id : int    -> user result
+(* Return information about a user using its login/id.                        *)
+(* Authentification required.                                                 *)
+val get_user         : ApiAuth.auth -> string -> (user, Api.errors) Api.result
+val get_user_from_id : ApiAuth.auth -> int    -> (user, Api.errors) Api.result
 
 (* Take: login firstname surname gender birthdate email password              *)
-(* Return a string option corresponding to the status of the request:         *)
-(* - Some string if an error occured, the string is the error message         *)
-(* - None if the request is successful                                        *)
+(* Return information about the user created.                                 *)
 val create_user :
   string -> string -> string -> ApiTypes.Gender.t
-  -> ApiTypes.Date.t -> string -> string -> string option
+  -> ApiTypes.Date.t -> string -> string
+  -> (user, Api.errors) Api.result

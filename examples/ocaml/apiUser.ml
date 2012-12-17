@@ -5,9 +5,6 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Yojson.Basic.Util
-open Api
-
 (* ************************************************************************** *)
 (* Type User                                                                  *)
 (* ************************************************************************** *)
@@ -26,54 +23,79 @@ type user =
     }
 
 (* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+(* Yojson.Basic.json -> user                                                  *)
+let user_from_json tree =
+  let open Yojson.Basic.Util in
+      let creation_time =
+        ApiTypes.DateTime.of_string
+          (tree |> member "creation" |> to_string)
+      and modification_time =
+        ApiTypes.DateTime.of_string
+          (tree |> member "last_modification" |> to_string)
+      and gender =
+        ApiTypes.Gender.of_string (tree |> member "gender" |> to_string)
+      and birthdate =
+        ApiTypes.Date.of_string (tree |> member "birthdate" |> to_string) in
+      {
+        id                = tree |> member "id" |> to_int;
+        creation_time     = creation_time;
+        modification_time = modification_time;
+        login             = tree |> member "login" |> to_string;
+        firstname         = tree |> member "firstname" |> to_string;
+        surname           = tree |> member "surname" |> to_string;
+        gender            = gender;
+        birthdate         = birthdate;
+        email             = tree |> member "email" |> to_string;
+      }
+
+(* ************************************************************************** *)
 (* Api Methods                                                                *)
 (* ************************************************************************** *)
 
-(* string -> user result                                                      *)
-let get_user login =
-  let tree = curljson (ApiConf.base_url ^ "user/" ^ login) in
-  match check_error tree with
-    | Some e -> Failure e
-    | None   ->
-      let creation_time =
-	ApiTypes.DateTime.of_string
-	  (tree |> member "creation_time" |> to_string)
-      and modification_time =
-	  ApiTypes.DateTime.of_string
-	    (tree |> member "modification_time"	|> to_string)
-      and gender =
-	ApiTypes.Gender.of_string (tree |> member "gender" |> to_string)
-      and birthdate =
-	  ApiTypes.Date.of_string (tree |> member "birthdate" |> to_string) in
-      Success {
-	id                = tree |> member "id" |> to_int;
-	creation_time     = creation_time;
-	modification_time = modification_time;
-	login             = tree |> member "login" |> to_string;
-	firstname         = tree |> member "firstname" |> to_string;
-	surname           = tree |> member "surname" |> to_string;
-	gender            = gender;
-	birthdate         = birthdate;
-	email             = tree |> member "email" |> to_string;
-      }
+(* ************************************************************************** *)
+(* Get User                                                                   *)
+(* ************************************************************************** *)
+(* Return information about a user using its login/id.                        *)
+(* Authentification required.                                                 *)
 
-(* int -> user result                                                         *)
-let get_user_from_id id =
-  get_user (string_of_int id)
+(* ApiAuth.auth -> string -> (user, Api.errors) Api.result                    *)
+let get_user auth login =
+  let url =
+    Api.url ~parents:["user"; login]
+      ~get:[("token", auth.ApiAuth.token)] () in
+  let tree = Api.curljson url in
+  match Api.get_content tree with
+    | Api.Failure e    -> Api.Failure e
+    | Api.Success tree -> Api.Success (user_from_json tree)
 
-(* Return a string option corresponding to the status of the request:         *)
-(* - Some string if an error occured, the string is the error message         *)
-(* - None if the request is successful                                        *)
+(* ApiAuth.auth -> int -> (user, Api.errors) Api.result                       *)
+let get_user_from_id auth id =
+  get_user auth (string_of_int id)
+
+(* ************************************************************************** *)
+(* Create User                                                                *)
+(* ************************************************************************** *)
+
+(* string -> string -> string -> ApiTypes.Gender.t                            *)
+(* -> ApiTypes.Date.t -> string -> string                                     *)
+(* -> (user, Api.errors) Api.result                                           *)
+(* Return information about the user created.                                 *)
 let create_user login firstname surname gender birthdate email password =
   let result =
-    let url = (ApiConf.base_url
-	       ^ "user/register"
-	       ^ "?login=" ^ login
-	       ^ "&firstname=" ^ firstname
-	       ^ "&surname=" ^ surname
-	       ^ "&gender=" ^ (ApiTypes.Gender.to_string gender)
-	       ^ "&birthdate=" ^ (ApiTypes.Date.to_string birthdate)
-	       ^ "&email=" ^ email
-	       ^ "&password=" ^ password) in
-    curljson url in
-  check_error result
+    let url =
+      Api.url ~parents:["user"; "register"]
+        ~get:[("login", login);
+              ("firstname", firstname);
+              ("surname", surname);
+              ("gender", (ApiTypes.Gender.to_string gender));
+              ("birthdate", (ApiTypes.Date.to_string birthdate));
+              ("email", email);
+              ("password", password);
+             ] () in
+    Api.curljson url in
+ match Api.get_content result with
+   | Api.Failure e    -> Api.Failure e
+   | Api.Success tree -> Api.Success (user_from_json tree)

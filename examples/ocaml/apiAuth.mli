@@ -20,28 +20,6 @@ type auth =
 (* Api Methods                                                                *)
 (* ************************************************************************** *)
 
-(* ************************************************************************** *)
-(* Login                                                                      *)
-(* ************************************************************************** *)
 (* Get an authentication token from the API.                                  *)
-
-(* string -> string -> (auth, Api.errors) Api.result                          *)
 (* Authenticate using a login and a password                                  *)
-let login login password =
-  let tree =
-    let url = Api.url ~parents:["auth"; "login"]
-                ~get:[("login", login);
-                      ("password", password);
-                     ] () in
-    Api.curljson url in
-  match Api.get_content tree with
-    | Api.Failure e -> Api.Failure e
-    | Api.Success tree ->
-      let open Yojson.Basic.Util in
-          Api.Success
-            {
-              login  = login;
-              token  = tree |> member "token"  |> to_string;
-              expire = ApiTypes.DateTime.of_string
-                (tree |> member "expire" |> to_string);
-            }
+val login : string -> string -> (auth, Api.errors) Api.result
