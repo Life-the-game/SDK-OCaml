@@ -18,6 +18,7 @@ sig
   val to_string : t -> string
   val of_string : string -> t
 
+  val empty : t
   val now : unit -> t
   val is_past : t -> bool
 end
@@ -31,6 +32,7 @@ sig
   val to_string : t -> string
   val of_string : string -> t
 
+  val empty : t
   val today : unit -> t
 end
 
@@ -45,6 +47,7 @@ struct
   let of_string str_date =
     CalendarLib.Printer.Date.from_fstring format str_date
 
+  let empty = CalendarLib.Date.make 0 0 0
   let today () = CalendarLib.Date.today ()
 end
 (* Full time with date + hour                                                 *)
@@ -58,6 +61,7 @@ struct
   let of_string str_date =
     CalendarLib.Printer.Calendar.from_fstring format str_date
 
+  let empty = CalendarLib.Calendar.make 0 0 0 0 0 0
   let now () = CalendarLib.Calendar.now ()
   let is_past date =
     CalendarLib.Calendar.compare (now ()) date >= 0
@@ -70,6 +74,7 @@ end
 module type GENDER =
 sig
   type t
+  val default   : t
   val to_string : t -> string
   val of_string : string -> t
 end
