@@ -58,3 +58,4 @@ let invalid_email : t = (invalid, "INVALID_EMAIL")
 let invalid_passw : t = (invalid, "INVALID_PASSWORD")
 
 let unmatch_user : t = (incorrect, "USER_DOES_NOT_MATCH")
+let unmatch_password : t = (incorrect, "PASSWORD_DOES_NOT_MATCH")
