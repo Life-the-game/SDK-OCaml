@@ -17,19 +17,26 @@ let debug_print err =
 let print_token auth =
   print_endline ("[Token] " ^ auth.ApiAuth.token)
 
-let get_user auth login =
-  let user = ApiUser.get_user auth login in
-  match user with
-    | Api.Failure err_list -> debug_print "Not Found: " err_list
-    | Api.Success user     ->
-      print_endline ("The id of the user " ^ login ^ " is " ^
-                        string_of_int user.ApiUser.id)
+let print_user_id user =
+  print_endline ("The id of the user " ^ login ^ " is " ^
+                    string_of_int user.ApiUser.id)
 
 let _ =
 
-  let auth = ApiAuth.login auth_login auth_password in
-
-  match auth with
+  match ApiAuth.login auth_login auth_password with
     | Api.Failure err_list -> debug_print "Auth Fail:" err_list
-    | Api.Success auth     -> print_token auth; get_user auth login
-
+    | Api.Success auth     ->
+      print_token auth;
+      Unix.sleep 1;
+      match ApiUser.get_user auth login with
+        | Api.Failure err_list -> debug_print "Not Found: " err_list
+        | Api.Success user     ->
+          print_user_id user;
+          match ApiAuth.logout auth with
+            | Api.Failure err_list -> debug_print "Logout fail: " err_list
+            | Api.Success auth     ->
+              Unix.sleep 1;
+              print_endline "Get user while logged out - should fail";
+              match ApiUser.get_user auth login with
+                | Api.Failure err_list -> debug_print "Not Found: " err_list
+                | Api.Success user     -> print_user_id user

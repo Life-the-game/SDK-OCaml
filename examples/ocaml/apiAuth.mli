@@ -14,6 +14,7 @@ type auth =
       login  : string;
       token  : string;
       expire : ApiTypes.DateTime.t;
+      logged : bool;
     }
 
 (* ************************************************************************** *)
@@ -23,3 +24,7 @@ type auth =
 (* Get an authentication token from the API.                                  *)
 (* Authenticate using a login and a password                                  *)
 val login : string -> string -> (auth, Api.errors) Api.result
+
+(* Invalidate the given token                                                 *)
+val logout : auth -> (auth, Api.errors) Api.result
+val logout_from_login_token : string -> string -> (auth, Api.errors) Api.result
