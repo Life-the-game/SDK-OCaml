@@ -16,9 +16,21 @@ let base_url = "http://life.paysdu42.fr:2000"
 (* Curl                                                                       *)
 (* ************************************************************************** *)
 
+type request_type =
+  | GET
+  | POST
+  | PUT
+  | DELETE
+
+let request_type_to_string = function
+  | GET    -> "GET"
+  | POST   -> "POST"
+  | PUT    -> "PUT"
+  | DELETE -> "DELETE"
+
 (* ?auth:((string * string) option) -> string -> string                       *)
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
-let get_text_form_url ?(auth=None) url =
+let get_text_form_url ?(auth=None) ?(request_type=GET) url =
   let writer accum data =
     Buffer.add_string accum data;
     String.length data in
@@ -28,6 +40,7 @@ let get_text_form_url ?(auth=None) url =
   let text =
     try
       (let connection = Curl.init () in
+       Curl.set_customrequest connection (request_type_to_string request_type);
        Curl.set_errorbuffer connection errorBuffer;
        Curl.set_writefunction connection (writer result);
        Curl.set_followlocation connection true;

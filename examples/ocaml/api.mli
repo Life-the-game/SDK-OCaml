@@ -16,9 +16,17 @@ val base_url : string
 (* Curl                                                                       *)
 (* ************************************************************************** *)
 
+type request_type =
+  | GET
+  | POST
+  | PUT
+  | DELETE
+
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
 val get_text_form_url :
-  ?auth:((string * string) option) -> string -> string
+  ?auth:((string * string) option)
+  -> ?request_type:request_type
+  -> string -> string
 
 (* Take a url, get the page and return a json tree                            *)
 val curljson : string -> Yojson.Basic.json
