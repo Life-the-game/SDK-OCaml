@@ -9,11 +9,11 @@
 (* Configuration                                                              *)
 (* ************************************************************************** *)
 
-(* The URL of the API                                                         *)
+(* The URL of the API Web service                                             *)
 let base_url = "http://life.paysdu42.fr:2000"
 
 (* ************************************************************************** *)
-(* Curl                                                                       *)
+(** Network                                                                   *)
 (* ************************************************************************** *)
 
 type request_type =
@@ -28,7 +28,8 @@ let request_type_to_string = function
   | PUT    -> "PUT"
   | DELETE -> "DELETE"
 
-(* ?auth:((string * string) option) -> string -> string                       *)
+(* ?auth:((string * string) option) -> ?request_type:request)type             *)
+(*  -> string -> string                                                       *)
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
 let get_text_form_url ?(auth=None) ?(request_type=GET) url =
   let writer accum data =
@@ -62,30 +63,6 @@ let get_text_form_url ?(auth=None) ?(request_type=GET) url =
   let _ = Curl.global_cleanup () in
   text
 
-(* string -> Yojson.Basic.json                                                *)
-(* Take a url, get the page and return a json tree                            *)
-let curljson url =
-  let result = get_text_form_url url in
-  Yojson.Basic.from_string result
-
-(* ************************************************************************** *)
-(* Tools                                                                      *)
-(* ************************************************************************** *)
-
-type ('a, 'b) result = Success of 'a | Failure of 'b
-type errors = ApiRsp.t list
-
-(* Yojson.Basic.json -> (Yojson.Basic.json, errors) result                    *)
-(* Take a response tree, check error and return the result or the error(s)    *)
-let get_content tree =
-  let open Yojson.Basic.Util in
-      let rspcode = tree |> member "rspcode" |> to_int
-      and rspmsg  = tree |> member "rspmsg"  |> to_string
-      and content = tree |> member "content" in
-      if rspcode = 0
-      then Success content
-      else Failure [(rspcode, rspmsg)] (* todo: multiple errors *)
-
 (* ?parents:(string list) -> ?get:((string * string) list) -> ?url:string     *)
 (*  -> unit -> string                                                         *)
 (* Generate a formatted URL with get parameters                               *)
@@ -95,3 +72,40 @@ let url ?(parents = []) ?(get = []) ?(url = base_url) () =
     let url = (List.fold_left (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) "" get) in
     if (String.length url) = 0 then url else (String.set url 0 '?'; url) in
   url ^ parents ^ get
+
+(* ************************************************************************** *)
+(* Transform content                                                          *)
+(* ************************************************************************** *)
+
+(* Yojson.Basic.json -> (ApiError.t option * Yojson.Basic.json)               *)
+(* Take a response tree, check error and return the error and the result      *)
+let get_content tree =
+  let open Yojson.Basic.Util in
+      let error =
+	let elt = tree |> member "error" in
+	if (elt |> member "code" |> to_int) = 0
+	then None
+	else
+	  (let open ApiError in
+	       Some {
+		 message = elt |> member "message" |> to_string;
+		 stype   = elt |> member "stype"   |> to_string;
+		 code    = elt |> member "code"    |> to_int;
+	       })
+      and element = tree |> member "element" in
+      (error, element)
+
+(* ************************************************************************** *)
+(* Shortcuts                                                                  *)
+(* ************************************************************************** *)
+
+(* string -> Yojson.Basic.json                                                *)
+(* Take a url, get the page and return a json tree                            *)
+let curljson url =
+  let result = get_text_form_url url in
+  Yojson.Basic.from_string result
+
+(* string -> (ApiError.t option * Yojson.Basic.json)                          *)
+(* Take a url, get the pag into json, check and return error and result       *)
+let curljsoncontent url = get_content (curljson url)
+

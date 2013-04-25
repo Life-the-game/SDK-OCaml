@@ -6,14 +6,14 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
-(* Configuration                                                              *)
+(** Configuration                                                             *)
 (* ************************************************************************** *)
 
-(* The URL of the API                                                         *)
+(** The URL of the API Web service                                            *)
 val base_url : string
 
 (* ************************************************************************** *)
-(* Curl                                                                       *)
+(** Network                                                                   *)
 (* ************************************************************************** *)
 
 type request_type =
@@ -22,29 +22,33 @@ type request_type =
   | PUT
   | DELETE
 
-(* Return a text from a url using Curl and HTTP Auth (if needed)              *)
+(** Return a text from a url using Curl and HTTP Auth (if needed)             *)
 val get_text_form_url :
   ?auth:((string * string) option)
   -> ?request_type:request_type
   -> string -> string
 
-(* Take a url, get the page and return a json tree                            *)
-val curljson : string -> Yojson.Basic.json
-
-(* ************************************************************************** *)
-(* Tools                                                                      *)
-(* ************************************************************************** *)
-
-type ('a, 'b) result = Success of 'a | Failure of 'b
-type errors = ApiRsp.t list
-
-(* Take a response tree, check error and return the result or the error(s)    *)
-val get_content : Yojson.Basic.json -> (Yojson.Basic.json, errors) result
-
-(* Generate a formatted URL with get parameters                               *)
-(* Example: url ~parents:["a"; "b"] ~get:[("c", "d")] ~url:("http://g.com") ()*)
-(*  Result: http://g.com/a/b?c=d                                              *)
+(** Generate a formatted URL with get parameters                              *)
+(** Example: url ~parents:["a"; "b"] ~get:[("c", "d")] ~url:("http://g.com")  *)
+(**  Result: http://g.com/a/b?c=d                                             *)
 val url :
   ?parents:(string list)
   -> ?get:((string * string) list)
   -> ?url:string  -> unit -> string
+
+(* ************************************************************************** *)
+(** Transform content                                                         *)
+(* ************************************************************************** *)
+
+(** Take a response tree, check error and return the error and the result     *)
+val get_content : Yojson.Basic.json -> (ApiError.t option * Yojson.Basic.json)
+
+(* ************************************************************************** *)
+(** Shortcuts                                                                 *)
+(* ************************************************************************** *)
+
+(** Take a url, get the page and return a json tree                           *)
+val curljson : string -> Yojson.Basic.json
+
+(** Take a url, get the pag into json, check and return error and result      *)
+val curljsoncontent : string -> (ApiError.t option * Yojson.Basic.json)
