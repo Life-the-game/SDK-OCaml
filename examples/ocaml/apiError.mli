@@ -20,9 +20,4 @@ type t =
 (* Success                                                                    *)
 (* ************************************************************************** *)
 
-let success =
-  {
-    message = "Success";
-    stype   = "Success";
-    code    = 0;
-  }
+val success = t
