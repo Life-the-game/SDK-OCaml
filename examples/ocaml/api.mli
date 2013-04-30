@@ -6,6 +6,14 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(** Api response                                                              *)
+(* ************************************************************************** *)
+
+type 'a t =
+  | Result of 'a
+  | Error of ApiError.t
+
+(* ************************************************************************** *)
 (** Configuration                                                             *)
 (* ************************************************************************** *)
 
@@ -52,3 +60,7 @@ val curljson : string -> Yojson.Basic.json
 
 (** Take a url, get the pag into json, check and return error and result      *)
 val curljsoncontent : string -> (ApiError.t option * Yojson.Basic.json)
+
+(** In case the method does not return anything on success, use this to handl *)
+(** the whole request (curljsoncontent + return unit result)                  *)
+val noop : string -> unit t

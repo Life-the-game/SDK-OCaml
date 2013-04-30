@@ -6,6 +6,14 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Api response                                                               *)
+(* ************************************************************************** *)
+
+type 'a t =
+  | Result of 'a
+  | Error of ApiError.t
+
+(* ************************************************************************** *)
 (* Configuration                                                              *)
 (* ************************************************************************** *)
 
@@ -108,4 +116,13 @@ let curljson url =
 (* string -> (ApiError.t option * Yojson.Basic.json)                          *)
 (* Take a url, get the pag into json, check and return error and result       *)
 let curljsoncontent url = get_content (curljson url)
+
+(* string -> unit t                                                           *)
+(* In case the method does not return anything on success, use this to handle *)
+(* the whole request (curljsoncontent + return unit result)                   *)
+let noop url =
+  let (error, content) = curljsoncontent url in
+  match error with
+    | Some error -> Error error
+    | None       -> Result ()
 
