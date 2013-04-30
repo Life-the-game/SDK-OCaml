@@ -6,12 +6,18 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
-(* Api response                                                               *)
+(* Types                                                                      *)
 (* ************************************************************************** *)
 
+(* Api Response                                                               *)
 type 'a t =
   | Result of 'a
   | Error of ApiError.t
+
+type login    = string
+type password = string
+type url      = string
+type curlauth = (login * password)
 
 (* ************************************************************************** *)
 (* Configuration                                                              *)
@@ -21,25 +27,43 @@ type 'a t =
 let base_url = "http://life.paysdu42.fr:2000"
 
 (* ************************************************************************** *)
-(** Network                                                                   *)
+(* Network                                                                    *)
 (* ************************************************************************** *)
 
-type request_type =
-  | GET
-  | POST
-  | PUT
-  | DELETE
+module type REQUESTTYPE =
+sig
+  type t =
+    | GET
+    | POST
+    | PUT
+    | DELETE
+  val default   : t
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module RequestType : REQUESTTYPE =
+struct
+  type t =
+    | GET
+    | POST
+    | PUT
+    | DELETE
+  let default = GET
+  let to_string = function
+    | GET    -> "GET"
+    | POST   -> "POST"
+    | PUT    -> "PUT"
+    | DELETE -> "DELETE"
+  let of_string = function
+    | "GET"    -> GET
+    | "POST"   -> POST
+    | "PUT"    -> PUT
+    | "DELETE" -> DELETE
+    | _        -> default
+end
 
-let request_type_to_string = function
-  | GET    -> "GET"
-  | POST   -> "POST"
-  | PUT    -> "PUT"
-  | DELETE -> "DELETE"
-
-(* ?auth:((string * string) option) -> ?request_type:request)type             *)
-(*  -> string -> string                                                       *)
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
-let get_text_form_url ?(auth=None) ?(request_type=GET) url =
+let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
   let writer accum data =
     Buffer.add_string accum data;
     String.length data in
@@ -49,7 +73,7 @@ let get_text_form_url ?(auth=None) ?(request_type=GET) url =
   let text =
     try
       (let connection = Curl.init () in
-       Curl.set_customrequest connection (request_type_to_string request_type);
+       Curl.set_customrequest connection (RequestType.to_string rtype);
        Curl.set_errorbuffer connection errorBuffer;
        Curl.set_writefunction connection (writer result);
        Curl.set_followlocation connection true;
@@ -71,8 +95,6 @@ let get_text_form_url ?(auth=None) ?(request_type=GET) url =
   let _ = Curl.global_cleanup () in
   text
 
-(* ?parents:(string list) -> ?get:((string * string) list) -> ?url:string     *)
-(*  -> unit -> string                                                         *)
 (* Generate a formatted URL with get parameters                               *)
 let url ?(parents = []) ?(get = []) ?(url = base_url) () =
   let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
@@ -85,21 +107,20 @@ let url ?(parents = []) ?(get = []) ?(url = base_url) () =
 (* Transform content                                                          *)
 (* ************************************************************************** *)
 
-(* Yojson.Basic.json -> (ApiError.t option * Yojson.Basic.json)               *)
 (* Take a response tree, check error and return the error and the result      *)
 let get_content tree =
   let open Yojson.Basic.Util in
       let error =
-	let elt = tree |> member "error" in
-	if (elt |> member "code" |> to_int) = 0
-	then None
-	else
-	  (let open ApiError in
-	       Some {
-		 message = elt |> member "message" |> to_string;
-		 stype   = elt |> member "stype"   |> to_string;
-		 code    = elt |> member "code"    |> to_int;
-	       })
+        let elt = tree |> member "error" in
+        if (elt |> member "code" |> to_int) = 0
+        then None
+        else
+          (let open ApiError in
+               Some {
+                 message = elt |> member "message" |> to_string;
+                 stype   = elt |> member "stype"   |> to_string;
+                 code    = elt |> member "code"    |> to_int;
+               })
       and element = tree |> member "element" in
       (error, element)
 
@@ -107,22 +128,28 @@ let get_content tree =
 (* Shortcuts                                                                  *)
 (* ************************************************************************** *)
 
-(* string -> Yojson.Basic.json                                                *)
 (* Take a url, get the page and return a json tree                            *)
-let curljson url =
+let curljson ?(auth=None) ?(rtype=RequestType.GET) url =
   let result = get_text_form_url url in
   Yojson.Basic.from_string result
 
-(* string -> (ApiError.t option * Yojson.Basic.json)                          *)
 (* Take a url, get the pag into json, check and return error and result       *)
-let curljsoncontent url = get_content (curljson url)
+let curljsoncontent ?(auth=None) ?(rtype=RequestType.GET) url =
+  get_content (curljson url)
 
-(* string -> unit t                                                           *)
-(* In case the method does not return anything on success, use this to handle *)
-(* the whole request (curljsoncontent + return unit result)                   *)
-let noop url =
-  let (error, content) = curljsoncontent url in
+(* ************************************************************************** *)
+(* Ultimate shortcuts                                                         *)
+(* ************************************************************************** *)
+
+(* Handle an API method completely. Take a function to transform the json.    *)
+let go ?(auth=None) ?(rtype=RequestType.GET) url f =
+  let (error, content) =
+    curljsoncontent ~auth:auth ~rtype:rtype url in
   match error with
     | Some error -> Error error
-    | None       -> Result ()
+    | None       -> Result (f content)
 
+(* In case the method does not return anything on success, use this to handle *)
+(* the whole request (curljsoncontent + return unit result)                   *)
+let noop ?(auth=None) ?(rtype=RequestType.GET) url =
+  go ~auth:auth ~rtype:rtype url (fun _ -> ())

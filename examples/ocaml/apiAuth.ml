@@ -5,16 +5,36 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
+open Api.RequestType
+
 (* ************************************************************************** *)
-(* Type                                                                       *)
+(* Types                                                                      *)
 (* ************************************************************************** *)
+
+type login = string
+type password = string
+type token = string
 
 type t =
     {
-      user   : string;
-      token  : string;
+      user   : login;
+      token  : token;
       expire : ApiTypes.DateTime.t;
     }
+
+(* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+(* Take a json tree representing an auth element and return an auth element   *)
+let from_json content =
+  let open Yojson.Basic.Util in
+      {
+        user   = content |> member "user"  |> to_string;
+        token  = content |> member "token" |> to_string;
+        expire = ApiTypes.DateTime.of_string
+          (content |> member "expire" |> to_string);
+      }
 
 (* ************************************************************************** *)
 (* Api Methods                                                                *)
@@ -25,26 +45,21 @@ type t =
 (* ************************************************************************** *)
 
 let login login password =
-  let (error, content) =
-    Api.curljsoncontent
-      (Api.url ~parents:["tokens"]
-	 ~get:[("login", login); ("password", password)] ()) in
-  match error with
-    | Some error -> Api.Error error
-    | None       ->
-      let open Yojson.Basic.Util in
-	  Api.Result
-	    {
-	      user   = content |> member "user"  |> to_string;
-	      token  = content |> member "token" |> to_string; 
-	      expire = ApiTypes.DateTime.of_string
-		(content |> member "expire" |> to_string);
-	    }
+  Api.go ~rtype:POST
+    (Api.url ~parents:["tokens"]
+       ~get:[("login", login); ("password", password)] ())
+    from_json
+
+(* ************************************************************************** *)
+(* Get information about a token                                              *)
+(* ************************************************************************** *)
+
+let get token =
+  Api.go (Api.url ~parents:["tokens"; token] ()) from_json
 
 (* ************************************************************************** *)
 (* Logout (delete token)                                                      *)
 (* ************************************************************************** *)
 
 let logout token =
-  Api.noop
-    (Api.url ~parents:["tokens"; token.token] ())
+  Api.noop ~rtype:DELETE (Api.url ~parents:["tokens"; token.token] ())
