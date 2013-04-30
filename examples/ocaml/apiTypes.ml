@@ -68,6 +68,59 @@ struct
 end
 
 (* ************************************************************************** *)
+(* Information Element                                                        *)
+(* ************************************************************************** *)
+
+(* Almost all method data contains these information                          *)
+module type INFO =
+sig
+  type t =
+      {
+	id       : int;
+	creation : DateTime.t;
+      }
+  val from_json : Yojson.Basic.json -> t
+end
+module Info : INFO =
+struct
+  type t =
+      {
+	id       : int;
+	creation : DateTime.t;
+      }
+  let from_json c =
+    let open Yojson.Basic.Util in
+	{
+	  id       = c |> member "id" |> to_int;
+	  creation = DateTime.of_string
+            (c |> member "creation" |> to_string);
+	}
+end
+
+(* ************************************************************************** *)
+(* List Pagination                                                            *)
+(* ************************************************************************** *)
+
+module type LIST =
+sig
+  type 'a t =
+      {
+        server_size : int;
+        index       : int;
+        items       : 'a list;
+      }
+end
+module List : LIST =
+struct
+  type 'a t =
+      {
+        server_size : int;
+        index       : int;
+        items       : 'a list;
+      }
+end
+
+(* ************************************************************************** *)
 (* Gender type                                                                *)
 (* ************************************************************************** *)
 

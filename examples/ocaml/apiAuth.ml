@@ -17,6 +17,7 @@ type token = string
 
 type t =
     {
+      info   : ApiTypes.Info.t;
       user   : login;
       token  : token;
       expire : ApiTypes.DateTime.t;
@@ -30,6 +31,7 @@ type t =
 let from_json content =
   let open Yojson.Basic.Util in
       {
+	info   = ApiTypes.Info.from_json content;
         user   = content |> member "user"  |> to_string;
         token  = content |> member "token" |> to_string;
         expire = ApiTypes.DateTime.of_string

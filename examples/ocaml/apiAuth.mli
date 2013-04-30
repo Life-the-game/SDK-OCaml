@@ -15,6 +15,7 @@ type token = string
 
 type t =
     {
+      info   : ApiTypes.Info.t;
       user   : login;
       token  : token;
       expire : ApiTypes.DateTime.t;

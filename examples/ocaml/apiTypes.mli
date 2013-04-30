@@ -38,6 +38,38 @@ sig
 end
 module Date : DATE
 
+
+(* ************************************************************************** *)
+(** Information Element                                                       *)
+(* ************************************************************************** *)
+
+(* Almost all method data contains these information                          *)
+module type INFO =
+sig
+  type t =
+      {
+	id       : int;
+	creation : DateTime.t;
+      }
+  val from_json : Yojson.Basic.json -> t
+end
+module Info : INFO
+
+(* ************************************************************************** *)
+(** List Pagination                                                           *)
+(* ************************************************************************** *)
+
+module type LIST =
+sig
+  type 'a t =
+      {
+        server_size : int;
+        index       : int;
+        items       : 'a list;
+      }
+end
+module List : LIST
+
 (* ************************************************************************** *)
 (** Gender type                                                               *)
 (* ************************************************************************** *)
