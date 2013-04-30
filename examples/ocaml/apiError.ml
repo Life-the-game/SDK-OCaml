@@ -31,9 +31,9 @@ let success =
 (* Client-side errors                                                         *)
 (* ************************************************************************** *)
 
-let invalid_json =
+let invalid_json msg =
   {
-    message = "The JSON tree response is not formatted as expected.";
+    message = "The JSON tree response is not formatted as expected: " ^ msg;
     stype   = "CLIENT_InvalidJSON";
     code    = -18;
   }

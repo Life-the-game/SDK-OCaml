@@ -26,5 +26,5 @@ val success : t
 (* Client-side errors                                                         *)
 (* ************************************************************************** *)
 
-val invalid_json        : t
+val invalid_json        : string -> t
 val requirement_missing : t

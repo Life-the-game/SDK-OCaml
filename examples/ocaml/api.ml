@@ -151,9 +151,11 @@ let curljsoncontent ?(auth = None)
 let go ?(auth = None) ?(rtype = RequestType.GET) url f =
   let (error, content) =
     curljsoncontent ~auth:auth ~rtype:rtype url in
-  match error with
+  try (match error with
     | Some error -> ApiTypes.Error error
-    | None       -> ApiTypes.Result (f content)
+    | None       -> ApiTypes.Result (f content))
+  with Yojson.Basic.Util.Type_error (msg, _) ->
+    ApiTypes.Error (ApiError.invalid_json msg)
 
 (* In case the method does not return anything on success, use this to handle *)
 (* the whole request (curljsoncontent + return unit result)                   *)
