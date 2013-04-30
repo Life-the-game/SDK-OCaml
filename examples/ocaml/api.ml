@@ -130,7 +130,7 @@ let get_content tree =
 (* ************************************************************************** *)
 
 (* Take a url, get the page and return a json tree                            *)
-let curljson ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url =
+let curljson ?(auth = None) ?(rtype = RequestType.GET) url =
   let result =
     get_text_form_url ~rtype:rtype
     ~auth:(match auth with
@@ -139,23 +139,23 @@ let curljson ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url =
   Yojson.Basic.from_string result
 
 (* Take a url, get the pag into json, check and return error and result       *)
-let curljsoncontent ?(auth = None) ?(lang = None)
+let curljsoncontent ?(auth = None)
     ?(rtype = RequestType.GET) url =
-  get_content (curljson ~auth:auth ~lang:lang ~rtype:rtype url)
+  get_content (curljson ~auth:auth ~rtype:rtype url)
 
 (* ************************************************************************** *)
 (* Ultimate shortcuts                                                         *)
 (* ************************************************************************** *)
 
 (* Handle an API method completely. Take a function to transform the json.    *)
-let go ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url f =
+let go ?(auth = None) ?(rtype = RequestType.GET) url f =
   let (error, content) =
-    curljsoncontent ~auth:auth ~lang:lang ~rtype:rtype url in
+    curljsoncontent ~auth:auth ~rtype:rtype url in
   match error with
     | Some error -> ApiTypes.Error error
     | None       -> ApiTypes.Result (f content)
 
 (* In case the method does not return anything on success, use this to handle *)
 (* the whole request (curljsoncontent + return unit result)                   *)
-let noop ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url =
-  go ~auth:auth ~lang:lang ~rtype:rtype url (fun _ -> ())
+let noop ?(auth = None) ?(rtype = RequestType.GET) url =
+  go ~auth:auth ~rtype:rtype url (fun _ -> ())

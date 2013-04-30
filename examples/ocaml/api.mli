@@ -72,7 +72,6 @@ val get_content :
 (** Take a url, get the page and return a json tree                           *)
 val curljson :
   ?auth:(ApiTypes.auth option)
-  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> Yojson.Basic.json
@@ -80,7 +79,6 @@ val curljson :
 (** Take a url, get the pag into json, check and return error and result      *)
 val curljsoncontent :
   ?auth:(ApiTypes.auth option)
-  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> (ApiError.t option * Yojson.Basic.json)
@@ -92,7 +90,6 @@ val curljsoncontent :
 (** Handle an API method completely. Take a function to transform the json.   *)
 val go :
   ?auth:(ApiTypes.auth option)
-  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> (Yojson.Basic.json -> 'a)
@@ -102,7 +99,6 @@ val go :
 (** the whole request (curljsoncontent + return unit result)                  *)
 val noop :
   ?auth:(ApiTypes.auth option)
-  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> unit t
