@@ -28,8 +28,11 @@ type t =
 (** Login (create token)                                                      *)
 val login : login -> password -> t Api.t
 
-(** Get information about a token                                             *)
-val get : token -> t Api.t
-
 (** Logout (delete token)                                                     *)
 val logout : t -> unit Api.t
+
+(** Get information about a token                                             *)
+val get_token : token -> t Api.t
+
+(** Get your current active connection tokens                                 *)
+val get : ApiTypes.auth -> t ApiTypes.List.t Api.t

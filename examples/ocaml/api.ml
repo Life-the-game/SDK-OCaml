@@ -9,15 +9,7 @@
 (* Types                                                                      *)
 (* ************************************************************************** *)
 
-(* Api Response                                                               *)
-type 'a t =
-  | Result of 'a
-  | Error of ApiError.t
-
-type login    = string
-type password = string
-type url      = string
-type curlauth = (login * password)
+type 'a t = 'a ApiTypes.response
 
 (* ************************************************************************** *)
 (* Configuration                                                              *)
@@ -96,10 +88,19 @@ let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
   text
 
 (* Generate a formatted URL with get parameters                               *)
-let url ?(parents = []) ?(get = []) ?(url = base_url) () =
+let url ?(parents = []) ?(get = [])
+    ?(url = base_url) ?(auth = None) ?(lang = None) () =
+  let get = match lang with
+    | Some lang -> (("lang", ApiTypes.Lang.to_string lang)::get)
+    | None      -> get in
+  let get = match auth with
+    | Some (ApiTypes.Token t) -> (("token", t)::get)
+    | _                       -> get (* todo: OAuth stuff *) in
   let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
   and get =
-    let url = (List.fold_left (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) "" get) in
+    let url =
+      let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
+      (List.fold_left  f "" get) in
     if (String.length url) = 0 then url else (String.set url 0 '?'; url) in
   url ^ parents ^ get
 
@@ -129,27 +130,32 @@ let get_content tree =
 (* ************************************************************************** *)
 
 (* Take a url, get the page and return a json tree                            *)
-let curljson ?(auth=None) ?(rtype=RequestType.GET) url =
-  let result = get_text_form_url url in
+let curljson ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url =
+  let result =
+    get_text_form_url ~rtype:rtype
+    ~auth:(match auth with
+      | Some (ApiTypes.Curl auth) -> Some auth
+      | _                         -> None) url in
   Yojson.Basic.from_string result
 
 (* Take a url, get the pag into json, check and return error and result       *)
-let curljsoncontent ?(auth=None) ?(rtype=RequestType.GET) url =
-  get_content (curljson url)
+let curljsoncontent ?(auth = None) ?(lang = None)
+    ?(rtype = RequestType.GET) url =
+  get_content (curljson ~auth:auth ~lang:lang ~rtype:rtype url)
 
 (* ************************************************************************** *)
 (* Ultimate shortcuts                                                         *)
 (* ************************************************************************** *)
 
 (* Handle an API method completely. Take a function to transform the json.    *)
-let go ?(auth=None) ?(rtype=RequestType.GET) url f =
+let go ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url f =
   let (error, content) =
-    curljsoncontent ~auth:auth ~rtype:rtype url in
+    curljsoncontent ~auth:auth ~lang:lang ~rtype:rtype url in
   match error with
-    | Some error -> Error error
-    | None       -> Result (f content)
+    | Some error -> ApiTypes.Error error
+    | None       -> ApiTypes.Result (f content)
 
 (* In case the method does not return anything on success, use this to handle *)
 (* the whole request (curljsoncontent + return unit result)                   *)
-let noop ?(auth=None) ?(rtype=RequestType.GET) url =
-  go ~auth:auth ~rtype:rtype url (fun _ -> ())
+let noop ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url =
+  go ~auth:auth ~lang:lang ~rtype:rtype url (fun _ -> ())

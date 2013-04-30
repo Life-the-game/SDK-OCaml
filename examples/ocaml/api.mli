@@ -5,19 +5,13 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
+open ApiTypes
+
 (* ************************************************************************** *)
 (** Types                                                                     *)
 (* ************************************************************************** *)
 
-(** Api Response                                                              *)
-type 'a t =
-  | Result of 'a
-  | Error of ApiError.t
-
-type login    = string
-type password = string
-type url      = string
-type curlauth = (login * password)
+type 'a t = 'a response
 
 (* ************************************************************************** *)
 (** Configuration                                                             *)
@@ -45,7 +39,7 @@ module RequestType : REQUESTTYPE
 
 (** Return a text from a url using Curl and HTTP Auth (if needed)             *)
 val get_text_form_url :
-  ?auth:(curlauth option)
+  ?auth:(ApiTypes.curlauth option)
   -> ?rtype:RequestType.t
   -> url
   -> string
@@ -57,6 +51,8 @@ val url :
   ?parents:(string list)
   -> ?get:((string * string) list)
   -> ?url:url
+  -> ?auth:(ApiTypes.auth option)
+  -> ?lang:(Lang.t option)
   -> unit
   -> url
 
@@ -65,7 +61,9 @@ val url :
 (* ************************************************************************** *)
 
 (** Take a response tree, check error and return the error and the result     *)
-val get_content : Yojson.Basic.json -> (ApiError.t option * Yojson.Basic.json)
+val get_content :
+  Yojson.Basic.json
+  -> (ApiError.t option * Yojson.Basic.json)
 
 (* ************************************************************************** *)
 (** Shortcuts                                                                 *)
@@ -73,14 +71,16 @@ val get_content : Yojson.Basic.json -> (ApiError.t option * Yojson.Basic.json)
 
 (** Take a url, get the page and return a json tree                           *)
 val curljson :
-  ?auth:(curlauth option)
+  ?auth:(ApiTypes.auth option)
+  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> Yojson.Basic.json
 
 (** Take a url, get the pag into json, check and return error and result      *)
 val curljsoncontent :
-  ?auth:((login * password) option)
+  ?auth:(ApiTypes.auth option)
+  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> (ApiError.t option * Yojson.Basic.json)
@@ -91,7 +91,8 @@ val curljsoncontent :
 
 (** Handle an API method completely. Take a function to transform the json.   *)
 val go :
-  ?auth:(curlauth option)
+  ?auth:(ApiTypes.auth option)
+  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> (Yojson.Basic.json -> 'a)
@@ -100,7 +101,8 @@ val go :
 (** In case the method does not return anything on success, use this to handl *)
 (** the whole request (curljsoncontent + return unit result)                  *)
 val noop :
-  ?auth:(curlauth option)
+  ?auth:(ApiTypes.auth option)
+  -> ?lang:(ApiTypes.Lang.t option)
   -> ?rtype:RequestType.t
   -> url
   -> unit t

@@ -53,15 +53,24 @@ let login login password =
     from_json
 
 (* ************************************************************************** *)
-(* Get information about a token                                              *)
-(* ************************************************************************** *)
-
-let get token =
-  Api.go (Api.url ~parents:["tokens"; token] ()) from_json
-
-(* ************************************************************************** *)
 (* Logout (delete token)                                                      *)
 (* ************************************************************************** *)
 
 let logout token =
   Api.noop ~rtype:DELETE (Api.url ~parents:["tokens"; token.token] ())
+
+(* ************************************************************************** *)
+(* Get information about a token                                              *)
+(* ************************************************************************** *)
+
+let get_token token =
+  Api.go (Api.url ~parents:["tokens"; token] ()) from_json
+
+(* ************************************************************************** *)
+(* Get your current active connection tokens                                  *)
+(* ************************************************************************** *)
+
+let get auth =
+  let auth = Some auth in
+  Api.go ~auth:auth (Api.url ~parents:["tokens"] ~auth:auth ())
+    (fun c -> ApiTypes.List.from_json from_json c)

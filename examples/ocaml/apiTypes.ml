@@ -6,6 +6,67 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* API Response                                                               *)
+(* ************************************************************************** *)
+
+type 'a response =
+  | Result of 'a
+  | Error of ApiError.t
+
+(* ************************************************************************** *)
+(* Explicit types for parameters                                              *)
+(* ************************************************************************** *)
+
+type login    = string
+type password = string
+type url      = string
+type token    = string
+
+(* ************************************************************************** *)
+(* Languages                                                                  *)
+(* ************************************************************************** *)
+
+module type LANG =
+sig
+  type t
+  val list        : string list
+  val default     : t
+  val is_valid    : string -> bool
+  val from_string : string -> t
+  val to_string   : t      -> string
+end
+module Lang : LANG =
+struct
+  type t = string
+  let list = ["en"; "fr"]
+  let default = List.hd list
+  let is_valid l = List.exists ((=) l) list
+  let from_string s =
+    match is_valid s with
+      | true  -> s
+      | false -> default
+  let to_string l = l
+end
+
+(* ************************************************************************** *)
+(* Requirements (Auth, Lang, ...)                                             *)
+(* ************************************************************************** *)
+
+type curlauth = (login * password)
+
+type auth =
+  | Curl        of curlauth
+  | Token       of token
+  | OAuthHTTP   of token  (* todo *)
+  | OAuthToken  of token  (* todo *)
+  | OAuthSecret of (login * token) (* todo *)
+
+type requirements =
+  | Auth of auth
+  | Lang of Lang.t
+  | NoneReq
+
+(* ************************************************************************** *)
 (* Date & Time                                                                *)
 (* ************************************************************************** *)
 
@@ -109,6 +170,11 @@ sig
         index       : int;
         items       : 'a list;
       }
+  (** Generate a list from the JSON tree using a converter function *)
+  val from_json :
+    (Yojson.Basic.json -> 'a)
+    -> Yojson.Basic.json
+    -> 'a t
 end
 module List : LIST =
 struct
@@ -118,10 +184,18 @@ struct
         index       : int;
         items       : 'a list;
       }
+  let from_json f c =
+    let open Yojson.Basic.Util in
+	{
+	  server_size = c |> member "server_size" |> to_int;
+	  index       = c |> member "index"       |> to_int;
+	  items       =
+	    List.map f (c |> member "server_size" |> to_list);
+	}
 end
 
 (* ************************************************************************** *)
-(* Gender type                                                                *)
+(* Gender                                                                     *)
 (* ************************************************************************** *)
 
 module type GENDER =

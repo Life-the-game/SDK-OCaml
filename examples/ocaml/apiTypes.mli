@@ -6,6 +6,69 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Summary:                                                                   *)
+(* - API Response                                                             *)
+(* - Explicit types for parameters                                            *)
+(* - Languages                                                                *)
+(* - Requirements (Auth, Lang, ...)                                           *)
+(* - Date & Time                                                              *)
+(* - Information Element                                                      *)
+(* - List Pagination                                                          *)
+(* - Gender                                                                   *)
+(* - Privacy                                                                  *)
+(* ************************************************************************** *)
+
+(* ************************************************************************** *)
+(** API Response                                                              *)
+(* ************************************************************************** *)
+
+type 'a response =
+  | Result of 'a
+  | Error of ApiError.t
+
+(* ************************************************************************** *)
+(** Explicit types for parameters                                             *)
+(* ************************************************************************** *)
+
+type login    = string
+type password = string
+type url      = string
+type token    = string
+
+(* ************************************************************************** *)
+(** Languages                                                                 *)
+(* ************************************************************************** *)
+
+module type LANG =
+sig
+  type t
+  val list        : string list
+  val default     : t
+  val is_valid    : string -> bool
+  val from_string : string -> t
+  val to_string   : t      -> string
+end
+module Lang : LANG
+
+(* ************************************************************************** *)
+(** Requirements (Auth, Lang, ...)                                            *)
+(* ************************************************************************** *)
+
+type curlauth = (login * password)
+
+type auth =
+  | Curl        of curlauth
+  | Token       of token
+  | OAuthHTTP   of token  (* todo *)
+  | OAuthToken  of token  (* todo *)
+  | OAuthSecret of (login * token) (* todo *)
+
+type requirements =
+  | Auth of auth
+  | Lang of Lang.t
+  | NoneReq
+
+(* ************************************************************************** *)
 (** Date & Time                                                               *)
 (* ************************************************************************** *)
 
@@ -67,11 +130,16 @@ sig
         index       : int;
         items       : 'a list;
       }
+  (** Generate a list from the JSON tree using a converter function *)
+  val from_json :
+    (Yojson.Basic.json -> 'a)
+    -> Yojson.Basic.json
+    -> 'a t
 end
 module List : LIST
 
 (* ************************************************************************** *)
-(** Gender type                                                               *)
+(** Gender                                                                    *)
 (* ************************************************************************** *)
 
 module type GENDER =
