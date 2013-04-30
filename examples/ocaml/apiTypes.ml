@@ -94,3 +94,31 @@ struct
     | "undefined" -> Other
     | _           -> default
 end
+
+(* ************************************************************************** *)
+(* Privacy                                                                    *)
+(* ************************************************************************** *)
+
+module type PRIVACY =
+sig
+  type t
+  val default   : t
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Privacy : PRIVACY =
+struct
+  type t = Enemy | Pure | Hardcore | Discutable
+  let default = Discutable
+  let to_string = function
+    | Enemy      -> "enemy"
+    | Pure       -> "pure"
+    | Hardcore   -> "hardcore"
+    | Discutable -> "discutable"
+  let of_string = function
+    | "enemy"      -> Enemy
+    | "pure"       -> Pure
+    | "hardcore"   -> Hardcore
+    | "discutable" -> Hardcore
+    | _            -> default
+end
