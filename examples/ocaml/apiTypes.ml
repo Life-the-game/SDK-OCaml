@@ -17,6 +17,7 @@ type 'a response =
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
 
+type id       = int
 type login    = string
 type password = string
 type url      = string

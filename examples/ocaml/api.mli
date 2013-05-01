@@ -84,7 +84,7 @@ val curljsoncontent :
   -> (ApiError.t option * Yojson.Basic.json)
 
 (* ************************************************************************** *)
-(** Ultimate shortcuts                                                        *)
+(** Ultimate shortcut                                                         *)
 (* ************************************************************************** *)
 
 (** Handle an API method completely. Take a function to transform the json.   *)
@@ -95,6 +95,10 @@ val go :
   -> (Yojson.Basic.json -> 'a)
   -> 'a t
 
+(* ************************************************************************** *)
+(** Various tools                                                             *)
+(* ************************************************************************** *)
+
 (** In case the method does not return anything on success, use this to handl *)
 (** the whole request (curljsoncontent + return unit result)                  *)
 val noop :
@@ -102,3 +106,18 @@ val noop :
   -> ?rtype:RequestType.t
   -> url
   -> unit t
+
+(** Check if at least one requirement (auth or lang) has been provided before *)
+(** executing go                                                              *)
+val any :
+  ?auth:(ApiTypes.auth option)
+  -> ?lang:(ApiTypes.Lang.t option)
+  -> ?rtype:RequestType.t
+  -> url
+  -> (Yojson.Basic.json -> 'a)
+  -> 'a t
+
+(** Clean an option list by removing all the "None" elements                  *)
+val option_filter :
+  (string * string option) list
+  -> (string * string) list

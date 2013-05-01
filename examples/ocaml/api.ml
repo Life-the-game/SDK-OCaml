@@ -144,7 +144,7 @@ let curljsoncontent ?(auth = None)
   get_content (curljson ~auth:auth ~rtype:rtype url)
 
 (* ************************************************************************** *)
-(* Ultimate shortcuts                                                         *)
+(* Ultimate shortcut                                                          *)
 (* ************************************************************************** *)
 
 (* Handle an API method completely. Take a function to transform the json.    *)
@@ -157,7 +157,28 @@ let go ?(auth = None) ?(rtype = RequestType.GET) url f =
   with Yojson.Basic.Util.Type_error (msg, _) ->
     ApiTypes.Error (ApiError.invalid_json msg)
 
+(* ************************************************************************** *)
+(* Various tools                                                              *)
+(* ************************************************************************** *)
+
 (* In case the method does not return anything on success, use this to handle *)
 (* the whole request (curljsoncontent + return unit result)                   *)
 let noop ?(auth = None) ?(rtype = RequestType.GET) url =
   go ~auth:auth ~rtype:rtype url (fun _ -> ())
+
+(* Check if at least one requirement (auth or lang) has been provided before  *)
+(* executing go                                                               *)
+let any ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url f =
+  match (auth, lang) with
+    | (None, None) -> ApiTypes.Error ApiError.requirement_missing
+    | _            -> go ~auth:auth ~rtype:rtype url f
+
+(* Clean an option list by removing all the "None" elements                   *)
+let option_filter l =
+  let rec aux acc = function
+    | []   -> List.rev acc
+    | (k, v)::t ->
+      (match v with
+	| Some v -> aux ((k, v)::acc) t
+	| None   -> aux acc t) in
+  aux [] l
