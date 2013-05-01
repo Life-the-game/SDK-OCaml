@@ -20,6 +20,7 @@ type 'a response =
 type id       = int
 type login    = string
 type password = string
+type email    = string
 type url      = string
 type token    = string
 

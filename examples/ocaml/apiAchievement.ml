@@ -41,7 +41,7 @@ let rec from_json c =
 	parent_id          = c |> member "parent_id" |> to_string;
 	child_achievements = ApiTypes.List.from_json
 	  from_json (c |> member "child_achievements");
-	url                = c |> member "" |> to_string;
+	url                = c |> member "url" |> to_string;
       }
 
 let string_of_parent = function

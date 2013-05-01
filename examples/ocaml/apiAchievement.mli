@@ -41,26 +41,25 @@ val from_json : Yojson.Basic.json -> t
 val get :
   ?auth:auth option
   -> ?lang:Lang.t option
-  -> unit -> t List.t
+  -> unit -> t List.t Api.t
 
 (** Get one Achievement                                                       *)
 val get_achievement :
   ?auth:auth option
   -> ?lang:Lang.t option
-  -> id -> t
+  -> int -> t Api.t
 
 (** Post a new Achievement                                                    *)
 val post :
   ?parent:(parent option)
-  -> ~auth:auth
-  -> string -> string -> t
+  -> auth -> string -> string -> t Api.t
 
 (** Edit (put) an Achievement                                                 *)
 val put :
   ?name:(string option)
   -> ?description:(string option)
   -> ?parent:(parent option)
-  -> auth -> id -> t
+  -> auth -> id -> t Api.t
 
 (** Delete an Achievement                                                     *)
-val delete : auth -> id -> t
+val delete : auth -> id -> t Api.t

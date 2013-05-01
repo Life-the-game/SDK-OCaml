@@ -5,10 +5,8 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Yojson.Basic.Util
-
 (* ************************************************************************** *)
-(* Media                                                                      *)
+(** Media                                                                     *)
 (* ************************************************************************** *)
 
 module type MEDIA =
@@ -20,23 +18,10 @@ sig
       }
   val from_json : Yojson.Basic.json -> t
 end
-
-module Media : MEDIA =
-struct
-  type t =
-      {
-	title : string;
-	url   : ApiTypes.url;
-      }
-  let from_json c =
-    {
-      title = c |> member "title" |> to_string;
-      url   = c |> member "url"   |> to_string;
-    }
-end
+module Media : MEDIA
 
 (* ************************************************************************** *)
-(* Picture                                                                    *)
+(** Picture                                                                   *)
 (* ************************************************************************** *)
 
 module type PICTURE =
@@ -48,23 +33,10 @@ sig
     }
   val from_json : Yojson.Basic.json -> t
 end
-
-module Picture : PICTURE =
-struct
-  type t =
-    {
-      url_small : ApiTypes.url;
-      url_big   : ApiTypes.url;
-    }
-  let from_json c =
-    {
-      url_small = c |> member "url_small" |> to_string;
-      url_big   = c |> member "url_big"   |> to_string;
-    }
-end
+module Picture : PICTURE
 
 (* ************************************************************************** *)
-(* Video                                                                      *)
+(** Video                                                                     *)
 (* ************************************************************************** *)
 
 module type VIDEO =
@@ -75,15 +47,4 @@ sig
     }
   val from_json : Yojson.Basic.json -> t
 end
-
-module Video : VIDEO =
-struct
-  type t =
-    {
-      provider : ApiTypes.url;
-    }
-  let from_json c =
-    {
-      provider = c |> member "provider" |> to_string;
-    }
-end
+module Video : VIDEO
