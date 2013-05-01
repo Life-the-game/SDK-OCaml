@@ -6,7 +6,8 @@
 ## Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   ##
 ## ########################################################################## ##
 
-NAME		=	api_example_ocaml
+NAME		=	api.cma
+
 SRC		=	apiError.ml \
 			apiTypes.ml \
 			api.ml \
@@ -18,7 +19,10 @@ SRC		=	apiError.ml \
 SRCI		=	apiError.mli \
 			apiTypes.mli \
 			api.mli \
-			apiAuth.mli
+			apiAuth.mli \
+			apiMedia.mli \
+			apiAchievement.mli \
+			apiUser.mli
 
 SRCDOC		=	api.ml
 PACKS		=	curl,yojson,calendar
@@ -36,7 +40,7 @@ OCAMLFIND	=	ocamlfind
 RM		=	rm -f
 
 all		:	
-			$(OCAMLFIND) $(COMPILER) -o $(NAME) -package $(PACKS) $(SRCI) $(SRC) $(FLAGS)
+			$(OCAMLFIND) $(COMPILER) -a -o $(NAME) -package $(PACKS) $(SRCI) $(SRC) $(FLAGS)
 
 doc		:
 			$(OCAMLFIND) $(DOCCOMPILER) -html -package $(PACKS) $(SRCDOC)
