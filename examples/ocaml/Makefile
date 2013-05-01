@@ -13,6 +13,7 @@ SRC		=	apiError.ml \
 			apiAuth.ml \
 			apiMedia.ml \
 			apiAchievement.ml \
+			apiUser.ml
 
 SRCI		=	apiError.mli \
 			apiTypes.mli \
