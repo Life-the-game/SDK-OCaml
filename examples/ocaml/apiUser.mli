@@ -32,7 +32,7 @@ type t =
 val create :
   login:login
   -> email:email
-  -> lang:Lang.t option
+  -> lang:Lang.t
   -> ?firstname:string
   -> ?lastname:string
   -> ?gender:Gender.t

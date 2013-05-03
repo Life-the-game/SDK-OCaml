@@ -56,7 +56,7 @@ let from_json c =
 
 let create ~login ~email ~lang ?(firstname = "") ?(lastname = "")
     ?(gender = Gender.default) ?(birthday = Date.empty) () = (* todo: avatar *)
-  let url = Api.url ~parents:["users"] ~lang:lang
+  let url = Api.url ~parents:["users"] ~lang:(Some lang)
     ~get:[("login", login);
 	  ("email", email);
 	  ("firstname", firstname);
