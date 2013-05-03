@@ -31,6 +31,20 @@ let success =
 (* Client-side errors                                                         *)
 (* ************************************************************************** *)
 
+let generic =
+  {
+    message = "Something went wrong";
+    stype   = "CLIENT_Error";
+    code    = -1;
+  }
+
+let network msg =
+  {
+    message = msg;
+    stype   = "CLIENT_NetworkError";
+    code    = -45;
+  }
+
 let invalid_json msg =
   {
     message = "The JSON tree response is not formatted as expected: " ^ msg;

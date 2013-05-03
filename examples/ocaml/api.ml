@@ -54,6 +54,8 @@ struct
     | _        -> default
 end
 
+exception MyCurlExn of string
+
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
 let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
   let writer accum data =
@@ -82,8 +84,8 @@ let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
        Buffer.contents result)
     with
       | Curl.CurlException (_, _, _) ->
-        raise (Failure ("Error: " ^ !errorBuffer))
-      | Failure s -> raise (Failure s) in
+        raise (MyCurlExn !errorBuffer)
+      | Failure s -> raise (MyCurlExn s) in
   let _ = Curl.global_cleanup () in
   text
 
@@ -104,58 +106,36 @@ let url ?(parents = []) ?(get = [])
     if (String.length url) = 0 then url else (String.set url 0 '?'; url) in
   url ^ parents ^ get
 
-(* ************************************************************************** *)
-(* Transform content                                                          *)
-(* ************************************************************************** *)
-
-(* Take a response tree, check error and return the error and the result      *)
-let get_content tree =
-  let open Yojson.Basic.Util in
-      let error =
-        let elt = tree |> member "error" in
-        if (elt |> member "code" |> to_int) = 0
-        then None
-        else
-          (let open ApiError in
-               Some {
-                 message = elt |> member "message" |> to_string;
-                 stype   = elt |> member "stype"   |> to_string;
-                 code    = elt |> member "code"    |> to_int;
-               })
-      and element = tree |> member "element" in
-      (error, element)
-
-(* ************************************************************************** *)
-(* Shortcuts                                                                  *)
-(* ************************************************************************** *)
-
-(* Take a url, get the page and return a json tree                            *)
-let curljson ?(auth = None) ?(rtype = RequestType.GET) url =
-  let result =
-    get_text_form_url ~rtype:rtype
-    ~auth:(match auth with
-      | Some (ApiTypes.Curl auth) -> Some auth
-      | _                         -> None) url in
-  Yojson.Basic.from_string result
-
-(* Take a url, get the pag into json, check and return error and result       *)
-let curljsoncontent ?(auth = None)
-    ?(rtype = RequestType.GET) url =
-  get_content (curljson ~auth:auth ~rtype:rtype url)
-
-(* ************************************************************************** *)
-(* Ultimate shortcut                                                          *)
-(* ************************************************************************** *)
-
 (* Handle an API method completely. Take a function to transform the json.    *)
 let go ?(auth = None) ?(rtype = RequestType.GET) url f =
-  let (error, content) =
-    curljsoncontent ~auth:auth ~rtype:rtype url in
-  try (match error with
-    | Some error -> ApiTypes.Error error
-    | None       -> ApiTypes.Result (f content))
-  with Yojson.Basic.Util.Type_error (msg, _) ->
-    ApiTypes.Error (ApiError.invalid_json msg)
+  try (let result =
+	 get_text_form_url ~rtype:rtype
+	   ~auth:(match auth with
+	     | Some (ApiTypes.Curl auth) -> Some auth
+	     | _                         -> None) url in
+       let json = Yojson.Basic.from_string result in
+       let error =
+	 (let open Yojson.Basic.Util in
+	      let error_json = json |> member "error" in
+	      {
+		ApiError.message = error_json |> member "message" |> to_string;
+		ApiError.stype   = error_json |> member "type"   |> to_string;
+		ApiError.code    = error_json |> member "code"    |> to_int;
+	      }) in
+       if error.ApiError.code != 1
+       then ApiTypes.Error error
+       else
+	 let open Yojson.Basic.Util in
+	     let content = json |> member "element" in
+	     ApiTypes.Result (f content))
+  with
+    | Yojson.Basic.Util.Type_error (msg, _) ->
+      ApiTypes.Error (ApiError.invalid_json msg)
+    | Yojson.Json_error msg ->
+      ApiTypes.Error (ApiError.invalid_json msg)
+    | MyCurlExn msg ->
+      ApiTypes.Error (ApiError.network msg)
+    | _ -> ApiTypes.Error ApiError.generic
 
 (* ************************************************************************** *)
 (* Various tools                                                              *)

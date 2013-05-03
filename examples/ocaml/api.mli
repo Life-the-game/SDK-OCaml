@@ -37,13 +37,6 @@ sig
 end
 module RequestType : REQUESTTYPE
 
-(** Return a text from a url using Curl and HTTP Auth (if needed)             *)
-val get_text_form_url :
-  ?auth:(ApiTypes.curlauth option)
-  -> ?rtype:RequestType.t
-  -> url
-  -> string
-
 (** Generate a formatted URL with get parameters                              *)
 (** Example: url ~parents:["a"; "b"] ~get:[("c", "d")] ~url:("http://g.com")  *)
 (**  Result: http://g.com/a/b?c=d                                             *)
@@ -55,37 +48,6 @@ val url :
   -> ?lang:(Lang.t option)
   -> unit
   -> url
-
-(* ************************************************************************** *)
-(** Transform content                                                         *)
-(* ************************************************************************** *)
-
-(** Take a response tree, check error and return the error and the result     *)
-val get_content :
-  Yojson.Basic.json
-  -> (ApiError.t option * Yojson.Basic.json)
-
-(* ************************************************************************** *)
-(** Shortcuts                                                                 *)
-(* ************************************************************************** *)
-
-(** Take a url, get the page and return a json tree                           *)
-val curljson :
-  ?auth:(ApiTypes.auth option)
-  -> ?rtype:RequestType.t
-  -> url
-  -> Yojson.Basic.json
-
-(** Take a url, get the pag into json, check and return error and result      *)
-val curljsoncontent :
-  ?auth:(ApiTypes.auth option)
-  -> ?rtype:RequestType.t
-  -> url
-  -> (ApiError.t option * Yojson.Basic.json)
-
-(* ************************************************************************** *)
-(** Ultimate shortcut                                                         *)
-(* ************************************************************************** *)
 
 (** Handle an API method completely. Take a function to transform the json.   *)
 val go :
