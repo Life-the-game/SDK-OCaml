@@ -30,7 +30,7 @@ type 'a response =
 (** Explicit types for parameters                                             *)
 (* ************************************************************************** *)
 
-type id       = int
+type id       = string
 type login    = string
 type password = string
 type email    = string
@@ -113,7 +113,7 @@ module type INFO =
 sig
   type t =
       {
-	id       : int;
+	id       : string;
 	creation : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t

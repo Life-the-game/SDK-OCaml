@@ -17,7 +17,7 @@ type 'a response =
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
 
-type id       = int
+type id       = string
 type login    = string
 type password = string
 type email    = string
@@ -139,7 +139,7 @@ module type INFO =
 sig
   type t =
       {
-	id       : int;
+	id       : string;
 	creation : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
@@ -148,13 +148,13 @@ module Info : INFO =
 struct
   type t =
       {
-	id       : int;
+	id       : string;
 	creation : DateTime.t;
       }
   let from_json c =
     let open Yojson.Basic.Util in
 	{
-	  id       = c |> member "id" |> to_int;
+	  id       = c |> member "id" |> to_string;
 	  creation = DateTime.of_string
             (c |> member "creation" |> to_string);
 	}
