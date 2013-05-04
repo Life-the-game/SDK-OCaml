@@ -41,9 +41,7 @@ let from_json c =
 	avatar      = ApiMedia.Picture.from_json (c |> member "avatar");
 	gender      = Gender.of_string (c |> member "gender" |> to_string);
 	birthday    = Date.of_string (c |> member "birthday" |> to_string);
-	is_friend   =
-	  (try (Some (c |> member "is_friend" |> to_bool))
-	   with _ -> None);
+	is_friend   = c |> member "is_friend" |> to_bool_option;
 	profile_url = c |> member "profile_url" |> to_string;
       }
 
