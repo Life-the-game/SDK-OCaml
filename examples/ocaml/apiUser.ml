@@ -7,6 +7,7 @@
 
 open Api.RequestType
 open ApiTypes
+open ExtLib
 
 (* ************************************************************************** *)
 (* Types                                                                      *)
@@ -37,7 +38,7 @@ let from_json c =
 	login       = c |> member "login" |> to_string;
 	firstname   = c |> member "firstname" |> to_string;
 	lastname    = c |> member "lastname" |> to_string;
-	avatar      = c |> member "avatar" |> ApiMedia.Picture.from_json;
+	avatar      = ApiMedia.Picture.from_json (c |> member "avatar");
 	gender      = Gender.of_string (c |> member "gender" |> to_string);
 	birthday    = Date.of_string (c |> member "birthday" |> to_string);
 	is_friend   =
@@ -54,14 +55,16 @@ let from_json c =
 (* Create a user                                                              *)
 (* ************************************************************************** *)
 
-let create ~login ~email ~lang ?(firstname = "") ?(lastname = "")
-    ?(gender = Gender.default) ?(birthday = Date.empty) () = (* todo: avatar *)
+let create ~login ~email ~password ~lang ?(firstname = None) ?(lastname = None)
+    ?(gender = None) ?(birthday = None) () =
   let url = Api.url ~parents:["users"] ~lang:(Some lang)
-    ~get:[("login", login);
-	  ("email", email);
-	  ("firstname", firstname);
-	  ("lastname", lastname);
-	  ("gender", Gender.to_string gender);
-	  ("birthday", Date.to_string birthday);
-	 ] () in
+    ~get:(Api.option_filter
+	    [("login", Some login);
+	     ("email", Some email);
+	     ("password", Some password);
+	     ("firstname", firstname);
+	     ("lastname", lastname);
+	     ("gender", Option.map Gender.to_string gender);
+	     ("birthday", Option.map Date.to_string birthday);
+	    ]) () in
   Api.go ~rtype:POST url from_json
