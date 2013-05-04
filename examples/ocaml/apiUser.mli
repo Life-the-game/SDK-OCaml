@@ -40,3 +40,28 @@ val create :
   -> ?birthday:Date.t option
   -> unit -> t Api.t
 
+(** Get users                                                                 *)
+val get :
+  auth:auth
+  -> ?term:string option
+  -> ?index:int option
+  -> ?limit:int option
+  -> unit -> t ApiTypes.List.t Api.t
+
+(** Get a user                                                                *)
+val get_user : ?auth:auth option -> ?lang:Lang.t option -> id -> t Api.t
+
+(** Delete a user                                                             *)
+val delete : auth:auth -> id -> unit Api.t
+
+(** Edit (put) a user                                                         *)
+val edit :
+  auth:auth
+  -> ?email:email option
+  -> ?password:password option
+  -> ?firstname:string option
+  -> ?lastname:string option
+  -> ?gender:Gender.t option
+  -> ?birthday:Date.t option
+  -> id -> t Api.t
+

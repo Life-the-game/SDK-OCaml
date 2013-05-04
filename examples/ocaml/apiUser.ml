@@ -66,3 +66,48 @@ let create ~login ~email ~password ~lang ?(firstname = None) ?(lastname = None)
 	     ("birthday", Option.map Date.to_string birthday);
 	    ]) () in
   Api.go ~rtype:POST url from_json
+
+(* ************************************************************************** *)
+(* Get users                                                                  *)
+(* ************************************************************************** *)
+
+let get ~auth ?(term = None) ?(index = None) ?(limit = None) () =
+  let url = Api.url ~parents:["users"] ~auth:(Some auth)
+    ~get:(Api.option_filter
+	    [("term", term);
+	     ("index", Option.map string_of_int index);
+	     ("limit", Option.map string_of_int limit)]) () in
+  Api.go ~auth:(Some auth) url (ApiTypes.List.from_json from_json)
+
+(* ************************************************************************** *)
+(* Get a user                                                                 *)
+(* ************************************************************************** *)
+
+let get_user ?(auth = None) ?(lang = None) id =
+  let url = Api.url ~parents:["users"; id] ~auth:auth ~lang:lang () in
+  Api.any ~auth:auth ~lang:lang url from_json
+
+(* ************************************************************************** *)
+(* Delete a user                                                              *)
+(* ************************************************************************** *)
+
+let delete ~auth id =
+  let url = Api.url ~parents:["users"; id] ~auth:(Some auth) () in
+  Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
+(* ************************************************************************** *)
+(* Edit (put) a user                                                          *)
+(* ************************************************************************** *)
+
+let edit ~auth ?(email = None) ?(password = None) ?(firstname = None)
+    ?(lastname = None) ?(gender = None) ?(birthday = None) id =
+  let url = Api.url ~parents:["users"; id] ~auth:(Some auth)
+    ~get:(Api.option_filter
+	    [("email", email);
+	     ("password", password);
+	     ("firstname", firstname);
+	     ("lastname", lastname);
+	     ("gender", Option.map Gender.to_string gender);
+	     ("birthday", Option.map Date.to_string birthday);
+	    ]) () in
+  Api.go ~auth:(Some auth) ~rtype:PUT url from_json
