@@ -17,10 +17,10 @@ type t =
     }
 
 (* ************************************************************************** *)
-(* Success                                                                    *)
+(* Tools                                                                      *)
 (* ************************************************************************** *)
 
-val success : t
+val from_json : Yojson.Basic.json -> t
 
 (* ************************************************************************** *)
 (* Client-side errors                                                         *)
@@ -30,3 +30,4 @@ val generic             : t
 val network             : string -> t
 val invalid_json        : string -> t
 val requirement_missing : t
+val invalid_argument    : string -> t

@@ -16,7 +16,7 @@ type 'a t = 'a ApiTypes.response
 (* ************************************************************************** *)
 
 (* The URL of the API Web service                                             *)
-let base_url = "http://life.paysdu42.fr:2000"
+let base_url = "http://je.peux.pas.venir.ce.week.end.jai.poney.me/eipapi/"
 
 (* ************************************************************************** *)
 (* Network                                                                    *)
@@ -114,27 +114,23 @@ let go ?(auth = None) ?(rtype = RequestType.GET) url f =
 	     | Some (ApiTypes.Curl auth) -> Some auth
 	     | _                         -> None) url in
        let json = Yojson.Basic.from_string result in
-       let error =
-	 (let open Yojson.Basic.Util in
-	      let error_json = json |> member "error" in
-	      {
-		ApiError.message = error_json |> member "message" |> to_string;
-		ApiError.stype   = error_json |> member "type"   |> to_string;
-		ApiError.code    = error_json |> member "code"    |> to_int;
-	      }) in
-       if error.ApiError.code != 1
-       then ApiTypes.Error error
-       else
-	 let open Yojson.Basic.Util in
-	     let content = json |> member "element" in
-	     ApiTypes.Result (f content))
+       let open Yojson.Basic.Util in
+           (let error_json = json |> member "error"
+	       |> to_option ApiError.from_json in
+	    match error_json with
+	      | Some error -> ApiTypes.Error error
+	      | None ->
+		let content = json |> member "element" in
+		ApiTypes.Result (f content)))
   with
-    | Yojson.Basic.Util.Type_error (msg, _) ->
-      ApiTypes.Error (ApiError.invalid_json msg)
+    | Yojson.Basic.Util.Type_error (msg, tree) ->
+      ApiTypes.Error (ApiError.invalid_json
+			(msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
     | Yojson.Json_error msg ->
       ApiTypes.Error (ApiError.invalid_json msg)
     | MyCurlExn msg ->
       ApiTypes.Error (ApiError.network msg)
+    | Invalid_argument s -> ApiTypes.Error (ApiError.invalid_argument s)
     | _ -> ApiTypes.Error ApiError.generic
 
 (* ************************************************************************** *)

@@ -17,15 +17,16 @@ type t =
     }
 
 (* ************************************************************************** *)
-(* Success                                                                    *)
+(* Tools                                                                      *)
 (* ************************************************************************** *)
 
-let success =
-  {
-    message = "Success";
-    stype   = "Success";
-    code    = 0;
-  }
+let from_json error_json =
+  let open Yojson.Basic.Util in
+      {
+	message = error_json |> member "message" |> to_string;
+	stype   = error_json |> member "type"    |> to_string;
+	code    = error_json |> member "code"    |> to_int;
+      }
 
 (* ************************************************************************** *)
 (* Client-side errors                                                         *)
@@ -57,4 +58,11 @@ let requirement_missing =
     message = "One requirement is missing";
     stype   = "CLIENT_RequirementMissing";
     code    = -25;
+  }
+
+let invalid_argument msg =
+  {
+    message = msg;
+    stype   = "CLIENT_InvalidArgument";
+    code    = -4;
   }
