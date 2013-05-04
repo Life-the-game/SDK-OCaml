@@ -6,6 +6,7 @@
 (* ************************************************************************** *)
 
 open Api.RequestType
+open ExtLib
 
 (* ************************************************************************** *)
 (* Types                                                                      *)
@@ -17,14 +18,9 @@ type t =
       name               : string;
       description        : string;
       badge              : ApiMedia.Picture.t;
-      parent_id          : string;
       child_achievements : t ApiTypes.List.t;
       url                : ApiTypes.url;
     }
-
-type parent =
-  | ParentId of int
-  | Parent   of t
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -38,19 +34,10 @@ let rec from_json c =
 	name               = c |> member "name" |> to_string;
 	description        = c |> member "description" |> to_string;
 	badge              = c |> member "badge" |> ApiMedia.Picture.from_json;
-	parent_id          = c |> member "parent_id" |> to_string;
 	child_achievements = ApiTypes.List.from_json
 	  from_json (c |> member "child_achievements");
 	url                = c |> member "url" |> to_string;
       }
-
-let string_of_parent = function
-  | None -> None
-  | Some p -> Some
-    (string_of_int
-       (match p with
-	 | ParentId id -> id
-	 | Parent p    -> p.info.ApiTypes.Info.id))
 
 (* ************************************************************************** *)
 (* Api Methods                                                                *)
@@ -60,10 +47,14 @@ let string_of_parent = function
 (* Get Achievements                                                           *)
 (* ************************************************************************** *)
 
-let get ?(auth = None) ?(lang = None) () =
-  let url = Api.url ~parents:["achievements"] ~auth:auth ~lang:lang () in
-  Api.any ~auth:auth ~lang:lang url
-    (fun c -> ApiTypes.List.from_json from_json c)
+let get ?(auth = None) ?(lang = None) ?(term = None) ?(index = None)
+    ?(limit = None) () =
+  let url = Api.url ~parents:["achievements"] ~auth:auth ~lang:lang
+    ~get:(Api.option_filter
+	    [("term", term);
+	     ("index", Option.map string_of_int index);
+	     ("limit", Option.map string_of_int limit)]) () in
+  Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
 
 (* ************************************************************************** *)
 (* Get one Achievement                                                        *)
@@ -75,14 +66,13 @@ let get_achievement ?(auth = None) ?(lang = None) id =
   Api.any ~auth:auth ~lang:lang url from_json
 
 (* ************************************************************************** *)
-(* Post a new Achievement                                                     *)
+(* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let post ?(parent = None) auth name description =
+let post ~auth ~name ?(description = None) () =
   let get = Api.option_filter
-    [("parent", string_of_parent parent);
-     ("name", (Some name));
-     ("description", (Some description));
+    [("name", Some name);
+     ("description", description);
     ] in
   let url = Api.url ~parents:["achievements"]
     ~get:get ~auth:(Some auth) () in
@@ -92,13 +82,12 @@ let post ?(parent = None) auth name description =
 (* Edit (put) an Achievement                                                  *)
 (* ************************************************************************** *)
 
-let put ?(name = None) ?(description = None) ?(parent = None) auth id =
+let edit ~auth ?(name = None) ?(description = None) id =
   let get = Api.option_filter
     [("name", name);
      ("description", description);
-     ("parent", string_of_parent parent);
     ] in
-  let url = Api.url ~parents:["achievements"; string_of_int id]
+  let url = Api.url ~parents:["achievements"; id]
     ~get:get ~auth:(Some auth) () in
   Api.go ~auth:(Some auth) ~rtype:PUT url from_json
 
@@ -106,7 +95,7 @@ let put ?(name = None) ?(description = None) ?(parent = None) auth id =
 (* Delete an Achievement                                                      *)
 (* ************************************************************************** *)
 
-let delete auth id =
-  let url = Api.url ~parents:["achievements"; string_of_int id]
+let delete ~auth id =
+  let url = Api.url ~parents:["achievements"; id]
     ~auth:(Some auth) () in
   Api.go ~auth:(Some auth) ~rtype:DELETE url from_json
