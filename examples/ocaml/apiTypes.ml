@@ -192,7 +192,7 @@ struct
 	  server_size = c |> member "server_size" |> to_int;
 	  index       = c |> member "index"       |> to_int;
 	  items       =
-	    List.map f (c |> member "server_size" |> to_list);
+	    List.map f (c |> member "items" |> to_list);
 	}
 end
 
