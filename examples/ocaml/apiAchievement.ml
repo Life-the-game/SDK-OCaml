@@ -98,4 +98,4 @@ let edit ~auth ?(name = None) ?(description = None) id =
 let delete ~auth id =
   let url = Api.url ~parents:["achievements"; id]
     ~auth:(Some auth) () in
-  Api.go ~auth:(Some auth) ~rtype:DELETE url from_json
+  Api.noop ~auth:(Some auth) ~rtype:DELETE url

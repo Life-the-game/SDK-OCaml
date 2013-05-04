@@ -55,4 +55,4 @@ val edit :
   -> id -> t Api.t
 
 (** Delete an Achievement                                                     *)
-val delete : auth:auth -> id -> t Api.t
+val delete : auth:auth -> id -> unit Api.t
