@@ -47,10 +47,9 @@ let from_json content =
 (* ************************************************************************** *)
 
 let login login password =
-  Api.go ~rtype:POST
-    (Api.url ~parents:["tokens"]
-       ~get:[("login", login); ("password", password)] ())
-    from_json
+  let url = Api.url ~parents:["tokens"]
+    ~get:[("login", login); ("password", password)] () in
+  Api.go ~rtype:POST url from_json
 
 (* ************************************************************************** *)
 (* Logout (delete token)                                                      *)
@@ -63,14 +62,16 @@ let logout token =
 (* Get information about a token                                              *)
 (* ************************************************************************** *)
 
-let get_token token =
-  Api.go (Api.url ~parents:["tokens"; token] ()) from_json
+let get_token token_id =
+  Api.go (Api.url ~parents:["tokens"; token_id] ()) from_json
 
 (* ************************************************************************** *)
 (* Get your current active connection tokens                                  *)
 (* ************************************************************************** *)
 
-let get auth =
-  let auth = Some auth in
-  Api.go ~auth:auth (Api.url ~parents:["tokens"] ~auth:auth ())
-    (fun c -> ApiTypes.List.from_json from_json c)
+let get ?(index = None) ?(limit = None) auth =
+  let url = Api.url ~parents:["tokens"] ~auth:(Some auth)
+    ~get:(Api.option_filter
+	    [("index", Option.map strint_of_int index);
+	     ("limit", Option.map strint_of_int limit)]) () in
+  Api.go ~auth:(Some auth) url (ApiTypes.List.from_json from_json)

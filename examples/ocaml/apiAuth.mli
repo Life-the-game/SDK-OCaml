@@ -35,4 +35,8 @@ val logout : t -> unit Api.t
 val get_token : token -> t Api.t
 
 (** Get your current active connection tokens                                 *)
-val get : ApiTypes.auth -> t ApiTypes.List.t Api.t
+val get :
+  ?index:int option
+  -> ?limit:int option
+  -> ApiTypes.auth
+  -> t ApiTypes.List.t Api.t
