@@ -130,6 +130,7 @@ sig
       {
         server_size : int;
         index       : int;
+	limit       : int;
         items       : 'a list;
       }
   (** Generate a list from the JSON tree using a converter function *)
