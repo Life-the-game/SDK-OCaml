@@ -72,7 +72,5 @@ let get_token token_id =
 
 let get ?(index = None) ?(limit = None) auth =
   let url = Api.url ~parents:["tokens"] ~auth:(Some auth)
-    ~get:(Api.option_filter
-	    [("index", Option.map string_of_int index);
-	     ("limit", Option.map string_of_int limit)]) () in
+    ~get:(Api.pager index limit []) () in
   Api.go ~auth:(Some auth) url (ApiTypes.List.from_json from_json)

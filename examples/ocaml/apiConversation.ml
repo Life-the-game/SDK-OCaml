@@ -61,10 +61,7 @@ let from_json c =
 let get ~auth ?(index = None) ?(limit = None) id_user =
   let url =
     Api.url ~parents:["users"; id_user; "conversation"] ~auth:(Some auth)
-      ~get:(Api.option_filter
-	      [("index", Option.map string_of_int index);
-	       ("limit", Option.map string_of_int limit);
-	      ]) () in
+      ~get:(Api.pager index limit []) () in
   Api.go ~auth:(Some auth) url from_json
 
 (* ************************************************************************** *)

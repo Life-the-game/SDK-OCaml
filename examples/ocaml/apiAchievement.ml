@@ -50,10 +50,7 @@ let rec from_json c =
 let get ?(auth = None) ?(lang = None) ?(term = None) ?(index = None)
     ?(limit = None) () =
   let url = Api.url ~parents:["achievements"] ~auth:auth ~lang:lang
-    ~get:(Api.option_filter
-	    [("term", term);
-	     ("index", Option.map string_of_int index);
-	     ("limit", Option.map string_of_int limit)]) () in
+    ~get:(Api.pager index limit [("term", term)]) () in
   Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
 
 (* ************************************************************************** *)

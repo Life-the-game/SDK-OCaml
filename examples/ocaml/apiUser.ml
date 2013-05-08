@@ -73,10 +73,7 @@ let create ~login ~email ~password ~lang ?(firstname = None) ?(lastname = None)
 
 let get ~auth ?(term = None) ?(index = None) ?(limit = None) () =
   let url = Api.url ~parents:["users"] ~auth:(Some auth)
-    ~get:(Api.option_filter
-	    [("term", term);
-	     ("index", Option.map string_of_int index);
-	     ("limit", Option.map string_of_int limit)]) () in
+    ~get:(Api.pager index limit [("term", term)]) () in
   Api.go ~auth:(Some auth) url (ApiTypes.List.from_json from_json)
 
 (* ************************************************************************** *)
@@ -118,9 +115,7 @@ let edit ~auth ?(email = None) ?(password = None) ?(firstname = None)
 
 let get_tokens ~auth ?(index = None) ?(limit = None) user_id =
   let url = Api.url ~parents:["users"; user_id; "tokens"] ~auth:(Some auth)
-    ~get:(Api.option_filter
-	    [("index", Option.map string_of_int index);
-	     ("limit", Option.map string_of_int limit)]) () in
+    ~get:(Api.pager index limit []) () in
   Api.go ~auth:(Some auth) url (ApiTypes.List.from_json ApiAuth.from_json)
 
 (* ************************************************************************** *)
@@ -130,7 +125,5 @@ let get_tokens ~auth ?(index = None) ?(limit = None) user_id =
 let get_friends ?(auth = None) ?(lang = None)
     ?(index = None) ?(limit = None) user_id =
   let url = Api.url ~parents:["users"; user_id; "friends"] ~auth:auth ~lang:lang
-    ~get:(Api.option_filter
-	    [("index", Option.map string_of_int index);
-	     ("limit", Option.map string_of_int limit)]) () in
+    ~get:(Api.pager index limit []) () in
   Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
