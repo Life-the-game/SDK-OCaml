@@ -127,3 +127,12 @@ let get_friends ?(auth = None) ?(lang = None)
   let url = Api.url ~parents:["users"; user_id; "friends"] ~auth:auth ~lang:lang
     ~get:(Api.pager index limit []) () in
   Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
+
+(* ************************************************************************** *)
+(* The authenticated user request a friendship with a user                    *)
+(* ************************************************************************** *)
+
+let be_friend_with ~auth ?(src_user = None) user_id =
+  let url = Api.url ~parents:["users"; user_id; "friends"] ~auth:(Some auth)
+    ~get:(Api.option_filter [("src_user_id", src_user)]) () in
+  Api.noop ~auth:(Some auth) ~rtype:POST url

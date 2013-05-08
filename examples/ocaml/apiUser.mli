@@ -70,13 +70,18 @@ val get_tokens :
   auth:auth
   -> ?index:int option
   -> ?limit:int option
-  -> string -> ApiAuth.t ApiTypes.List.t Api.t
+  -> id -> ApiAuth.t ApiTypes.List.t Api.t
 
 (** Get user's friends                                                        *)
 val get_friends :
   ?auth:auth option -> ?lang:Lang.t option
   -> ?index:int option -> ?limit:int option
-  -> string -> t ApiTypes.List.t Api.t
+  -> id -> t ApiTypes.List.t Api.t
+
+(** The authenticated user request a friendship with a user                   *)
+val be_friend_with :
+  auth:auth -> ?src_user:id option -> id -> unit Api.t
+
 
 (* ************************************************************************** *)
 (** Tools                                                                     *)
