@@ -16,6 +16,7 @@ SRC		=	apiError.ml \
 			apiMedia.ml \
 			apiAchievement.ml \
 			apiUser.ml \
+			apiActivity.ml \
 			apiConversation.ml \
 			\
 			apiDump.ml
@@ -28,6 +29,7 @@ SRCI		=	apiError.mli \
 			apiMedia.mli \
 			apiAchievement.mli \
 			apiUser.mli \
+			apiActivity.mli \
 			apiConversation.mli \
 			\
 			apiDump.mli
