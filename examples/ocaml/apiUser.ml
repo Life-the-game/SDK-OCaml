@@ -130,9 +130,18 @@ let get_friends ?(auth = None) ?(lang = None)
 
 (* ************************************************************************** *)
 (* The authenticated user request a friendship with a user                    *)
+(*   Note: The src_user is for administrative purpose only                    *)
 (* ************************************************************************** *)
 
 let be_friend_with ~auth ?(src_user = None) user_id =
   let url = Api.url ~parents:["users"; user_id; "friends"] ~auth:(Some auth)
     ~get:(Api.option_filter [("src_user_id", src_user)]) () in
   Api.noop ~auth:(Some auth) ~rtype:POST url
+
+(* ************************************************************************** *)
+(* The authenticated user delete a friendship with a user                     *)
+(* ************************************************************************** *)
+
+let delete_friend ~auth user_id =
+  Api.noop ~auth:(Some auth) ~rtype:DELETE
+    (Api.url ~parents:["users"; user_id; "friends"] ~auth:(Some auth) ())

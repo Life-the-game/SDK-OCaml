@@ -82,6 +82,8 @@ val get_friends :
 val be_friend_with :
   auth:auth -> ?src_user:id option -> id -> unit Api.t
 
+(** The authenticated user delete a friendship with a user                    *)
+val delete_friend : auth:auth -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** Tools                                                                     *)
