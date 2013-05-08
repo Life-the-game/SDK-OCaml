@@ -67,6 +67,7 @@ let get_token token_id =
 
 (* ************************************************************************** *)
 (* Get your current active connection tokens                                  *)
+(*   Info: To get the tokens of another user, use ApiUser.get_tokens          *)
 (* ************************************************************************** *)
 
 let get ?(index = None) ?(limit = None) auth =

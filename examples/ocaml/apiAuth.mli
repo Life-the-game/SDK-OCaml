@@ -33,8 +33,16 @@ val logout : t -> unit Api.t
 val get_token : token -> t Api.t
 
 (** Get your current active connection tokens                                 *)
+(**   Info: To get the tokens of another user, use ApiUser.get_tokens         *)
 val get :
   ?index:int option
   -> ?limit:int option
   -> ApiTypes.auth
   -> t ApiTypes.List.t Api.t
+
+(* ************************************************************************** *)
+(** Tools                                                                     *)
+(* ************************************************************************** *)
+
+(** Take a json tree representing an auth element and return an auth element  *)
+val from_json : Yojson.Basic.json -> t

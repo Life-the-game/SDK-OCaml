@@ -65,6 +65,19 @@ val edit :
   -> ?birthday:Date.t option
   -> id -> t Api.t
 
+(** Get user's authentication tokens                                          *)
+val get_tokens :
+  auth:auth
+  -> ?index:int option
+  -> ?limit:int option
+  -> string -> ApiAuth.t ApiTypes.List.t Api.t
+
+(** Get user's friends                                                        *)
+val get_friends :
+  ?auth:auth option -> ?lang:Lang.t option
+  -> ?index:int option -> ?limit:int option
+  -> string -> t ApiTypes.List.t Api.t
+
 (* ************************************************************************** *)
 (** Tools                                                                     *)
 (* ************************************************************************** *)

@@ -111,3 +111,26 @@ let edit ~auth ?(email = None) ?(password = None) ?(firstname = None)
 	     ("birthday", Option.map Date.to_string birthday);
 	    ]) () in
   Api.go ~auth:(Some auth) ~rtype:PUT url from_json
+
+(* ************************************************************************** *)
+(* Get user's authentication tokens                                           *)
+(* ************************************************************************** *)
+
+let get_tokens ~auth ?(index = None) ?(limit = None) user_id =
+  let url = Api.url ~parents:["users"; user_id; "tokens"] ~auth:(Some auth)
+    ~get:(Api.option_filter
+	    [("index", Option.map string_of_int index);
+	     ("limit", Option.map string_of_int limit)]) () in
+  Api.go ~auth:(Some auth) url (ApiTypes.List.from_json ApiAuth.from_json)
+
+(* ************************************************************************** *)
+(* Get user's friends                                                         *)
+(* ************************************************************************** *)
+
+let get_friends ?(auth = None) ?(lang = None)
+    ?(index = None) ?(limit = None) user_id =
+  let url = Api.url ~parents:["users"; user_id; "friends"] ~auth:auth ~lang:lang
+    ~get:(Api.option_filter
+	    [("index", Option.map string_of_int index);
+	     ("limit", Option.map string_of_int limit)]) () in
+  Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
