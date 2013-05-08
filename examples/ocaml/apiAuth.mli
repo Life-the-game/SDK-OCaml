@@ -5,13 +5,11 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
+open ApiTypes
+
 (* ************************************************************************** *)
 (** Types                                                                     *)
 (* ************************************************************************** *)
-
-type login = string
-type password = string
-type token = string
 
 type t =
     {

@@ -60,7 +60,7 @@ type curlauth = (login * password)
 
 type auth =
   | Curl        of curlauth
-  | Token       of token
+  | Token       of token (* todo: should be ApiAuth.t *)
   | OAuthHTTP   of token  (* todo *)
   | OAuthToken  of token  (* todo *)
   | OAuthSecret of (login * token) (* todo *)

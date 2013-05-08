@@ -137,8 +137,8 @@ let go ?(auth = None) ?(rtype = RequestType.GET) url f =
 (* Various tools                                                              *)
 (* ************************************************************************** *)
 
-(* In case the method does not return anything on success, use this to handle *)
-(* the whole request (curljsoncontent + return unit result)                   *)
+(* In case the method does not return anything on success, use this to        *)
+(* handle the whole request (go + return unit result)                         *)
 let noop ?(auth = None) ?(rtype = RequestType.GET) url =
   go ~auth:auth ~rtype:rtype url (fun _ -> ())
 

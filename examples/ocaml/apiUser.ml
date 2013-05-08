@@ -30,7 +30,7 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-(* Take a json tree representing an achievement and return anachievement      *)
+(* Take a json tree representing a user and return an object user             *)
 let from_json c =
   let open Yojson.Basic.Util in
       {

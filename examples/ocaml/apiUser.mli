@@ -65,3 +65,9 @@ val edit :
   -> ?birthday:Date.t option
   -> id -> t Api.t
 
+(* ************************************************************************** *)
+(** Tools                                                                     *)
+(* ************************************************************************** *)
+
+(** Take a json tree representing a user and return an object user            *)
+val from_json : Yojson.Basic.json -> t

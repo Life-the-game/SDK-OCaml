@@ -61,8 +61,8 @@ val go :
 (** Various tools                                                             *)
 (* ************************************************************************** *)
 
-(** In case the method does not return anything on success, use this to handl *)
-(** the whole request (curljsoncontent + return unit result)                  *)
+(** In case the method does not return anything on success, use this to       *)
+(** handle the whole request (go + return unit result)                        *)
 val noop :
   ?auth:(ApiTypes.auth option)
   -> ?rtype:RequestType.t
