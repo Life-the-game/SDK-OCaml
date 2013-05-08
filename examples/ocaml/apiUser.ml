@@ -142,6 +142,16 @@ let be_friend_with ~auth ?(src_user = None) user_id =
 (* The authenticated user delete a friendship with a user                     *)
 (* ************************************************************************** *)
 
-let delete_friend ~auth user_id =
+let dont_be_friend_with ~auth user_id =
   Api.noop ~auth:(Some auth) ~rtype:DELETE
     (Api.url ~parents:["users"; user_id; "friends"] ~auth:(Some auth) ())
+
+(* ************************************************************************** *)
+(* Delete a friendship between a user and another user                        *)
+(*   Note: This method is for administrative purpose only                     *)
+(* ************************************************************************** *)
+
+let delete_friendship ~auth user_id user_in_list_id =
+  let url = Api.url ~auth:(Some auth)
+    ~parents:["users"; user_id; "friends"; user_in_list_id] () in
+  Api.noop ~auth:(Some auth) ~rtype:DELETE

@@ -79,11 +79,18 @@ val get_friends :
   -> id -> t ApiTypes.List.t Api.t
 
 (** The authenticated user request a friendship with a user                   *)
+(**   Note: The src_user is for administrative purpose only                   *)
 val be_friend_with :
   auth:auth -> ?src_user:id option -> id -> unit Api.t
 
 (** The authenticated user delete a friendship with a user                    *)
-val delete_friend : auth:auth -> id -> unit Api.t
+val dont_be_friend_with : auth:auth -> id -> unit Api.t
+
+(** Delete a friendship between a user and another user                       *)
+(** The first id is the user who own the list                                 *)
+(** The second id is the user in the list                                     *)
+(**   Note: This method is for administrative purpose only                    *)
+val delete_friendship : auth:auth -> id -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** Tools                                                                     *)
