@@ -11,21 +11,32 @@ NAME		=	api.cma
 SRC		=	apiError.ml \
 			apiTypes.ml \
 			api.ml \
+			\
 			apiAuth.ml \
 			apiMedia.ml \
 			apiAchievement.ml \
-			apiUser.ml
+			apiUser.ml \
+			apiConversation.ml \
+			\
+			apiDump.ml
 
 SRCI		=	apiError.mli \
 			apiTypes.mli \
 			api.mli \
+			\
 			apiAuth.mli \
 			apiMedia.mli \
 			apiAchievement.mli \
-			apiUser.mli
+			apiUser.mli \
+			apiConversation.mli \
+			\
+			apiDump.mli
 
 SRCDOC		=	api.ml
-PACKS		=	curl,yojson,calendar
+PACKS		=	extlib,curl,yojson,calendar
+
+TEST_NAME	=	example
+TEST_SRC	=	example.ml
 
 VERSION		=	1.0.0
 
@@ -44,6 +55,9 @@ all		:
 
 doc		:
 			$(OCAMLFIND) $(DOCCOMPILER) -html -package $(PACKS) $(SRCDOC)
+
+$(TEST_NAME)	:	all
+			$(OCAMLFIND) $(COMPILER) -o $(TEST_NAME) $(NAME) $(TEST_SRC) $(FLAGS)
 
 clean		:
 			$(RM) $(CMI) $(CMO)

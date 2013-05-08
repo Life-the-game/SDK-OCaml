@@ -7,5 +7,5 @@
 *.cmx
 *.cmxs
 *.cmxa
-api_example_ocaml
+example
 .depend
