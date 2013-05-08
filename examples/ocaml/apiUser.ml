@@ -1,6 +1,6 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit achievements                                *)
+(* Description: tools to get/edit users                                       *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
@@ -154,4 +154,4 @@ let dont_be_friend_with ~auth user_id =
 let delete_friendship ~auth user_id user_in_list_id =
   let url = Api.url ~auth:(Some auth)
     ~parents:["users"; user_id; "friends"; user_in_list_id] () in
-  Api.noop ~auth:(Some auth) ~rtype:DELETE
+  Api.noop ~auth:(Some auth) ~rtype:DELETE url
