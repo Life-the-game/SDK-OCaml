@@ -7,7 +7,6 @@
 
 open Api.RequestType
 open ApiTypes
-open ExtLib
 
 (* ************************************************************************** *)
 (* Types                                                                      *)
