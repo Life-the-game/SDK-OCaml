@@ -3,7 +3,7 @@ OCaml API example
 
 This is the example of usage of our API using the [OCaml programming language](http://ocaml.org/).
 
-It aims to be a complete library that allows you to integrate our API in any of your OCaml program.
+It is a complete library that allows you to integrate our API in any of your OCaml program.
 
 ## API Documentation
 
@@ -12,8 +12,7 @@ The full documentation of the API with the list of objects and methods:
 
 ## User corner
 
-Since the API is not released to the public and not stable for now, it is not possible to integrate
-this library into your project yet.
+Since the API is not released to the public and not stable yet, it is useless to integrate this library into your project for now.
 
 If you're interested in our project, you can follow the news
 [on our website](http://eip.epitech.eu/2014/lavieestunjeu/).
@@ -48,6 +47,14 @@ contains a bunch of useful functions that you can use to handle an API method.
 
 * The `url` function helps you generate URL that correspond to the API methods.
 * The `go` function pretty much handles everything for you (execute the method, parse the result, unwrap the elements, ...). It takes a converting function as a parameter.
+
+In certain cases, you may also use these functions instead of `go`:
+* When the API method doesn't return anything, use `noop`
+* When at least one requirement (auth or lang) should be provided, use `any`
+
+In addition, you can handle some parameters using these:
+* When some parameters are optional in the `get` list required by the `url` function, use `option_filter` to clean your list. Also checkout `ExtLib.Option.map` if you need to convert some parameters to string.
+* Methods that return an API List take two optional parameters (limit, index). The `pager` function take both + a list of other parameters and return a clean list for the `get` list for `url`
 
 ###### Requirements
 
@@ -93,31 +100,19 @@ let from_json content =
 (* The API method to get the strawberry                                       *)
 (* ************************************************************************** *)
 
-let get ?(auth = None) ?(lang = None) ?(message = None) strawberry_id =
+let get_strawberry ?(auth = None) ?(lang = None) ?(message = None) id =
+  let url = Api.url ~auth:auth ~lang:lang ~parents:["strawberries"; id]
+    ~get:(Api.option_filter [("message", message)]) () in
+  Api.any ~lang:lang ~auth:auth url from_json
 
-  match (auth, lang) with
-    (* Check if at least one requirement is provided *)
-    | (None, None) -> ApiTypes.Error ApiError.requirement_missing
-    | _            ->
-
-      (* Generate the URL *)
-      let url =
-        (Api.url ~auth:auth ~lang:lang (* Provide the auth and language! *)
-           ~parents:["strawberries"; (string_of_int strawberry_id)]
-           ~get:(match message with (* This parameter is optional *)
-             | Some m -> [("message", m)]
-             | None   -> [])
-           ()) in
-
-      Api.go ~auth:auth url from_json
 ```
 
 This function's signature would be:
 ```ocaml
 val get :
-  ?auth:(ApiTypes.auth option)
-  -> ?lang:(ApiTypes.Lang.t option)
-  -> ?message:(string option)
+  ?auth:ApiTypes.auth option
+  -> ?lang:ApiTypes.Lang.t option
+  -> ?message:string option
   -> int
   -> t Api.t
   ```
