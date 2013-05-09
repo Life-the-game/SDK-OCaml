@@ -56,3 +56,10 @@ val edit :
 
 (** Delete an Achievement                                                     *)
 val delete : auth:auth -> id -> unit Api.t
+
+(* ************************************************************************** *)
+(** Tools                                                                     *)
+(* ************************************************************************** *)
+
+(** Take a json tree representing an achievement and return achievement       *)
+val from_json : Yojson.Basic.json -> t
