@@ -109,15 +109,6 @@ let edit ~auth ?(email = None) ?(password = None) ?(firstname = None)
   Api.go ~auth:(Some auth) ~rtype:PUT url from_json
 
 (* ************************************************************************** *)
-(* Get user's authentication tokens                                           *)
-(* ************************************************************************** *)
-
-let get_tokens ~auth ?(index = None) ?(limit = None) user_id =
-  let url = Api.url ~parents:["users"; user_id; "tokens"] ~auth:(Some auth)
-    ~get:(Api.pager index limit []) () in
-  Api.go ~auth:(Some auth) url (ApiTypes.List.from_json ApiAuth.from_json)
-
-(* ************************************************************************** *)
 (* Get user's friends                                                         *)
 (* ************************************************************************** *)
 

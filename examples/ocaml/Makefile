@@ -12,10 +12,10 @@ SRC		=	apiError.ml \
 			apiTypes.ml \
 			api.ml \
 			\
-			apiAuth.ml \
 			apiMedia.ml \
-			apiAchievement.ml \
 			apiUser.ml \
+			apiAuth.ml \
+			apiAchievement.ml \
 			apiActivity.ml \
 			apiConversation.ml \
 			apiAchievementStatus.ml \
@@ -26,10 +26,10 @@ SRCI		=	apiError.mli \
 			apiTypes.mli \
 			api.mli \
 			\
-			apiAuth.mli \
 			apiMedia.mli \
-			apiAchievement.mli \
 			apiUser.mli \
+			apiAuth.mli \
+			apiAchievement.mli \
 			apiActivity.mli \
 			apiConversation.mli \
 			apiAchievementStatus.mli \

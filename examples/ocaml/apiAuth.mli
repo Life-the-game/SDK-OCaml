@@ -14,7 +14,7 @@ open ApiTypes
 type t =
     {
       info   : ApiTypes.Info.t;
-      user   : login;
+      user   : ApiUser.t;
       token  : token;
       expire : ApiTypes.DateTime.t;
     }
@@ -33,12 +33,20 @@ val logout : t -> unit Api.t
 val get_token : token -> t Api.t
 
 (** Get your current active connection tokens                                 *)
-(**   Info: To get the tokens of another user, use ApiUser.get_tokens         *)
+(**   Note: To get the tokens of another user, use get_user                   *)
 val get :
   ?index:int option
   -> ?limit:int option
   -> ApiTypes.auth
   -> t ApiTypes.List.t Api.t
+
+(** Get user's authentication tokens                                          *)
+(**   Note: This method is for administrative purpose only                    *)
+val get_user :
+  auth:auth
+  -> ?index:int option
+  -> ?limit:int option
+  -> id -> t ApiTypes.List.t Api.t
 
 (* ************************************************************************** *)
 (** Tools                                                                     *)

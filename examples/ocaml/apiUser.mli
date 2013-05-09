@@ -24,6 +24,8 @@ type t =
       profile_url        : url;
     }
 
+
+
 (* ************************************************************************** *)
 (** Api Methods                                                               *)
 (* ************************************************************************** *)
@@ -64,13 +66,6 @@ val edit :
   -> ?gender:Gender.t option
   -> ?birthday:Date.t option
   -> id -> t Api.t
-
-(** Get user's authentication tokens                                          *)
-val get_tokens :
-  auth:auth
-  -> ?index:int option
-  -> ?limit:int option
-  -> id -> ApiAuth.t ApiTypes.List.t Api.t
 
 (** Get user's friends                                                        *)
 val get_friends :

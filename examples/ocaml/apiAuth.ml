@@ -6,21 +6,18 @@
 (* ************************************************************************** *)
 
 open Api.RequestType
+open ApiTypes
 
 (* ************************************************************************** *)
 (* Types                                                                      *)
 (* ************************************************************************** *)
 
-type login = string
-type password = string
-type token = string
-
 type t =
     {
-      info   : ApiTypes.Info.t;
-      user   : login;
+      info   : Info.t;
+      user   : ApiUser.t;
       token  : token;
-      expire : ApiTypes.DateTime.t;
+      expire : DateTime.t;
     }
 
 (* ************************************************************************** *)
@@ -31,10 +28,10 @@ type t =
 let from_json content =
   let open Yojson.Basic.Util in
       {
-	info   = ApiTypes.Info.from_json content;
-        user   = content |> member "user"  |> to_string;
+	info   = Info.from_json content;
+        user   = ApiUser.from_json (content |> member "user");
         token  = content |> member "token" |> to_string;
-        expire = ApiTypes.DateTime.of_string
+        expire = DateTime.of_string
           (content |> member "expire" |> to_string);
       }
 
@@ -67,10 +64,20 @@ let get_token token_id =
 
 (* ************************************************************************** *)
 (* Get your current active connection tokens                                  *)
-(*   Info: To get the tokens of another user, use ApiUser.get_tokens          *)
+(*   Note: To get the tokens of another user, use get_user                    *)
 (* ************************************************************************** *)
 
 let get ?(index = None) ?(limit = None) auth =
   let url = Api.url ~parents:["tokens"] ~auth:(Some auth)
     ~get:(Api.pager index limit []) () in
-  Api.go ~auth:(Some auth) url (ApiTypes.List.from_json from_json)
+  Api.go ~auth:(Some auth) url (List.from_json from_json)
+
+(* ************************************************************************** *)
+(* Get user's authentication tokens                                           *)
+(*   Note: This method is for administrative purpose only                     *)
+(* ************************************************************************** *)
+
+let get_user ~auth ?(index = None) ?(limit = None) user_id =
+  let url = Api.url ~parents:["users"; user_id; "tokens"] ~auth:(Some auth)
+    ~get:(Api.pager index limit []) () in
+  Api.go ~auth:(Some auth) url (List.from_json from_json)
