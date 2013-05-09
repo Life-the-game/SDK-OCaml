@@ -86,6 +86,7 @@ val option_filter :
 
 (** Methods that return an API List take two optional parameters.             *)
 (** This function take both + a list of other parameters and return final list*)
+(** Note that this function call option_filter.                               *)
 val pager :
   int option (* index *) -> int option (* limit *)
   -> (string * string option) list -> (string * string) list

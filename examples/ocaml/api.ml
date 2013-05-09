@@ -161,6 +161,7 @@ let option_filter l =
 
 (* Methods that return an API List take two optional parameters.              *)
 (* This function take both + a list of other parameters and return final list *)
+(* Note that this function call option_filter.                                *)
 let pager index limit list =
   option_filter ([("index", Option.map string_of_int index);
 		  ("limit", Option.map string_of_int limit)] @ list)
