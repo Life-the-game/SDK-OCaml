@@ -22,10 +22,12 @@ let error e =
 
 let list l f =
   print_endline "[List]";
-  print_endline ("  Total items: " ^
+  print_endline ("  Total items (server_size): " ^
 		    (string_of_int l.ApiTypes.List.server_size));
   print_endline ("  Index: " ^
 		    (string_of_int l.ApiTypes.List.index));
+  print_endline ("  Limit: " ^
+		    (string_of_int l.ApiTypes.List.limit));
   print_endline "  Items:";
   if List.length l.ApiTypes.List.items = 0
   then print_endline "    Empty list"

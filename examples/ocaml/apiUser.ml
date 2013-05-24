@@ -5,8 +5,8 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Api.RequestType
 open ApiTypes
+open Network
 
 (* ************************************************************************** *)
 (* Types                                                                      *)
@@ -54,17 +54,17 @@ let from_json c =
 
 let create ~login ~email ~password ~lang ?(firstname = None) ?(lastname = None)
     ?(gender = None) ?(birthday = None) () =
-  let url = Api.url ~parents:["users"] ~lang:(Some lang)
-    ~get:(Api.option_filter
-	    [("login", Some login);
-	     ("email", Some email);
-	     ("password", Some password);
-	     ("firstname", firstname);
-	     ("lastname", lastname);
-	     ("gender", Option.map Gender.to_string gender);
-	     ("birthday", Option.map Date.to_string birthday);
-	    ]) () in
-  Api.go ~rtype:POST url from_json
+  let url = Api.url ~parents:["users"] ~lang:(Some lang) () in
+  Api.go ~rtype:POST ~lang:(Some lang)
+    ~post:(PostList (Api.option_filter
+		       [("login", Some login);
+			("email", Some email);
+			("password", Some password);
+			("firstname", firstname);
+			("lastname", lastname);
+			("gender", Option.map Gender.to_string gender);
+			("birthday", Option.map Date.to_string birthday);
+		       ])) url from_json
 
 (* ************************************************************************** *)
 (* Get users                                                                  *)
@@ -124,9 +124,10 @@ let get_friends ?(auth = None) ?(lang = None)
 (* ************************************************************************** *)
 
 let be_friend_with ~auth ?(src_user = None) user_id =
-  let url = Api.url ~parents:["users"; user_id; "friends"] ~auth:(Some auth)
-    ~get:(Api.option_filter [("src_user_id", src_user)]) () in
-  Api.noop ~auth:(Some auth) ~rtype:POST url
+  let url =
+    Api.url ~parents:["users"; user_id; "friends"] ~auth:(Some auth) () in
+  Api.noop ~auth:(Some auth) ~rtype:POST
+    ~post:(PostList (Api.option_filter [("src_user_id", src_user)])) url
 
 (* ************************************************************************** *)
 (* The authenticated user delete a friendship with a user                     *)

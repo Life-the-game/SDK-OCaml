@@ -22,42 +22,31 @@ let base_url = "http://je.peux.pas.venir.ce.week.end.jai.poney.me/eipapi/"
 (* Network                                                                    *)
 (* ************************************************************************** *)
 
-module type REQUESTTYPE =
-sig
-  type t =
-    | GET
-    | POST
-    | PUT
-    | DELETE
-  val default   : t
-  val to_string : t -> string
-  val of_string : string -> t
-end
-module RequestType : REQUESTTYPE =
-struct
-  type t =
-    | GET
-    | POST
-    | PUT
-    | DELETE
-  let default = GET
-  let to_string = function
-    | GET    -> "GET"
-    | POST   -> "POST"
-    | PUT    -> "PUT"
-    | DELETE -> "DELETE"
-  let of_string = function
-    | "GET"    -> GET
-    | "POST"   -> POST
-    | "PUT"    -> PUT
-    | "DELETE" -> DELETE
-    | _        -> default
-end
-
 exception MyCurlExn of string
 
+let getpost_to_string (auth : ApiTypes.auth option)
+    (lang : ApiTypes.Lang.t option)  (l : (string * string) list) : string =
+  let l = match lang with
+    | Some lang -> (("lang", ApiTypes.Lang.to_string lang)::l)
+    | None      -> l in
+  let l = match auth with
+    | Some (ApiTypes.Token t) -> (("token", t)::l)
+    | _                       -> l (* todo: OAuth stuff *) in
+  let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
+  List.fold_left  f "" l
+
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
-let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
+let get_text_form_url ?(auth = None) ?(lang = None)
+    ?(rtype = ApiTypes.Network.default) ?(post = ApiTypes.Network.PostEmpty) url =
+  let post =
+    let open ApiTypes.Network in
+	(match post with
+	  | PostText s -> s
+	  | PostList l -> getpost_to_string auth lang l
+	  | PostEmpty  -> "") in
+  let auth = match auth with
+    | Some (ApiTypes.Curl auth) -> Some auth
+    | _                         -> None in
   let writer accum data =
     Buffer.add_string accum data;
     String.length data in
@@ -67,10 +56,11 @@ let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
   let text =
     try
       (let connection = Curl.init () in
-       Curl.set_customrequest connection (RequestType.to_string rtype);
+       Curl.set_customrequest connection (ApiTypes.Network.to_string rtype);
        Curl.set_errorbuffer connection errorBuffer;
        Curl.set_writefunction connection (writer result);
        Curl.set_followlocation connection true;
+       Curl.set_postfields connection post;
        Curl.set_url connection url;
        
        (match auth with
@@ -87,32 +77,23 @@ let get_text_form_url ?(auth=None) ?(rtype=RequestType.GET) url =
         raise (MyCurlExn !errorBuffer)
       | Failure s -> raise (MyCurlExn s) in
   let _ = Curl.global_cleanup () in
+  print_endline text;
   text
 
 (* Generate a formatted URL with get parameters                               *)
-let url ?(parents = []) ?(get = [])
-    ?(url = base_url) ?(auth = None) ?(lang = None) () =
-  let get = match lang with
-    | Some lang -> (("lang", ApiTypes.Lang.to_string lang)::get)
-    | None      -> get in
-  let get = match auth with
-    | Some (ApiTypes.Token t) -> (("token", t)::get)
-    | _                       -> get (* todo: OAuth stuff *) in
+let url ?(parents = []) ?(get = []) ?(url = base_url)
+    ?(auth = None) ?(lang = None) () =
   let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
   and get =
-    let url =
-      let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
-      (List.fold_left  f "" get) in
-    if (String.length url) = 0 then url else (String.set url 0 '?'; url) in
+    let str = getpost_to_string auth lang get in
+    if (String.length str) = 0 then str else (String.set str 0 '?'; str) in
   url ^ parents ^ get
 
 (* Handle an API method completely. Take a function to transform the json.    *)
-let go ?(auth = None) ?(rtype = RequestType.GET) url f =
+let go ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
+    ?(post = ApiTypes.Network.PostEmpty) url f =
   try (let result =
-	 get_text_form_url ~rtype:rtype
-	   ~auth:(match auth with
-	     | Some (ApiTypes.Curl auth) -> Some auth
-	     | _                         -> None) url in
+	 get_text_form_url ~rtype:rtype ~post:post ~lang:lang ~auth:auth url in
        let json = Yojson.Basic.from_string result in
        let open Yojson.Basic.Util in
            (let error_json = json |> member "error"
@@ -139,15 +120,17 @@ let go ?(auth = None) ?(rtype = RequestType.GET) url f =
 
 (* In case the method does not return anything on success, use this to        *)
 (* handle the whole request (go + return unit result)                         *)
-let noop ?(auth = None) ?(rtype = RequestType.GET) url =
-  go ~auth:auth ~rtype:rtype url (fun _ -> ())
+let noop ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
+    ?(post = ApiTypes.Network.PostEmpty) url =
+  go ~auth:auth ~lang:lang ~rtype:rtype ~post:post url (fun _ -> ())
 
 (* Check if at least one requirement (auth or lang) has been provided before  *)
 (* executing go                                                               *)
-let any ?(auth = None) ?(lang = None) ?(rtype = RequestType.GET) url f =
+let any ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
+    ?(post = ApiTypes.Network.PostEmpty) url f =
   match (auth, lang) with
     | (None, None) -> ApiTypes.Error ApiError.requirement_missing
-    | _            -> go ~auth:auth ~rtype:rtype url f
+    | _            -> go ~auth:auth ~lang:lang ~rtype:rtype ~post:post url f
 
 (* Clean an option list by removing all the "None" elements                   *)
 let option_filter l =

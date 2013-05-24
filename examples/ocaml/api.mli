@@ -24,19 +24,6 @@ val base_url : url
 (** Network                                                                   *)
 (* ************************************************************************** *)
 
-module type REQUESTTYPE =
-sig
-  type t =
-    | GET
-    | POST
-    | PUT
-    | DELETE
-  val default   : t
-  val to_string : t -> string
-  val of_string : string -> t
-end
-module RequestType : REQUESTTYPE
-
 (** Generate a formatted URL with get parameters                              *)
 (** Example: url ~parents:["a"; "b"] ~get:[("c", "d")] ~url:("http://g.com")  *)
 (**  Result: http://g.com/a/b?c=d                                             *)
@@ -52,7 +39,9 @@ val url :
 (** Handle an API method completely. Take a function to transform the json.   *)
 val go :
   ?auth:(ApiTypes.auth option)
-  -> ?rtype:RequestType.t
+  -> ?lang:(Lang.t option)
+  -> ?rtype:Network.t
+  -> ?post:Network.post
   -> url
   -> (Yojson.Basic.json -> 'a)
   -> 'a t
@@ -65,7 +54,9 @@ val go :
 (** handle the whole request (go + return unit result)                        *)
 val noop :
   ?auth:(ApiTypes.auth option)
-  -> ?rtype:RequestType.t
+  -> ?lang:(Lang.t option)
+  -> ?rtype:Network.t
+  -> ?post:Network.post
   -> url
   -> unit t
 
@@ -74,7 +65,8 @@ val noop :
 val any :
   ?auth:(ApiTypes.auth option)
   -> ?lang:(ApiTypes.Lang.t option)
-  -> ?rtype:RequestType.t
+  -> ?rtype:Network.t
+  -> ?post:Network.post
   -> url
   -> (Yojson.Basic.json -> 'a)
   -> 'a t

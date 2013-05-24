@@ -5,8 +5,8 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Api.RequestType
 open ApiTypes
+open Network
 open ExtLib
 
 (* ************************************************************************** *)
@@ -70,9 +70,9 @@ let get ~auth ?(index = None) ?(limit = None) id_user =
 
 let post ~auth message id_user =
   let url =
-    Api.url ~parents:["users"; id_user; "conversation"] ~auth:(Some auth)
-      ~get:[("message", message)] () in
-  Api.go ~auth:(Some auth) ~rtype:POST url message_from_json
+    Api.url ~parents:["users"; id_user; "conversation"] ~auth:(Some auth) () in
+  Api.go ~auth:(Some auth) ~rtype:POST
+    ~post:(PostList [("message", message)]) url message_from_json
 
 (* ************************************************************************** *)
 (* Delete a message in the conversation                                       *)

@@ -5,8 +5,8 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Api.RequestType
 open ApiTypes
+open Network
 
 (* ************************************************************************** *)
 (* Types                                                                      *)

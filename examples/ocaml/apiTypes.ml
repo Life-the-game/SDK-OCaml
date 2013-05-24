@@ -14,6 +14,50 @@ type 'a response =
   | Error of ApiError.t
 
 (* ************************************************************************** *)
+(* Network stuff (GET POST ...)                                               *)
+(* ************************************************************************** *)
+
+module type NETWORK =
+sig
+  type t =
+    | GET
+    | POST
+    | PUT
+    | DELETE
+  type post =
+    | PostText of string
+    | PostList of (string * string) list
+    | PostEmpty
+  val default   : t
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Network : NETWORK =
+struct
+  type t =
+    | GET
+    | POST
+    | PUT
+    | DELETE
+  type post =
+    | PostText of string
+    | PostList of (string * string) list
+    | PostEmpty
+  let default = GET
+  let to_string = function
+    | GET    -> "GET"
+    | POST   -> "POST"
+    | PUT    -> "PUT"
+    | DELETE -> "DELETE"
+  let of_string = function
+    | "GET"    -> GET
+    | "POST"   -> POST
+    | "PUT"    -> PUT
+    | "DELETE" -> DELETE
+    | _        -> default
+end
+
+(* ************************************************************************** *)
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
 

@@ -5,7 +5,7 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Api.RequestType
+open ApiTypes.Network
 open ExtLib
 
 (* ************************************************************************** *)
@@ -67,13 +67,13 @@ let get_achievement ?(auth = None) ?(lang = None) id =
 (* ************************************************************************** *)
 
 let post ~auth ~name ?(description = None) () =
-  let get = Api.option_filter
-    [("name", Some name);
-     ("description", description);
-    ] in
   let url = Api.url ~parents:["achievements"]
-    ~get:get ~auth:(Some auth) () in
-  Api.go ~auth:(Some auth) ~rtype:POST url from_json
+    ~auth:(Some auth) () in
+  Api.go ~auth:(Some auth) ~rtype:POST
+    ~post:(PostList (Api.option_filter
+		       [("name", Some name);
+			("description", description);
+		       ])) url from_json
 
 (* ************************************************************************** *)
 (* Edit (put) an Achievement                                                  *)

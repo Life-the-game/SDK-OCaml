@@ -5,8 +5,8 @@
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-open Api.RequestType
 open ApiTypes
+open Network
 
 (* ************************************************************************** *)
 (* Types                                                                      *)
@@ -44,9 +44,9 @@ let from_json content =
 (* ************************************************************************** *)
 
 let login login password =
-  let url = Api.url ~parents:["tokens"]
-    ~get:[("login", login); ("password", password)] () in
-  Api.go ~rtype:POST url from_json
+  let url = Api.url ~parents:["tokens"] () in
+  Api.go ~rtype:POST
+    ~post:(PostList [("login", login); ("password", password)]) url from_json
 
 (* ************************************************************************** *)
 (* Logout (delete token)                                                      *)
