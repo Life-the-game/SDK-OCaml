@@ -6,33 +6,44 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+let lprint_string str = output_string !ApiConf.dump_output str
+let lprint_endline str = lprint_string (str ^ "\n")
+
+let verbose str =
+  if !ApiConf.verbose
+  then output_string !ApiConf.verbose_output (str ^ "\n")
+
+(* ************************************************************************** *)
 (* Dump results in a human readable format                                    *)
 (* ************************************************************************** *)
 
 let available_languages () =
-  print_string "  Available languages: ";
-  print_endline (String.concat ", " ApiTypes.Lang.list)
+  lprint_string "  Available languages: ";
+  lprint_endline (String.concat ", " ApiTypes.Lang.list)
 
 let error e =
   let open ApiError in
-      print_endline "[Error]";
-      print_endline ("  Message: " ^ e.message);
-      print_endline ("  Type: " ^ e.stype);
-      print_endline ("  Code: " ^ (string_of_int e.code))
+      lprint_endline "[Error]";
+      lprint_endline ("  Message: " ^ e.message);
+      lprint_endline ("  Type: " ^ e.stype);
+      lprint_endline ("  Code: " ^ (string_of_int e.code))
 
 let list l f =
-  print_endline "[List]";
-  print_endline ("  Total items (server_size): " ^
+  lprint_endline "[List]";
+  lprint_endline ("  Total items (server_size): " ^
 		    (string_of_int l.ApiTypes.List.server_size));
-  print_endline ("  Index: " ^
+  lprint_endline ("  Index: " ^
 		    (string_of_int l.ApiTypes.List.index));
-  print_endline ("  Limit: " ^
+  lprint_endline ("  Limit: " ^
 		    (string_of_int l.ApiTypes.List.limit));
-  print_endline "  Items:";
+  lprint_endline "  Items:";
   if List.length l.ApiTypes.List.items = 0
-  then print_endline "    Empty list"
+  then lprint_endline "    Empty list"
   else List.iter f l.ApiTypes.List.items
 
 let print a =
-  print_endline (ExtLib.dump a)
+  lprint_endline (ExtLib.dump a)
 

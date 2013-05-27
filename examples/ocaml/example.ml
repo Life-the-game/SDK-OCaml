@@ -10,6 +10,13 @@ let stop_on_error = false
 
 (* ************************************************************************** *)
 
+let _ =
+  let open ApiConf in
+      verbose := false;
+      base_url := "http://paysdu42.fr:2048/api/v1"
+
+(* ************************************************************************** *)
+
 type result = { mutable success: int; mutable failure: int; }
 let total = { success = 0; failure = 0; }
 
@@ -18,7 +25,7 @@ let test ?(f = ApiDump.print) = function
     ApiDump.error e; if stop_on_error then exit 1
   | ApiTypes.Result res -> total.success <- total.success + 1;
     if print_success
-    then f res else print_endline "OK"
+    then f res else ApiDump.lprint_endline "OK"
 
 let test_list = test ~f:(fun res -> ApiDump.list res ApiDump.print)
 
@@ -33,10 +40,10 @@ let _ =
   and password = "helloworld"
   and email = "db0lol@gmail.com" in
 
-  print_endline "## Get achievements without being logged in";
+  ApiDump.lprint_endline "## Get achievements without being logged in";
   test_list (ApiAchievement.get ~lang:(Some lang) ());
 
-  print_endline "## Create a new user";
+  ApiDump.lprint_endline "## Create a new user";
   test (ApiUser.create
 	  ~login:login
 	  ~email:email
@@ -48,14 +55,13 @@ let _ =
 	  ~birthday:(Some birthday)
 	  ());
 
-  print_endline "## Get an authentication token using this user";
+  ApiDump.lprint_endline "## Get an authentication token using this user";
   test (ApiAuth.login login password)
 
 
 let _ =
   let t = string_of_int (total.success + total.failure) in
-  print_endline ("
-
+  ApiDump.lprint_endline ("
 ####################################################
 
                       T O T A L
@@ -64,7 +70,5 @@ let _ =
   Failure    : " ^ (string_of_int total.failure) ^ " / " ^ t ^ "
 
 ####################################################
-
-
 
 ")

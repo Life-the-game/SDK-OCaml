@@ -8,8 +8,11 @@
 
 NAME		=	api.cma
 
-SRC		=	apiError.ml \
+SRC		=	\
 			apiTypes.ml \
+			apiConf.ml \
+			apiDump.ml \
+			apiError.ml \
 			api.ml \
 			\
 			apiMedia.ml \
@@ -20,10 +23,11 @@ SRC		=	apiError.ml \
 			apiConversation.ml \
 			apiAchievementStatus.ml \
 			\
-			apiDump.ml
 
-SRCI		=	apiError.mli \
+SRCI		=	\
 			apiTypes.mli \
+			apiDump.mli \
+			apiError.mli \
 			api.mli \
 			\
 			apiMedia.mli \
@@ -34,7 +38,6 @@ SRCI		=	apiError.mli \
 			apiConversation.mli \
 			apiAchievementStatus.mli \
 			\
-			apiDump.mli
 
 SRCDOC		=	api.ml
 PACKS		=	extlib,curl,yojson,calendar

@@ -12,13 +12,6 @@
 type 'a t = 'a ApiTypes.response
 
 (* ************************************************************************** *)
-(* Configuration                                                              *)
-(* ************************************************************************** *)
-
-(* The URL of the API Web service                                             *)
-let base_url = "http://je.peux.pas.venir.ce.week.end.jai.poney.me/eipapi/"
-
-(* ************************************************************************** *)
 (* Network                                                                    *)
 (* ************************************************************************** *)
 
@@ -77,17 +70,19 @@ let get_text_form_url ?(auth = None) ?(lang = None)
         raise (MyCurlExn !errorBuffer)
       | Failure s -> raise (MyCurlExn s) in
   let _ = Curl.global_cleanup () in
-  print_endline text;
+  ApiDump.verbose text;
   text
 
 (* Generate a formatted URL with get parameters                               *)
-let url ?(parents = []) ?(get = []) ?(url = base_url)
+let url ?(parents = []) ?(get = []) ?(url = !ApiConf.base_url)
     ?(auth = None) ?(lang = None) () =
   let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
   and get =
     let str = getpost_to_string auth lang get in
     if (String.length str) = 0 then str else (String.set str 0 '?'; str) in
-  url ^ parents ^ get
+  let url = url ^ parents ^ get in
+  ApiDump.verbose url;
+  url
 
 (* Handle an API method completely. Take a function to transform the json.    *)
 let go ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
