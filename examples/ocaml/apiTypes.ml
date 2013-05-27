@@ -248,7 +248,7 @@ end
 
 module type GENDER =
 sig
-  type t
+  type t = Male | Female | Other | Undefined
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
@@ -276,7 +276,7 @@ end
 
 module type PRIVACY =
 sig
-  type t
+  type t = Enemy | Pure | Hardcore | Discutable
   val default   : t
   val to_string : t -> string
   val of_string : string -> t

@@ -169,7 +169,7 @@ module List : LIST
 
 module type GENDER =
 sig
-  type t
+  type t = Male | Female | Other | Undefined
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
@@ -182,7 +182,7 @@ module Gender : GENDER
 
 module type PRIVACY =
 sig
-  type t
+  type t = Enemy | Pure | Hardcore | Discutable
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
