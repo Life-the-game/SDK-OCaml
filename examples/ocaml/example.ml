@@ -1,51 +1,70 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Example of usage of the API library                           *)
+(* Description: Test cases                                                    *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
 
-let input msg =
-  print_string (msg ^ "? ");
-  flush stdout;
-  input_line stdin
+let print_success = true
+let stop_on_error = false
 
 (* ************************************************************************** *)
-(* Example of usage of the API library                                        *)
-(* ************************************************************************** *)
+
+type result = { mutable success: int; mutable failure: int; }
+let total = { success = 0; failure = 0; }
+
+let test ?(f = ApiDump.print) = function
+  | ApiTypes.Error e -> total.failure <- total.failure + 1;
+    ApiDump.error e; if stop_on_error then exit 1
+  | ApiTypes.Result res -> total.success <- total.success + 1;
+    if print_success
+    then f res else print_endline "OK"
+
+let test_list = test ~f:(fun res -> ApiDump.list res ApiDump.print)
 
 let _ =
 
+  let login = "db0"
+  and lang = ApiTypes.Lang.default
+  and firstname = "Barbara"
+  and lastname = "Lepage"
+  and gender = ApiTypes.Gender.Female
+  and birthday = ApiTypes.Date.of_string "1991-05-30"
+  and password = "helloworld"
+  and email = "db0lol@gmail.com" in
+
   print_endline "## Get achievements without being logged in";
-  
-  match
-    ApiAchievement.get
-      ~lang:(Some (ApiTypes.Lang.from_string (ApiDump.available_languages ();
-  				     input "Language"))) () with
-  	| ApiTypes.Error e -> ApiDump.error e
-  	| ApiTypes.Result achievements ->
-  	  ApiDump.list achievements ApiDump.print;
-    
+  test_list (ApiAchievement.get ~lang:(Some lang) ());
+
   print_endline "## Create a new user";
+  test (ApiUser.create
+	  ~login:login
+	  ~email:email
+	  ~password:password
+	  ~lang:lang
+	  ~firstname:(Some firstname)
+	  ~lastname:(Some lastname)
+	  ~gender:(Some gender)
+	  ~birthday:(Some birthday)
+	  ());
 
-  let login = input "Login"
-  and password = input "Password"
-  and email = input "Email" in
-
-  match
-    ApiUser.create
-      ~login:login
-      ~email:email
-      ~password:password
-      ~lang:(ApiTypes.Lang.from_string "en")
-      (* additional parameters available: name, gender, birthday, ... *)
-      () with
-  	| ApiTypes.Error e -> ApiDump.error e
-  	| ApiTypes.Result user -> ApiDump.print user;
-
-  	  print_endline "## Get an authentication token using this user";
-	  match ApiAuth.login login password with 
-	    | ApiTypes.Error e -> ApiDump.error e
-	    | ApiTypes.Result auth -> ApiDump.print auth;
+  print_endline "## Get an authentication token using this user";
+  test (ApiAuth.login login password)
 
 
+let _ =
+  let t = string_of_int (total.success + total.failure) in
+  print_endline ("
+
+####################################################
+
+                      T O T A L
+
+  Success    : " ^ (string_of_int total.success) ^ " / " ^ t ^ "
+  Failure    : " ^ (string_of_int total.failure) ^ " / " ^ t ^ "
+
+####################################################
+
+
+
+")
