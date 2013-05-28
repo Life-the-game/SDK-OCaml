@@ -57,6 +57,28 @@ val edit :
 (** Delete an Achievement                                                     *)
 val delete : auth:auth -> id -> unit Api.t
 
+(** Get an achievement parents                                                *)
+val get_parents :
+  ?index:int option
+  -> ?limit:int option
+  -> ?auth:auth option
+  -> ?lang:Lang.t option
+  -> id -> t List.t Api.t
+
+(** Get an achievement children                                               *)
+val get_children :
+  ?index:int option
+  -> ?limit:int option
+  -> ?auth:auth option
+  -> ?lang:Lang.t option
+  -> id -> t List.t Api.t
+
+(** Add a child to a parent                                                   *)
+val add_child : auth:auth -> id -> id -> unit Api.t
+
+(** Remove a child from a parent                                              *)
+val delete_child : auth:auth -> id -> id -> unit Api.t
+
 (* ************************************************************************** *)
 (** Tools                                                                     *)
 (* ************************************************************************** *)
