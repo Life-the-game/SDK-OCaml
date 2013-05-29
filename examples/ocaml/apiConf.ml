@@ -20,3 +20,8 @@ let set_verbose_file str =
 let dump_output = ref stdout
 let set_dump_file str =
   dump_output := open_out str
+
+let set_all_output str =
+  let o = open_out str in
+  verbose_output := o;
+  dump_output := o
