@@ -9,10 +9,10 @@
 NAME		=	api.cma
 
 SRC		=	\
+			apiError.ml \
 			apiTypes.ml \
 			apiConf.ml \
 			apiDump.ml \
-			apiError.ml \
 			api.ml \
 			\
 			apiMedia.ml \
@@ -25,9 +25,9 @@ SRC		=	\
 			\
 
 SRCI		=	\
+			apiError.mli \
 			apiTypes.mli \
 			apiDump.mli \
-			apiError.mli \
 			api.mli \
 			\
 			apiMedia.mli \
@@ -67,7 +67,7 @@ $(TEST_NAME)	:	all
 			$(OCAMLFIND) $(COMPILER) -o $(TEST_NAME) $(NAME) $(TEST_SRC) $(FLAGS)
 
 clean		:
-			$(RM) $(CMI) $(CMO)
+			$(RM) $(CMI) $(CMO) example.cmi
 
 fclean		:	clean
 			$(RM) $(NAME)
