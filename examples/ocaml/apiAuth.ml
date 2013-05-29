@@ -14,10 +14,10 @@ open Network
 
 type t =
     {
-      info   : Info.t;
-      user   : ApiUser.t;
-      token  : token;
-      expire : DateTime.t;
+      info       : Info.t;
+      user       : ApiUser.t;
+      token      : token;
+      expiration : DateTime.t;
     }
 
 (* ************************************************************************** *)
@@ -28,11 +28,11 @@ type t =
 let from_json content =
   let open Yojson.Basic.Util in
       {
-	info   = Info.from_json content;
-        user   = ApiUser.from_json (content |> member "user");
-        token  = content |> member "token" |> to_string;
-        expire = DateTime.of_string
-          (content |> member "expire" |> to_string);
+	info       = Info.from_json content;
+        user       = ApiUser.from_json (content |> member "user");
+        token      = content |> member "token" |> to_string;
+        expiration = DateTime.of_string
+          (content |> member "expiration" |> to_string);
       }
 
 (* ************************************************************************** *)

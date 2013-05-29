@@ -13,10 +13,10 @@ open ApiTypes
 
 type t =
     {
-      info   : ApiTypes.Info.t;
-      user   : ApiUser.t;
-      token  : token;
-      expire : ApiTypes.DateTime.t;
+      info       : ApiTypes.Info.t;
+      user       : ApiUser.t;
+      token      : token;
+      expiration : ApiTypes.DateTime.t;
     }
 
 (* ************************************************************************** *)
