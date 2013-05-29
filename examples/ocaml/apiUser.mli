@@ -17,14 +17,13 @@ type t =
       login              : login;
       firstname          : string;
       lastname           : string;
-      avatar             : ApiMedia.Picture.t;
+      avatar             : ApiMedia.Picture.t option;
       gender             : Gender.t;
       birthday           : Date.t;
       is_friend          : bool option;
       profile_url        : url;
+      lang               : Lang.t;
     }
-
-
 
 (* ************************************************************************** *)
 (** Api Methods                                                               *)

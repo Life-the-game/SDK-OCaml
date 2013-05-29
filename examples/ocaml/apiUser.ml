@@ -18,11 +18,12 @@ type t =
       login              : login;
       firstname          : string;
       lastname           : string;
-      avatar             : ApiMedia.Picture.t;
+      avatar             : ApiMedia.Picture.t option;
       gender             : Gender.t;
       birthday           : Date.t;
       is_friend          : bool option;
       profile_url        : url;
+      lang               : Lang.t;
     }
 
 (* ************************************************************************** *)
@@ -32,16 +33,18 @@ type t =
 (* Take a json tree representing a user and return an object user             *)
 let from_json c =
   let open Yojson.Basic.Util in
+  let open ApiMedia in
       {
 	info        = Info.from_json c;
 	login       = c |> member "login" |> to_string;
 	firstname   = c |> member "firstname" |> to_string;
 	lastname    = c |> member "lastname" |> to_string;
-	avatar      = ApiMedia.Picture.from_json (c |> member "avatar");
+	avatar      = c |> member "avatar" |> to_option Picture.from_json;
 	gender      = Gender.of_string (c |> member "gender" |> to_string);
 	birthday    = Date.of_string (c |> member "birthday" |> to_string);
 	is_friend   = c |> member "is_friend" |> to_bool_option;
 	profile_url = c |> member "profile_url" |> to_string;
+	lang        = Lang.from_string (c |> member "lang" |> to_string);
       }
 
 (* ************************************************************************** *)
