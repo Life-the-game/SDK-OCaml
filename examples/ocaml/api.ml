@@ -15,8 +15,6 @@ type 'a t = 'a ApiTypes.response
 (* Network                                                                    *)
 (* ************************************************************************** *)
 
-exception MyCurlExn of string
-
 let getpost_to_string (auth : ApiTypes.auth option)
     (lang : ApiTypes.Lang.t option)  (l : (string * string) list) : string =
   let l = match lang with
@@ -26,7 +24,11 @@ let getpost_to_string (auth : ApiTypes.auth option)
     | Some (ApiTypes.Token t) -> (("token", t)::l)
     | _                       -> l (* todo: OAuth stuff *) in
   let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
-  List.fold_left  f "" l
+  let str = List.fold_left  f "" l in
+  if (String.length str) = 0 then str
+  else Str.string_after str 1
+
+exception MyCurlExn of string
 
 (* Return a text from a url using Curl and HTTP Auth (if needed)              *)
 let get_text_form_url ?(auth = None) ?(lang = None)
@@ -70,7 +72,9 @@ let get_text_form_url ?(auth = None) ?(lang = None)
         raise (MyCurlExn !errorBuffer)
       | Failure s -> raise (MyCurlExn s) in
   let _ = Curl.global_cleanup () in
-  ApiDump.verbose text;
+  ApiDump.verbose (" ## URL: " ^ url);
+  ApiDump.verbose (" ## POST data: " ^ post);
+  ApiDump.verbose (" ## Content received:\n" ^ text);
   text
 
 (* Generate a formatted URL with get parameters                               *)
@@ -79,10 +83,8 @@ let url ?(parents = []) ?(get = []) ?(url = !ApiConf.base_url)
   let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
   and get =
     let str = getpost_to_string auth lang get in
-    if (String.length str) = 0 then str else (String.set str 0 '?'; str) in
-  let url = url ^ parents ^ get in
-  ApiDump.verbose url;
-  url
+    if (String.length str) = 0 then str else "?" ^ str in
+  url ^ parents ^ get
 
 (* Handle an API method completely. Take a function to transform the json.    *)
 let go ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
