@@ -21,7 +21,7 @@ type t =
       gender             : Gender.t;
       birthday           : Date.t;
       is_friend          : bool option;
-      profile_url        : url;
+      url                : url;
       lang               : Lang.t;
     }
 

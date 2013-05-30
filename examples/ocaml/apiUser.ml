@@ -22,7 +22,7 @@ type t =
       gender             : Gender.t;
       birthday           : Date.t;
       is_friend          : bool option;
-      profile_url        : url;
+      url                : url;
       lang               : Lang.t;
     }
 
@@ -43,7 +43,7 @@ let from_json c =
 	gender      = Gender.of_string (c |> member "gender" |> to_string);
 	birthday    = Date.of_string (c |> member "birthday" |> to_string);
 	is_friend   = c |> member "is_friend" |> to_bool_option;
-	profile_url = c |> member "profile_url" |> to_string;
+	url         = c |> member "url" |> to_string;
 	lang        = Lang.from_string (c |> member "lang" |> to_string);
       }
 
