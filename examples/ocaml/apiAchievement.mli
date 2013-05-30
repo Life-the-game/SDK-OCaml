@@ -16,7 +16,7 @@ type t =
       info               : Info.t;
       name               : string;
       description        : string;
-      badge              : ApiMedia.Picture.t;
+      badge              : ApiMedia.Picture.t option;
       child_achievements : t List.t;
       url                : url;
     }

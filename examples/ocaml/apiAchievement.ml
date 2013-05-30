@@ -17,7 +17,7 @@ type t =
       info               : ApiTypes.Info.t;
       name               : string;
       description        : string;
-      badge              : ApiMedia.Picture.t;
+      badge              : ApiMedia.Picture.t option;
       child_achievements : t ApiTypes.List.t;
       url                : ApiTypes.url;
     }
@@ -33,7 +33,8 @@ let rec from_json c =
 	info               = ApiTypes.Info.from_json c;
 	name               = c |> member "name" |> to_string;
 	description        = c |> member "description" |> to_string;
-	badge              = c |> member "badge" |> ApiMedia.Picture.from_json;
+	badge              = (c |> member "badge"
+                                |> to_option ApiMedia.Picture.from_json);
 	child_achievements = ApiTypes.List.from_json
 	  from_json (c |> member "child_achievements");
 	url                = c |> member "url" |> to_string;
