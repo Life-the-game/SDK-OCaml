@@ -161,7 +161,7 @@ end
 module DateTime : DATETIME =
 struct
   type t = CalendarLib.Calendar.t
-  let format = Date.format ^ " %H:%M:%S"
+  let format = Date.format ^ "T%H:%M:%SZ"
 
   let to_string date =
     CalendarLib.Printer.Calendar.sprint format date
