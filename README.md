@@ -1,7 +1,7 @@
-OCaml API example
+OCaml API Library
 =================
 
-This is the example of usage of our API using the [OCaml programming language](http://ocaml.org/).
+This library is the implementation on client-side of the API using [OCaml programming language](http://ocaml.org/).
 
 It is a complete library that allows you to integrate our API in any of your OCaml program.
 
