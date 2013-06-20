@@ -14,6 +14,8 @@ The full documentation of the API with the list of objects and methods:
 
 Since the API is not released to the public and not stable yet, it is useless to integrate this library into your project for now.
 
+However, you can feed your curiosity with the `example.ml` file. It will show you how to use the library.
+
 If you're interested in our project, you can follow the news
 [on our website](http://eip.epitech.eu/2014/lavieestunjeu/).
 
@@ -116,3 +118,24 @@ val get :
   -> int
   -> t Api.t
   ```
+## Copyright/License
+
+
+     Copyright 2013 Barbara Lepage
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+     
+#### Latest version
+
+Latest version of this project is on GitHub:
+* https://github.com/LaVieEstUnJeu/Public-API/
