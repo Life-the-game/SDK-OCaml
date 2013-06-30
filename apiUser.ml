@@ -16,8 +16,8 @@ type t =
     {
       info               : Info.t;
       login              : login;
-      firstname          : string;
-      lastname           : string;
+      firstname          : string option;
+      lastname           : string option;
       avatar             : ApiMedia.Picture.t option;
       gender             : Gender.t;
       birthday           : Date.t;
@@ -37,8 +37,8 @@ let from_json c =
       {
 	info        = Info.from_json c;
 	login       = c |> member "login" |> to_string;
-	firstname   = c |> member "firstname" |> to_string;
-	lastname    = c |> member "lastname" |> to_string;
+	firstname   = c |> member "firstname" |> to_string_option;
+	lastname    = c |> member "lastname" |> to_string_option;
 	avatar      = c |> member "avatar" |> to_option Picture.from_json;
 	gender      = Gender.of_string (c |> member "gender" |> to_string);
 	birthday    = Date.of_string (c |> member "birthday" |> to_string);

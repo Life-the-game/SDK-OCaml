@@ -15,8 +15,8 @@ type t =
     {
       info               : Info.t;
       login              : login;
-      firstname          : string;
-      lastname           : string;
+      firstname          : string option;
+      lastname           : string option;
       avatar             : ApiMedia.Picture.t option;
       gender             : Gender.t;
       birthday           : Date.t;
