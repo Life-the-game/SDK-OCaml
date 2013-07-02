@@ -1,12 +1,12 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Medias (pictures, sounds, videos) stuff                       *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** Medias (pictures, sounds, videos) API methods                             *)
 
 (* ************************************************************************** *)
-(** Media                                                                     *)
+(** {3 Media}                                                                 *)
 (* ************************************************************************** *)
 
 module type MEDIA =
@@ -21,7 +21,7 @@ end
 module Media : MEDIA
 
 (* ************************************************************************** *)
-(** Picture                                                                   *)
+(** {3 Picture}                                                               *)
 (* ************************************************************************** *)
 
 module type PICTURE =
@@ -36,7 +36,7 @@ end
 module Picture : PICTURE
 
 (* ************************************************************************** *)
-(** Video                                                                     *)
+(** {3 Video}                                                                 *)
 (* ************************************************************************** *)
 
 module type VIDEO =

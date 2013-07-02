@@ -9,3 +9,4 @@
 *.cmxa
 example
 .depend
+html/

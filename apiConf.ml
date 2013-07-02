@@ -1,9 +1,9 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Configuration of the library                                  *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** Configuration of the library                                              *)
 
 (** The URL of the API Web service *)
 let base_url = ref "http://api.glife.fr"

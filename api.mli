@@ -1,25 +1,26 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Get a page from a url using curl and return a json tree       *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** Call the web-service to handle the API methods                            *)
 
 open ApiTypes
 
 (* ************************************************************************** *)
-(** Types                                                                     *)
+(** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
 type 'a t = 'a response
 
 (* ************************************************************************** *)
-(** Network                                                                   *)
+(** {3 Network}                                                               *)
 (* ************************************************************************** *)
 
-(** Generate a formatted URL with get parameters                              *)
-(** Example: url ~parents:["a"; "b"] ~get:[("c", "d")] ~url:("http://g.com")  *)
-(**  Result: http://g.com/a/b?c=d                                             *)
+(** Generate a formatted URL with get parameters
+
+{b Example:} [ url ~parents:["a"; "b"] ~get:[("c", "d")] ~url:("http://g.com") ]
+{b Result:}  [ http://g.com/a/b?c=d ]                                         *)
 val url :
   ?parents:(string list)
   -> ?get:((string * string) list)
@@ -40,11 +41,11 @@ val go :
   -> 'a t
 
 (* ************************************************************************** *)
-(** Various tools                                                             *)
+(** {3 Various tools}                                                         *)
 (* ************************************************************************** *)
 
-(** In case the method does not return anything on success, use this to       *)
-(** handle the whole request (go + return unit result)                        *)
+(** In case the method does not return anything on success, use this to
+    handle the whole request (go + return unit result)                        *)
 val noop :
   ?auth:(ApiTypes.auth option)
   -> ?lang:(Lang.t option)
@@ -53,8 +54,8 @@ val noop :
   -> url
   -> unit t
 
-(** Check if at least one requirement (auth or lang) has been provided before *)
-(** executing go                                                              *)
+(** Check if at least one requirement (auth or lang) has been provided before
+    executing go                                                              *)
 val any :
   ?auth:(ApiTypes.auth option)
   -> ?lang:(ApiTypes.Lang.t option)
@@ -69,9 +70,9 @@ val option_filter :
   (string * string option) list
   -> (string * string) list
 
-(** Methods that return an API List take two optional parameters.             *)
-(** This function take both + a list of other parameters and return final list*)
-(** Note that this function call option_filter.                               *)
+(** Methods that return an API List take two optional parameters.
+    This function take both + a list of other parameters and return final list.
+    {i Note that this function call option_filter.}                           *)
 val pager :
   int option (* index *) -> int option (* limit *)
   -> (string * string option) list -> (string * string) list

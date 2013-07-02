@@ -1,14 +1,14 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit users' achievements personal lists          *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** Achievement statuses API methods                                          *)
 
 open ApiTypes
 
 (* ************************************************************************** *)
-(** Types                                                                     *)
+(** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
 type t =
@@ -26,7 +26,7 @@ type t =
     }
 
 (* ************************************************************************** *)
-(** Api Methods                                                               *)
+(** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
 (** Get user's achievement status'                                            *)
@@ -35,9 +35,9 @@ val get :
   -> ?index:int option -> ?limit:int option
   -> id -> t ApiTypes.List.t Api.t
 
-(** Add a new achievement in a user's list                                    *)
-(**   The upload_picture argument is an optional string wich is the path of   *)
-(**   file corresponding to the picture you would like to upload.             *)
+(** Add a new achievement in a user's listo.
+    The upload_picture argument is an optional string wich is the path of
+    file corresponding to the picture you would like to upload.             *)
 val add :
   auth:auth -> achievement:id -> state_code:int -> message:string
   -> ?upload_picture:string option -> id -> t Api.t

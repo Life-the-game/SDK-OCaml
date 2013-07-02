@@ -39,7 +39,7 @@ SRCI		=	\
 			apiAchievementStatus.mli \
 			\
 
-SRCDOC		=	api.ml
+SRCDOC		=	$(SRCI) $(SRC)
 PACKS		=	extlib,curl,yojson,calendar
 
 TEST_NAME	=	example
@@ -60,8 +60,9 @@ RM		=	rm -f
 all		:	
 			$(OCAMLFIND) $(COMPILER) -a -o $(NAME) -package $(PACKS) $(SRCI) $(SRC) $(FLAGS)
 
-doc		:
-			$(OCAMLFIND) $(DOCCOMPILER) -html -package $(PACKS) $(SRCDOC)
+doc		:	all
+			mkdir -p html/
+			$(OCAMLFIND) $(DOCCOMPILER) -html -package $(PACKS) $(SRCDOC) -d html/
 
 $(TEST_NAME)	:	all
 			$(OCAMLFIND) $(COMPILER) -o $(TEST_NAME) $(NAME) $(TEST_SRC) $(FLAGS)

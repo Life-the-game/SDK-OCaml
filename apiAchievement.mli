@@ -1,14 +1,14 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit achievements                                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** Achievements API methods                                                  *)
 
 open ApiTypes
 
 (* ************************************************************************** *)
-(** Types                                                                     *)
+(** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
 type t =
@@ -22,7 +22,7 @@ type t =
     }
 
 (* ************************************************************************** *)
-(** Api Methods                                                               *)
+(** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
 (** Get Achievements                                                          *)
@@ -80,7 +80,7 @@ val add_child : auth:auth -> id -> id -> unit Api.t
 val delete_child : auth:auth -> id -> id -> unit Api.t
 
 (* ************************************************************************** *)
-(** Tools                                                                     *)
+(** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
 
 (** Take a json tree representing an achievement and return achievement       *)

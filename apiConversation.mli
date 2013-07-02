@@ -1,14 +1,14 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit user's conversations                        *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** User's conversations API methods                                          *)
 
 open ApiTypes
 
 (* ************************************************************************** *)
-(** Types                                                                     *)
+(** {3 Types}                                                                 *)
 (* ************************************************************************** *)
 
 type message =
@@ -25,7 +25,7 @@ type t =
     }
 
 (* ************************************************************************** *)
-(** Api Methods                                                               *)
+(** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
 (** Get the conversation                                                      *)

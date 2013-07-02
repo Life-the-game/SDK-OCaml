@@ -1,14 +1,14 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit users                                       *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
+(** Users API methods                                                         *)
 
 open ApiTypes
 
 (* ************************************************************************** *)
-(** Types                                                                     *)
+(** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
 type t =
@@ -26,7 +26,7 @@ type t =
     }
 
 (* ************************************************************************** *)
-(** Api Methods                                                               *)
+(** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
 (** Create a user                                                             *)
@@ -72,22 +72,22 @@ val get_friends :
   -> ?index:int option -> ?limit:int option
   -> id -> t ApiTypes.List.t Api.t
 
-(** The authenticated user request a friendship with a user                   *)
-(**   Note: The src_user is for administrative purpose only                   *)
+(** The authenticated user request a friendship with a user.
+    {i Note: The src_user is for administrative purpose only}                 *)
 val be_friend_with :
   auth:auth -> ?src_user:id option -> id -> unit Api.t
 
 (** The authenticated user delete a friendship with a user                    *)
 val dont_be_friend_with : auth:auth -> id -> unit Api.t
 
-(** Delete a friendship between a user and another user                       *)
-(** The first id is the user who own the list                                 *)
-(** The second id is the user in the list                                     *)
-(**   Note: This method is for administrative purpose only                    *)
+(** Delete a friendship between a user and another user
+    {ul {li The first id is the user who own the list}
+        {li The second id is the user in the list}}
+    {i Note: This method is for administrative purpose only}                  *)
 val delete_friendship : auth:auth -> id -> id -> unit Api.t
 
 (* ************************************************************************** *)
-(** Tools                                                                     *)
+(** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
 
 (** Take a json tree representing a user and return an object user            *)
