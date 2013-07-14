@@ -51,3 +51,7 @@ val get :
 val add :
   auth:auth -> achievement:id -> state_code:int -> message:string
   -> ?upload_picture:string option -> id -> t Api.t
+
+(** Get the details of one achievement status                               *)
+val get_one :
+  auth:auth -> id -> t Api.t

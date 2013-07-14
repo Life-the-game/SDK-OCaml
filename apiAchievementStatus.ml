@@ -104,3 +104,12 @@ let add ~auth ~achievement ~state_code ~message
     | None         -> go false ""
     | Some picture -> go true  ""
 (* todo: send a post data with the file, check file exists *)
+
+(* ************************************************************************** *)
+(* Get the details of one achievement status                                  *)
+(* ************************************************************************** *)
+
+let get_one ~auth id =
+  let url = Api.url ~parents:["achievement_statuses"; id]
+    ~auth:(Some auth) () in
+  Api.go ~auth:(Some auth) url from_json
