@@ -19,7 +19,7 @@ type t =
       lastname           : string option;
       avatar             : ApiMedia.Picture.t option;
       gender             : Gender.t;
-      birthday           : Date.t;
+      birthday           : Date.t option;
       is_friend          : bool option;
       url                : url;
       lang               : Lang.t;
@@ -92,3 +92,6 @@ val delete_friendship : auth:auth -> id -> id -> unit Api.t
 
 (** Take a json tree representing a user and return an object user            *)
 val from_json : Yojson.Basic.json -> t
+
+(** Return the full name using the first and last name or empty strings       *)
+val name : t -> string

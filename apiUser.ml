@@ -20,7 +20,7 @@ type t =
       lastname           : string option;
       avatar             : ApiMedia.Picture.t option;
       gender             : Gender.t;
-      birthday           : Date.t;
+      birthday           : Date.t option;
       is_friend          : bool option;
       url                : url;
       lang               : Lang.t;
@@ -41,11 +41,16 @@ let from_json c =
 	lastname    = c |> member "lastname" |> to_string_option;
 	avatar      = c |> member "avatar" |> to_option Picture.from_json;
 	gender      = Gender.of_string (c |> member "gender" |> to_string);
-	birthday    = Date.of_string (c |> member "birthday" |> to_string);
+	birthday    = c |> member "birthday" |> to_option
+	    (fun d -> Date.of_string (d |> to_string));
 	is_friend   = c |> member "is_friend" |> to_bool_option;
 	url         = c |> member "url" |> to_string;
 	lang        = Lang.from_string (c |> member "lang" |> to_string);
       }
+
+let name user =
+  let optstr = function | Some s -> s | None   -> "" in
+  ((optstr user.firstname) ^  " " ^ (optstr user.lastname))
 
 (* ************************************************************************** *)
 (* Api Methods                                                                *)
