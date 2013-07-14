@@ -15,6 +15,7 @@ The full documentation of the API with the list of objects and methods:
 Since the API is not released to the public and not stable yet, it is useless to integrate this library into your project for now.
 
 However, you can feed your curiosity with the `example.ml` file. It will show you how to use the library.
+You can also generate the documentation using `make doc`, or browse it [here](http://life.db0.fr/api/OCaml/).
 
 If you're interested in our project, you can follow the news
 [on our website](http://eip.epitech.eu/2014/lavieestunjeu/).
