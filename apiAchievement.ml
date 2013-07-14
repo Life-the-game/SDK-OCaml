@@ -59,7 +59,7 @@ let get ?(auth = None) ?(lang = None) ?(term = None) ?(index = None)
 (* ************************************************************************** *)
 
 let get_achievement ?(auth = None) ?(lang = None) id =
-  let url = Api.url ~parents:["achievements"; string_of_int id]
+  let url = Api.url ~parents:["achievements"; id]
     ~auth:auth ~lang:lang () in
   Api.any ~auth:auth ~lang:lang url from_json
 

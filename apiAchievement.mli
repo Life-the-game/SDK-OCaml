@@ -38,7 +38,7 @@ val get :
 val get_achievement :
   ?auth:auth option
   -> ?lang:Lang.t option
-  -> int -> t Api.t
+  -> id -> t Api.t
 
 (** Create a new Achievement                                                  *)
 val post :
