@@ -12,13 +12,35 @@ open Network
 (* Types                                                                      *)
 (* ************************************************************************** *)
 
+module type STATUS =
+sig
+  type t =
+    | Objective
+    | Achieved
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Status : STATUS =
+struct
+  type t =
+    | Objective
+    | Achieved
+  let to_string = function (* todo: update the api to use the correct words *)
+    | Objective -> "planned"
+    | Achieved  -> "done"
+  let of_string = function
+    | "planned" -> Objective
+    | "done"    -> Achieved
+    | _         -> Objective
+end
+
 type t =
     {
       info             : Info.t;
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
-      state            : string;
-      state_code       : int;
+      state            : Status.t;
+      state_code       : int; (* todo: wtf is that *)
       message          : string;
       approvers        : ApiUser.t ApiTypes.List.t;
       non_approvers    : ApiUser.t ApiTypes.List.t;
@@ -37,7 +59,7 @@ let from_json c =
 	info        = Info.from_json c;
 	owner            = ApiUser.from_json (c |> member "owner");
 	achievement      = ApiAchievement.from_json (c |> member "achievement");
-	state            = c |> member "state" |> to_string;
+	state            = Status.of_string (c |> member "state" |> to_string);
 	state_code       = c |> member "state_code" |> to_int;
 	message          = c |> member "message" |> to_string;
 	approvers        = (ApiTypes.List.from_json ApiUser.from_json
@@ -58,7 +80,7 @@ let from_json c =
 (* ************************************************************************** *)
 
 let get ?(auth = None) ?(lang = None) ?(index = None) ?(limit = None) user_id =
-  let url = Api.url ~parents:["users"; user_id; "achievement_status"]
+  let url = Api.url ~parents:["users"; user_id; "achievement_statuses"]
     ~get:(Api.pager index limit []) ~auth:auth ~lang:lang () in
   Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
 
@@ -71,7 +93,7 @@ let get ?(auth = None) ?(lang = None) ?(index = None) ?(limit = None) user_id =
 let add ~auth ~achievement ~state_code ~message
     ?(upload_picture = None) user_id =
   let go with_picture picture_content =
-    let url = Api.url ~parents:["users"; user_id; "achievement_status"]
+    let url = Api.url ~parents:["users"; user_id; "achievement_statuses"]
       ~get:[("achievement_id", achievement);
 	      ("state_code", string_of_int state_code);
 	      ("message", message);

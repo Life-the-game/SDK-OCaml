@@ -11,12 +11,22 @@ open ApiTypes
 (** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
+module type STATUS =
+sig
+  type t =
+    | Objective
+    | Achieved
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Status : STATUS
+
 type t =
     {
       info             : Info.t;
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
-      state            : string;
+      state            : Status.t;
       state_code       : int;
       message          : string;
       approvers        : ApiUser.t ApiTypes.List.t;
