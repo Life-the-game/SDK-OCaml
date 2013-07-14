@@ -112,7 +112,7 @@ let go ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
     | _ -> ApiTypes.Error ApiError.generic
 
 (* ************************************************************************** *)
-(* Various tools                                                              *)
+(* Various Developers tools                                                   *)
 (* ************************************************************************** *)
 
 (* In case the method does not return anything on success, use this to        *)
@@ -145,3 +145,16 @@ let option_filter l =
 let pager index limit list =
   option_filter ([("index", Option.map string_of_int index);
 		  ("limit", Option.map string_of_int limit)] @ list)
+
+(* ************************************************************************** *)
+(* Tools for users                                                            *)
+(* ************************************************************************** *)
+
+(* Get an optional auth. If it's None, then return the given language (or
+   default), if it's Some, return None.
+   This function is helpful when you want to call an API method regardless
+   the authentication. Just call it, give it your auth (or None) and the result
+   of this function as the lang argument                                      *)
+let either_lang ?(lang = ApiTypes.Lang.default) = function
+  | Some _ -> None
+  | None   -> Some lang

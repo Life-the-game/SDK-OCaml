@@ -14,6 +14,20 @@ open ApiTypes
 type 'a t = 'a response
 
 (* ************************************************************************** *)
+(** {3 Tools for users}                                                       *)
+(* ************************************************************************** *)
+
+(** Get an optional auth. If it's None, then return the given language (or
+    default), if it's Some, return None.
+    This function is helpful when you want to call an API method regardless
+    the authentication. Just call it, give it your auth (or None) and the
+    result of this function as the lang argument.                             *)
+val either_lang :
+  ?lang:ApiTypes.Lang.t -> ApiTypes.auth option -> ApiTypes.Lang.t option
+
+(** {e Everything below this line is for library's developers only.}          *)
+
+(* ************************************************************************** *)
 (** {3 Network}                                                               *)
 (* ************************************************************************** *)
 
