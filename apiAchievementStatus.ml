@@ -76,7 +76,7 @@ let from_json c =
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
-(* Get user's achievement status'                                             *)
+(* Get user's achievement status                                              *)
 (* ************************************************************************** *)
 
 let get ?(auth = None) ?(lang = None) ?(index = None) ?(limit = None) user_id =
@@ -106,6 +106,15 @@ let add ~auth ~achievement ~state_code ~message
 (* todo: send a post data with the file, check file exists *)
 
 (* ************************************************************************** *)
+(* Delete an achievement status                                               *)
+(* ************************************************************************** *)
+
+let delete ~auth user_id as_id =
+    let url = Api.url ~parents:["user"; user_id; "achievement_statuses"; as_id]
+        ~auth:(Some auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
+(* ************************************************************************** *)
 (* Get the details of one achievement status                                  *)
 (* ************************************************************************** *)
 
@@ -113,3 +122,104 @@ let get_one ~auth id =
   let url = Api.url ~parents:["achievement_statuses"; id]
     ~auth:(Some auth) () in
   Api.go ~auth:(Some auth) url from_json
+
+(* ************************************************************************** *)
+(* Delete user's achievement status                                           *)
+(* ************************************************************************** *)
+
+let delete ~auth id =
+  let url = Api.url ~parents:["achievement_statuses"; id] ~auth:(Some auth) () in
+  Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
+(* ************************************************************************** *)
+(* Edit (put) an achievement status                                           *)
+(* ************************************************************************** *)
+
+let edit ~auth ?(state_code = None) ?(message = None) id =
+    let url = Api.url ~parents:["achievement_statuses"; id] ~auth:(Some auth)
+        ~get:(Api.option_filter
+        [("state_code", Option.map string_of_int state_code);
+        ("message", message);
+        ]) () in
+    Api.go ~auth:(Some auth) ~rtype:PUT url from_json
+
+(* ************************************************************************** *)
+(* Get approvers for an achievement status                                    *)
+(* ************************************************************************** *)
+
+let get_approvers ~auth ?(index = None) ?(limit = None) id =
+    let url = Api.url ~parents:["achievement_statuses"; id; "approvers"] 
+        ~auth:(Some auth)
+        ~get:(Api.pager index limit []) () in
+    Api.go ~auth:(Some auth) url (List.from_json from_json)
+
+(* ************************************************************************** *)
+(* Approve an achievement status                                              *)
+(* ************************************************************************** *)
+
+let approve ~auth ?(src_user = None) id =
+    let url =
+        Api.url ~parents:["achievement_statuses"; id; "approvers"] ~auth:(Some
+        auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:POST
+        ~post:(PostList (Api.option_filter [("src_user_id", src_user)])) url
+
+(* ************************************************************************** *)
+(* Remove approving from an achievement status                                *)
+(* ************************************************************************** *)
+
+let remove_approve ~auth id =
+    let url = Api.url ~parents:["achievement_statuses"; id; "approvers"] ~auth:(Some
+        auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
+(* ************************************************************************** *)
+(* Remove an approver from an achievement status                              *)
+(* ************************************************************************** *)
+
+let remove_approver ~auth as_id user_id =
+    let url = Api.url ~parents:["achievement_statuses"; as_id; "approvers";
+        user_id] ~auth:(Some auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
+
+(* ************************************************************************** *)
+(* Get disapprovers for an achievement status                                 *)
+(* ************************************************************************** *)
+
+let get_disapprovers ~auth ?(index = None) ?(limit = None) id =
+    let url = Api.url ~parents:["achievement_statuses"; id; "disapprovers"] 
+        ~auth:(Some auth)
+        ~get:(Api.pager index limit []) () in
+    Api.go ~auth:(Some auth) url (List.from_json from_json)
+
+(* ************************************************************************** *)
+(* Disapprove an achievement status                                           *)
+(* ************************************************************************** *)
+
+let disapprove ~auth ?(src_user = None) id =
+    let url =
+        Api.url ~parents:["achievement_statuses"; id; "disapprovers"] ~auth:(Some
+        auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:POST
+        ~post:(PostList (Api.option_filter [("src_user_id", src_user)])) url
+
+(* ************************************************************************** *)
+(* Remove disapproving from an achievement status                             *)
+(* ************************************************************************** *)
+
+let remove_disapprove ~auth id =
+    let url = Api.url ~parents:["achievement_statuses"; id; "disapprovers"]
+    ~auth:(Some
+        auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
+(* ************************************************************************** *)
+(* Remove a disapprover from an achievement status                            *)
+(* ************************************************************************** *)
+
+let remove_disapprover ~auth as_id user_id =
+    let url = Api.url ~parents:["achievement_statuses"; as_id; "disapprovers";
+        user_id] ~auth:(Some auth) () in
+    Api.noop ~auth:(Some auth) ~rtype:DELETE url
+
