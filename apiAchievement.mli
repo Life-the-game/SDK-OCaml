@@ -13,12 +13,16 @@ open ApiTypes
 
 type t =
     {
-      info               : Info.t;
+      info               : ApiTypes.Info.t;
       name               : string;
-      description        : string;
+      description        : string option;
       badge              : ApiMedia.Picture.t option;
-      child_achievements : t List.t;
-      url                : url;
+      category           : bool;
+      child_achievements : t ApiTypes.List.t;
+      secret             : bool;
+      discoverable       : bool;
+      keywords           : string list;
+      url                : ApiTypes.url;
     }
 
 (* ************************************************************************** *)

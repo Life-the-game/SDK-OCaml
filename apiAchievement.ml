@@ -1,6 +1,5 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit achievements                                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
 (* ************************************************************************** *)
@@ -9,16 +8,20 @@ open ApiTypes.Network
 open ExtLib
 
 (* ************************************************************************** *)
-(* Types                                                                      *)
+(* Type                                                                       *)
 (* ************************************************************************** *)
 
 type t =
     {
       info               : ApiTypes.Info.t;
       name               : string;
-      description        : string;
+      description        : string option;
       badge              : ApiMedia.Picture.t option;
+      category           : bool;
       child_achievements : t ApiTypes.List.t;
+      secret             : bool;
+      discoverable       : bool;
+      keywords           : string list;
       url                : ApiTypes.url;
     }
 
@@ -32,11 +35,15 @@ let rec from_json c =
       {
 	info               = ApiTypes.Info.from_json c;
 	name               = c |> member "name" |> to_string;
-	description        = c |> member "description" |> to_string;
+	description        = c |> member "description" |> to_string_option;
 	badge              = (c |> member "badge"
                                 |> to_option ApiMedia.Picture.from_json);
+	category           = c |> member "category" |> to_bool;
 	child_achievements = ApiTypes.List.from_json
 	  from_json (c |> member "child_achievements");
+	secret             = c |> member "secret" |> to_bool;
+	discoverable       = c |> member "discoverable" |> to_bool;
+	keywords           = convert_each to_string (c |> member "keywords");
 	url                = c |> member "url" |> to_string;
       }
 
