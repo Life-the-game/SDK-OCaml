@@ -54,3 +54,8 @@ val get_user :
 
 (** Take a json tree representing an auth element and return an auth element  *)
 val from_json : Yojson.Basic.json -> t
+
+(** Transform an API object returned by the login function into an api type
+   required by most of the API methods                                        *)
+val auth_to_api : t -> ApiTypes.auth
+val opt_auth_to_api : t option -> ApiTypes.auth option

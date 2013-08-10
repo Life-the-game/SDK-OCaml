@@ -35,6 +35,15 @@ let from_json content =
           (content |> member "expiration" |> to_string);
       }
 
+(* Transform an API object returned by the login function into an api type
+   required by most of the API methods                                        *)
+let auth_to_api auth =
+  ApiTypes.Token auth.token
+
+let opt_auth_to_api = function
+  | Some auth -> Some (auth_to_api auth)
+  | None      -> None
+
 (* ************************************************************************** *)
 (* Api Methods                                                                *)
 (* ************************************************************************** *)
