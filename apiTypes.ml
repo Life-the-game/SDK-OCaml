@@ -123,6 +123,7 @@ sig
   val format : string
 
   val to_string : t -> string
+  val to_simple_string : t -> string
   val of_string : string -> t
 
   val empty : t
@@ -162,9 +163,12 @@ module DateTime : DATETIME =
 struct
   type t = CalendarLib.Calendar.t
   let format = Date.format ^ "T%H:%M:%SZ"
+  let simple_format = Date.format ^ " %H:%M"
 
   let to_string date =
     CalendarLib.Printer.Calendar.sprint format date
+  let to_simple_string date =
+    CalendarLib.Printer.Calendar.sprint simple_format date
   let of_string str_date =
     CalendarLib.Printer.Calendar.from_fstring format str_date
 
@@ -183,8 +187,9 @@ module type INFO =
 sig
   type t =
       {
-	id       : string;
-	creation : DateTime.t;
+	id           : string;
+	creation     : DateTime.t;
+	modification : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
 end
@@ -192,14 +197,17 @@ module Info : INFO =
 struct
   type t =
       {
-	id       : string;
-	creation : DateTime.t;
+	id           : string;
+	creation     : DateTime.t;
+	modification : DateTime.t;
       }
   let from_json c =
     let open Yojson.Basic.Util in
 	{
-	  id       = c |> member "id" |> to_string;
-	  creation = DateTime.of_string
+	  id           = c |> member "id" |> to_string;
+	  creation     = DateTime.of_string
+            (c |> member "creation" |> to_string);
+	  modification = DateTime.of_string
             (c |> member "creation" |> to_string);
 	}
 end
@@ -210,11 +218,20 @@ end
 
 module type LIST =
 sig
+  type order =
+    | Smart
+    | Date_modified
+    | Alphabetic
+    | Score
+    | Nb_comments
+  type direction = Asc | Desc
   type 'a t =
       {
         server_size : int;
         index       : int;
 	limit       : int;
+	order       : order;
+	direction   : direction;
         items       : 'a list;
       }
   (** Generate a list from the JSON tree using a converter function *)
@@ -222,22 +239,62 @@ sig
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
     -> 'a t
+  val default_order : order
+  val order_to_string : order -> string
+  val order_of_string : string -> order
+  val default_direction : direction
+  val direction_to_string : direction -> string
+  val direction_of_string : string -> direction
 end
 module List : LIST =
 struct
+  type order =
+    | Smart
+    | Date_modified
+    | Alphabetic
+    | Score
+    | Nb_comments
+  type direction = Asc | Desc
   type 'a t =
       {
         server_size : int;
         index       : int;
 	limit       : int;
+	order       : order;
+	direction   : direction;
         items       : 'a list;
       }
+  let default_order = Smart
+  let order_to_string = function
+    | Smart         -> "smart"
+    | Date_modified -> "date_modified"
+    | Alphabetic    -> "alphabetic"
+    | Score         -> "score"
+    | Nb_comments   -> "nb_comments"
+  let order_of_string = function
+    | "smart"         -> Smart
+    | "date_modified" -> Date_modified
+    | "alphabetic"    -> Alphabetic
+    | "score"         -> Score
+    | "Nb_comments"   -> Nb_comments
+    | _               -> default_order
+  let default_direction = Asc
+  let direction_to_string = function
+    | Asc  -> "asc"
+    | Desc -> "desc"
+  let direction_of_string = function
+    | "asc"  -> Asc
+    | "desc" -> Desc
+    | _      -> default_direction
   let from_json f c =
     let open Yojson.Basic.Util in
 	{
 	  server_size = c |> member "server_size" |> to_int;
 	  index       = c |> member "index"       |> to_int;
 	  limit       = c |> member "limit"       |> to_int;
+	  order       = order_of_string (c |> member "order" |> to_string);
+	  direction   = direction_of_string
+	    (c |> member "direction" |> to_string);
 	  items       = convert_each f (c |> member "items");
 	}
 end

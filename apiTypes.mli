@@ -103,6 +103,7 @@ sig
   val format : string
 
   val to_string : t -> string
+  val to_simple_string : t -> string
   val of_string : string -> t
 
   val empty : t
@@ -135,8 +136,9 @@ module type INFO =
 sig
   type t =
       {
-	id       : string;
-	creation : DateTime.t;
+	id           : string;
+	creation     : DateTime.t;
+	modification : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
 end
@@ -148,11 +150,20 @@ module Info : INFO
 
 module type LIST =
 sig
+  type order =
+    | Smart
+    | Date_modified
+    | Alphabetic
+    | Score
+    | Nb_comments
+  type direction = Asc | Desc
   type 'a t =
       {
         server_size : int;
         index       : int;
 	limit       : int;
+	order       : order;
+	direction   : direction;
         items       : 'a list;
       }
   (** Generate a list from the JSON tree using a converter function *)
@@ -160,6 +171,12 @@ sig
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
     -> 'a t
+  val default_order : order
+  val order_to_string : order -> string
+  val order_of_string : string -> order
+  val default_direction : direction
+  val direction_to_string : direction -> string
+  val direction_of_string : string -> direction
 end
 module List : LIST
 
