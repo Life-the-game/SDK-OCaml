@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 (** Pretty print the values returned by the API library                       *)
 
@@ -19,5 +19,5 @@ val verbose : string -> unit
 
 val available_languages : unit -> unit
 val error : ApiError.t -> unit
-val list : 'a ApiTypes.List.t -> ('a -> unit) -> unit
+val page  : 'a ApiTypes.Page.t -> ('a -> unit) -> unit
 val print : 'a -> unit

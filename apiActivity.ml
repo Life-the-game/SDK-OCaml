@@ -2,7 +2,7 @@
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Description: tools to get/edit user's activities                           *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 
 open ApiTypes
@@ -32,24 +32,24 @@ let from_json c =
 	activity_type = c |> member "activity_type" |> to_int;
       }
 
-(* ************************************************************************** *)
-(* Api Methods                                                                *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\* Api Methods                                                                *\) *)
+(* (\* ************************************************************************** *\) *)
 
-(* ************************************************************************** *)
-(* Get activities                                                             *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\* Get activities                                                             *\) *)
+(* (\* ************************************************************************** *\) *)
 
-let get ?(auth = None) ?(lang = None) ?(index = None) ?(limit = None) user_id =
-  let url = Api.url ~parents:["users"; user_id; "activities"]
-    ~get:(Api.pager index limit []) ~auth:auth ~lang:lang () in
-  Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json)
+(* let get ?(auth = None) ?(lang = None) ?(index = None) ?(limit = None) user_id = *)
+(*   let url = Api.url ~parents:["users"; user_id; "activities"] *)
+(*     ~get:(Api.pager index limit []) ~auth:auth ~lang:lang () in *)
+(*   Api.any ~auth:auth ~lang:lang url (ApiTypes.List.from_json from_json) *)
 
-(* ************************************************************************** *)
-(* Delete an activity                                                         *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\* Delete an activity                                                         *\) *)
+(* (\* ************************************************************************** *\) *)
 
-let delete ~auth user_id activity_id =
-  Api.noop ~auth:(Some auth) ~rtype:DELETE
-    (Api.url ~parents:["users"; user_id; "activities"; activity_id]
-       ~auth:(Some auth) ())
+(* let delete ~auth user_id activity_id = *)
+(*   Api.noop ~auth:(Some auth) ~rtype:DELETE *)
+(*     (Api.url ~parents:["users"; user_id; "activities"; activity_id] *)
+(*        ~auth:(Some auth) ()) *)

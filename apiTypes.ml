@@ -2,7 +2,7 @@
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Description: API Special Types                                             *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
@@ -24,13 +24,19 @@ sig
     | POST
     | PUT
     | DELETE
+  type parameters = (string * string) list
   type post =
     | PostText of string
-    | PostList of (string * string) list
+    | PostList of parameters
     | PostEmpty
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
+(* Clean an option list by removing all the "None" elements *)
+  val option_filter :
+    (string * string option) list
+    -> (string * string) list
+  val list_parameter : string list -> string
 end
 module Network : NETWORK =
 struct
@@ -39,9 +45,10 @@ struct
     | POST
     | PUT
     | DELETE
+  type parameters = (string * string) list
   type post =
     | PostText of string
-    | PostList of (string * string) list
+    | PostList of parameters
     | PostEmpty
   let default = GET
   let to_string = function
@@ -55,6 +62,16 @@ struct
     | "PUT"    -> PUT
     | "DELETE" -> DELETE
     | _        -> default
+(* Clean an option list by removing all the "None" elements *)
+  let option_filter l =
+    let rec aux acc = function
+      | []   -> List.rev acc
+      | (k, v)::t ->
+	(match v with
+	  | Some v -> aux ((k, v)::acc) t
+	  | None   -> aux acc t) in
+    aux [] l
+  let list_parameter = String.concat ","
 end
 
 (* ************************************************************************** *)
@@ -98,10 +115,7 @@ end
 (* Requirements (Auth, Lang, ...)                                             *)
 (* ************************************************************************** *)
 
-type curlauth = (login * password)
-
 type auth =
-  | Curl        of curlauth
   | Token       of token
   | OAuthHTTP   of token  (* todo *)
   | OAuthToken  of token  (* todo *)
@@ -110,7 +124,12 @@ type auth =
 type requirements =
   | Auth of auth
   | Lang of Lang.t
-  | NoneReq
+  | Both of (auth * Lang.t)
+
+(* Transform an optional auth into a requirement                              *)
+let opt_auth = function
+  | Some auth -> Some (Auth auth)
+  | None      -> None
 
 (* ************************************************************************** *)
 (* Date & Time                                                                *)
@@ -216,7 +235,7 @@ end
 (* List Pagination                                                            *)
 (* ************************************************************************** *)
 
-module type LIST =
+module type PAGE =
 sig
   type order =
     | Smart
@@ -234,7 +253,17 @@ sig
 	direction   : direction;
         items       : 'a list;
       }
-  (** Generate a list from the JSON tree using a converter function *)
+  type parameters =
+  (int option (* index*)
+   * int option (* limit*)
+   * order option
+   * direction option)
+  val default_parameters : parameters
+  (** Take a page and return the arguments to get the next one,
+      or None if there's no next page *)
+  val next : 'a t -> parameters option
+  val previous : 'a t -> parameters option
+  (** Generate a page from the JSON tree using a converter function *)
   val from_json :
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
@@ -246,7 +275,7 @@ sig
   val direction_to_string : direction -> string
   val direction_of_string : string -> direction
 end
-module List : LIST =
+module Page : PAGE =
 struct
   type order =
     | Smart
@@ -264,6 +293,24 @@ struct
 	direction   : direction;
         items       : 'a list;
       }
+  type parameters =
+  (int option (* index*)
+   * int option (* limit*)
+   * order option
+   * direction option)
+  let default_parameters = (None, None, None, None)
+  let next page =
+    let nextpage = page.index + page.limit in
+    if nextpage < page.server_size
+    then Some (Some nextpage, Some page.limit,
+	       Some page.order, Some page.direction)
+    else None
+  let previous page =
+    let previouspage = page.index + page.limit in
+    if previouspage >= 0
+    then Some (Some previouspage, Some page.limit,
+	       Some page.order, Some page.direction)
+    else None
   let default_order = Smart
   let order_to_string = function
     | Smart         -> "smart"

@@ -2,7 +2,7 @@
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Description: Module to pretty print the values returned by the API library *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
@@ -31,18 +31,18 @@ let error e =
       lprint_endline ("  Type: " ^ e.stype);
       lprint_endline ("  Code: " ^ (string_of_int e.code))
 
-let list l f =
-  lprint_endline "[List]";
+let page l f =
+  lprint_endline "[Page]";
   lprint_endline ("  Total items (server_size): " ^
-		    (string_of_int l.ApiTypes.List.server_size));
+		    (string_of_int l.ApiTypes.Page.server_size));
   lprint_endline ("  Index: " ^
-		    (string_of_int l.ApiTypes.List.index));
+		    (string_of_int l.ApiTypes.Page.index));
   lprint_endline ("  Limit: " ^
-		    (string_of_int l.ApiTypes.List.limit));
+		    (string_of_int l.ApiTypes.Page.limit));
   lprint_endline "  Items:";
-  if List.length l.ApiTypes.List.items = 0
-  then lprint_endline "    Empty list"
-  else List.iter f l.ApiTypes.List.items
+  if List.length l.ApiTypes.Page.items = 0
+  then lprint_endline "    Empty page"
+  else List.iter f l.ApiTypes.Page.items
 
 let print a =
   lprint_endline (ExtLib.dump a)

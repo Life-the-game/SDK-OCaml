@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 (** API Special Types                                                         *)
 
@@ -38,13 +38,19 @@ sig
     | POST
     | PUT
     | DELETE
+  type parameters = (string * string) list
   type post =
     | PostText of string
-    | PostList of (string * string) list
+    | PostList of parameters
     | PostEmpty
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
+(** Clean an option list by removing all the "None" elements *)
+  val option_filter :
+    (string * string option) list
+    -> (string * string) list
+  val list_parameter : string list -> string
 end
 module Network : NETWORK
 
@@ -78,10 +84,7 @@ module Lang : LANG
 (** {3 Requirements (Auth, Lang, ...)}                                        *)
 (* ************************************************************************** *)
 
-type curlauth = (login * password)
-
 type auth =
-  | Curl        of curlauth
   | Token       of token (* todo: should be ApiAuth.t *)
   | OAuthHTTP   of token  (* todo *)
   | OAuthToken  of token  (* todo *)
@@ -90,7 +93,10 @@ type auth =
 type requirements =
   | Auth of auth
   | Lang of Lang.t
-  | NoneReq
+  | Both of (auth * Lang.t)
+
+(** Transform an optional auth into a requirement                             *)
+val opt_auth : auth option -> requirements option
 
 (* ************************************************************************** *)
 (** {3 Date & Time}                                                           *)
@@ -148,7 +154,7 @@ module Info : INFO
 (** {3 List Pagination}                                                       *)
 (* ************************************************************************** *)
 
-module type LIST =
+module type PAGE =
 sig
   type order =
     | Smart
@@ -166,7 +172,17 @@ sig
 	direction   : direction;
         items       : 'a list;
       }
-  (** Generate a list from the JSON tree using a converter function *)
+  type parameters =
+  (int option (* index*)
+   * int option (* limit*)
+   * order option
+   * direction option)
+  val default_parameters : parameters
+  (** Take a page and return the arguments to get the next one,
+      or None if there's no next page *)
+  val next : 'a t -> parameters option
+  val previous : 'a t -> parameters option
+  (** Generate a page from the JSON tree using a converter function *)
   val from_json :
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
@@ -178,7 +194,7 @@ sig
   val direction_to_string : direction -> string
   val direction_of_string : string -> direction
 end
-module List : LIST
+module Page : PAGE
 
 (* ************************************************************************** *)
 (** {3 Gender}                                                                *)

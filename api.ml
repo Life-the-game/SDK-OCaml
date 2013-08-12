@@ -1,160 +1,183 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Get a page from a url using curl and return a json tree       *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml    *)
 (* ************************************************************************** *)
 
-(* ************************************************************************** *)
-(* Types                                                                      *)
-(* ************************************************************************** *)
-
-type 'a t = 'a ApiTypes.response
+open ApiTypes
 
 (* ************************************************************************** *)
-(* Network                                                                    *)
+(* Type                                                                       *)
 (* ************************************************************************** *)
 
-let getpost_to_string (auth : ApiTypes.auth option)
-    (lang : ApiTypes.Lang.t option)  (l : (string * string) list) : string =
-  let l = match lang with
-    | Some lang -> (("lang", ApiTypes.Lang.to_string lang)::l)
-    | None      -> l in
-  let l = match auth with
-    | Some (ApiTypes.Token t) -> (("token", t)::l)
-    | _                       -> l (* todo: OAuth stuff *) in
-  let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
-  let str = List.fold_left  f "" l in
-  if (String.length str) = 0 then str
-  else Str.string_after str 1
+type 'a t = 'a response
 
-exception MyCurlExn of string
+(* ************************************************************************** *)
+(* Curl Connection                                                            *)
+(* ************************************************************************** *)
 
-(* Return a text from a url using Curl and HTTP Auth (if needed)              *)
-let get_text_form_url ?(auth = None) ?(lang = None)
-    ?(rtype = ApiTypes.Network.default) ?(post = ApiTypes.Network.PostEmpty) url =
+let connection = ref None
+
+let writer accum data =
+  Buffer.add_string accum data;
+  String.length data
+let result = Buffer.create 4096
+let error_buffer = ref ""
+
+(* Connect to the API using your username and password on GitHub.             *)
+let connect () =
+  Curl.global_init Curl.CURLINIT_GLOBALALL;
+  let c = Curl.init () in
+  connection := Some c;
+  Curl.set_errorbuffer c error_buffer;
+  Curl.set_writefunction c (writer result);
+  Curl.set_followlocation c true;
+  Curl.set_useragent c !ApiConf.user_agent;
+  c
+
+let disconnect () =
+  match !connection with
+    | Some c ->
+      connection := None;
+      Curl.cleanup c;
+      Curl.global_cleanup ()
+    | _ -> ()
+
+(* ************************************************************************** *)
+(* Curl Method handling                                                       *)
+(* ************************************************************************** *)
+
+(* Return a text from a url using Curl and HTTP Auth (if needed).
+ * Error handling with exceptions to catch                                    *)
+let curl_perform ~path ~get ~post ~rtype () =
+
+  let parameters_to_string parameters =
+    let str =
+      let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
+      List.fold_left  f "" parameters in
+    if (String.length str) = 0 then str
+    else Str.string_after str 1 (* remove last & *) in
+
+  let c = match !connection with
+    | None -> connect () (* may throw exceptions *)
+    | Some c -> c in
+
+  let url =
+    let path = List.fold_left (fun f s -> f ^ "/" ^ s) "" path
+    and get =
+      let str = parameters_to_string get in
+      if (String.length str) = 0 then str else "?" ^ str in
+     !ApiConf.base_url ^ path ^ get in
+
   let post =
-    let open ApiTypes.Network in
+    let open Network in
 	(match post with
 	  | PostText s -> s
-	  | PostList l -> getpost_to_string auth lang l
+	  | PostList l -> parameters_to_string l
 	  | PostEmpty  -> "") in
-  let auth = match auth with
-    | Some (ApiTypes.Curl auth) -> Some auth
-    | _                         -> None in
-  let writer accum data =
-    Buffer.add_string accum data;
-    String.length data in
-  let result = Buffer.create 4096
-  and errorBuffer = ref "" in
-  Curl.global_init Curl.CURLINIT_GLOBALALL;
-  let text =
-    try
-      (let connection = Curl.init () in
-       Curl.set_customrequest connection (ApiTypes.Network.to_string rtype);
-       Curl.set_errorbuffer connection errorBuffer;
-       Curl.set_writefunction connection (writer result);
-       Curl.set_followlocation connection true;
-       Curl.set_postfields connection post;
-       Curl.set_url connection url;
-       
-       (match auth with
-         | Some (username, password) ->
-           (Curl.set_httpauth connection [Curl.CURLAUTH_BASIC];
-            Curl.set_userpwd connection (username ^ ":" ^ password))
-         | _ -> ());
 
-       Curl.perform connection;
-       Curl.cleanup connection;
-       Buffer.contents result)
-    with
-      | Curl.CurlException (_, _, _) ->
-        raise (MyCurlExn !errorBuffer)
-      | Failure s -> raise (MyCurlExn s) in
-  let _ = Curl.global_cleanup () in
-  ApiDump.verbose (" ## URL: " ^ url);
-  ApiDump.verbose (" ## POST data: " ^ post);
-  ApiDump.verbose (" ## Content received:\n" ^ text);
-  text
+    Buffer.clear result;
+    Curl.set_customrequest c (Network.to_string rtype);
+    Curl.set_postfields c post;
+    Curl.set_url c url;
+    Curl.perform c;
 
-(* Generate a formatted URL with get parameters                               *)
-let url ?(parents = []) ?(get = []) ?(url = !ApiConf.base_url)
-    ?(auth = None) ?(lang = None) () =
-  let parents = List.fold_left (fun f s -> f ^ "/" ^ s) "" parents
-  and get =
-    let str = getpost_to_string auth lang get in
-    if (String.length str) = 0 then str else "?" ^ str in
-  url ^ parents ^ get
+    let text = Buffer.contents result in
+    ApiDump.verbose (" ## URL: " ^ url);
+    ApiDump.verbose (" ## POST data: " ^ post);
+    ApiDump.verbose (" ## Content received:\n" ^ text);
+    text
+
+(* ************************************************************************** *)
+(* Internal tools for extra parameters                                        *)
+(* ************************************************************************** *)
+
+let req_parameters
+    (parameters : Network.parameters)
+    (req : requirements option)
+    : Network.parameters =
+  let auth_parameters = function
+    | Token t -> ("token", t)
+    | _       -> ("todo", "oauth")
+  and lang_parameters lang = ("lang", Lang.to_string lang) in
+  match req with
+    | None               -> parameters
+    | Some (Auth a)      -> (auth_parameters a)::parameters
+    | Some (Lang l)      -> (lang_parameters l)::parameters
+    | Some (Both (a, l)) ->
+      (auth_parameters a)::(lang_parameters l)::parameters
+
+let page_parameters
+    (parameters : Network.parameters)
+    (page : Page.parameters option)
+    : Network.parameters =
+  match page with
+  | Some (index, limit, order, direction) ->
+    Network.option_filter
+      [("index", Option.map string_of_int index);
+       ("limit", Option.map string_of_int limit);
+       ("order", Option.map Page.order_to_string order);
+       ("direction", Option.map
+	 Page.direction_to_string direction);
+      ]
+  | None -> []
+
+let extra_parameters
+    (parameters : Network.parameters)
+    (req : requirements option)
+    (page : Page.parameters option)
+    : Network.parameters =
+  page_parameters (req_parameters parameters req) page
+
+(* ************************************************************************** *)
+(* Make a call to the API                                                     *)
+(* ************************************************************************** *)
 
 (* Handle an API method completely. Take a function to transform the json.    *)
-let go ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
-    ?(post = ApiTypes.Network.PostEmpty) url f =
-  try (let result =
-	 get_text_form_url ~rtype:rtype ~post:post ~lang:lang ~auth:auth url in
-       let json = Yojson.Basic.from_string result in
-       let open Yojson.Basic.Util in
-           (let error_json = json |> member "error"
-	       |> to_option ApiError.from_json in
-	    match error_json with
-	      | Some error -> ApiTypes.Error error
-	      | None ->
-		let content = json |> member "element" in
-		ApiTypes.Result (f content)))
+let go
+    ?(rtype = Network.default)
+    ?(path = [])
+    ?(req = None)
+    ?(page = None)
+    ?(get = [])
+    ?(post = Network.PostEmpty)
+    from_json =
+
+  let get = extra_parameters get req page
+  and post = match post with
+    | Network.PostList l -> Network.PostList (extra_parameters l req page)
+    | p -> p in
+
+  try
+    (let result =
+       curl_perform ~path:path
+	 ~get:get ~post:post ~rtype:rtype () in
+     let json = Yojson.Basic.from_string result in
+     let open Yojson.Basic.Util in
+     let error_json = json |> member "error"
+	|> to_option ApiError.from_json in
+     match error_json with
+       | Some error -> Error error
+       | None ->
+	 let content = json |> member "element" in
+	 Result (from_json content))
+
   with
     | Yojson.Basic.Util.Type_error (msg, tree) ->
-      ApiTypes.Error (ApiError.invalid_json
+      Error (ApiError.invalid_json
 			(msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
     | Yojson.Json_error msg ->
-      ApiTypes.Error (ApiError.invalid_json msg)
-    | MyCurlExn msg ->
-      ApiTypes.Error (ApiError.network msg)
-    | Invalid_argument s -> ApiTypes.Error (ApiError.invalid_argument s)
-    | _ -> ApiTypes.Error ApiError.generic
+      Error (ApiError.invalid_json msg)
+    | Curl.CurlException (_, _, _) -> Error
+      (ApiError.network !error_buffer)
+    | Failure msg -> Error (ApiError.network msg)
+    | Invalid_argument s -> Error (ApiError.invalid_argument s)
+    | _ -> Error ApiError.generic
 
 (* ************************************************************************** *)
 (* Various Developers tools                                                   *)
 (* ************************************************************************** *)
 
-(* In case the method does not return anything on success, use this to        *)
-(* handle the whole request (go + return unit result)                         *)
-let noop ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
-    ?(post = ApiTypes.Network.PostEmpty) url =
-  go ~auth:auth ~lang:lang ~rtype:rtype ~post:post url (fun _ -> ())
-
-(* Check if at least one requirement (auth or lang) has been provided before  *)
-(* executing go                                                               *)
-let any ?(auth = None) ?(lang = None) ?(rtype = ApiTypes.Network.default)
-    ?(post = ApiTypes.Network.PostEmpty) url f =
-  match (auth, lang) with
-    | (None, None) -> ApiTypes.Error ApiError.requirement_missing
-    | _            -> go ~auth:auth ~lang:lang ~rtype:rtype ~post:post url f
-
-(* Clean an option list by removing all the "None" elements                   *)
-let option_filter l =
-  let rec aux acc = function
-    | []   -> List.rev acc
-    | (k, v)::t ->
-      (match v with
-	| Some v -> aux ((k, v)::acc) t
-	| None   -> aux acc t) in
-  aux [] l
-
-(* Methods that return an API List take two optional parameters.              *)
-(* This function take both + a list of other parameters and return final list *)
-(* Note that this function call option_filter.                                *)
-let pager index limit list =
-  option_filter ([("index", Option.map string_of_int index);
-		  ("limit", Option.map string_of_int limit)] @ list)
-
-(* ************************************************************************** *)
-(* Tools for users                                                            *)
-(* ************************************************************************** *)
-
-(* Get an optional auth. If it's None, then return the given language (or
-   default), if it's Some, return None.
-   This function is helpful when you want to call an API method regardless
-   the authentication. Just call it, give it your auth (or None) and the result
-   of this function as the lang argument                                      *)
-let either_lang ?(lang = ApiTypes.Lang.default) = function
-  | Some _ -> None
-  | None   -> Some lang
+(* Helper function to be used as the from_json parameter when methods does
+ * not return anything (unit)                                                 *)
+let noop _ = ()

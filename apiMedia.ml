@@ -2,38 +2,11 @@
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Description: Medias (pictures, sounds, videos) stuff                       *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 
 open Yojson.Basic.Util
-
-(* ************************************************************************** *)
-(* Media                                                                      *)
-(* ************************************************************************** *)
-
-module type MEDIA =
-sig
-  type t =
-      {
-	title : string;
-	url   : ApiTypes.url;
-      }
-  val from_json : Yojson.Basic.json -> t
-end
-
-module Media : MEDIA =
-struct
-  type t =
-      {
-	title : string;
-	url   : ApiTypes.url;
-      }
-  let from_json c =
-    {
-      title = c |> member "title" |> to_string;
-      url   = c |> member "url"   |> to_string;
-    }
-end
+open ApiTypes
 
 (* ************************************************************************** *)
 (* Picture                                                                    *)
@@ -43,8 +16,8 @@ module type PICTURE =
 sig
   type t =
     {
-      url_small : ApiTypes.url;
-      url_big   : ApiTypes.url;
+      url_small : url;
+      url_big   : url;
     }
   val from_json : Yojson.Basic.json -> t
 end
@@ -53,8 +26,8 @@ module Picture : PICTURE =
 struct
   type t =
     {
-      url_small : ApiTypes.url;
-      url_big   : ApiTypes.url;
+      url_small : url;
+      url_big   : url;
     }
   let from_json c =
     {
@@ -69,21 +42,58 @@ end
 
 module type VIDEO =
 sig
+  type provider =
+    | Youtube
+    | DailyMotion
+    | Vimeo
+    | Unknown
   type t =
     {
-      provider : ApiTypes.url;
+      provider  : provider;
+      video_url : url;
+      thumbnail : Picture.t;
     }
   val from_json : Yojson.Basic.json -> t
+  val provider_to_string : provider -> string
+  val provider_of_string : string -> provider
 end
 
 module Video : VIDEO =
 struct
+  type provider =
+    | Youtube
+    | DailyMotion
+    | Vimeo
+    | Unknown
   type t =
     {
-      provider : ApiTypes.url;
+      provider  : provider;
+      video_url : url;
+      thumbnail : Picture.t;
     }
+  let provider_to_string = function
+    | Youtube     -> "youtube"
+    | DailyMotion -> "dailymotion"
+    | Vimeo       -> "vimeo"
+    | Unknown     -> "unknown"
+  let provider_of_string = function
+    | "youtube"     -> Youtube
+    | "dailymotion" -> DailyMotion
+    | "vimeo"       -> Vimeo
+    | _             -> Unknown
   let from_json c =
     {
-      provider = c |> member "provider" |> to_string;
+      provider = provider_of_string (c |> member "provider" |> to_string);
+      video_url = c |> member "url" |> to_string;
+      thumbnail = Picture.from_json (c |> member "thumbnail");
     }
 end
+
+(* ************************************************************************** *)
+(* Media                                                                      *)
+(* ************************************************************************** *)
+
+type media =
+  | Picture of Picture.t
+  | Video   of Video.t
+

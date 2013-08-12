@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 (** Authentication API methods                                                *)
 
@@ -19,34 +19,34 @@ type t =
       expiration : ApiTypes.DateTime.t;
     }
 
-(* ************************************************************************** *)
-(** {3 API Methods}                                                           *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\** {3 API Methods}                                                           *\) *)
+(* (\* ************************************************************************** *\) *)
 
-(** Login (create token)                                                      *)
-val login : login -> password -> t Api.t
+(* (\** Login (create token)                                                      *\) *)
+(* val login : login -> password -> t Api.t *)
 
-(** Logout (delete token)                                                     *)
-val logout : t -> unit Api.t
+(* (\** Logout (delete token)                                                     *\) *)
+(* val logout : t -> unit Api.t *)
 
-(** Get information about a token                                             *)
-val get_token : token -> t Api.t
+(* (\** Get information about a token                                             *\) *)
+(* val get_token : token -> t Api.t *)
 
-(** Get your current active connection tokens.
-    {i Note: To get the tokens of another user, use {! ApiAuth.get_user}}     *)
-val get :
-  ?index:int option
-  -> ?limit:int option
-  -> ApiTypes.auth
-  -> t ApiTypes.List.t Api.t
+(* (\** Get your current active connection tokens. *)
+(*     {i Note: To get the tokens of another user, use {! ApiAuth.get_user}}     *\) *)
+(* val get : *)
+(*   ?index:int option *)
+(*   -> ?limit:int option *)
+(*   -> ApiTypes.auth *)
+(*   -> t ApiTypes.Page.t Api.t *)
 
-(** Get user's authentication tokens
-    {i Note: This method is for administrative purpose only}                  *)
-val get_user :
-  auth:auth
-  -> ?index:int option
-  -> ?limit:int option
-  -> id -> t ApiTypes.List.t Api.t
+(* (\** Get user's authentication tokens *)
+(*     {i Note: This method is for administrative purpose only}                  *\) *)
+(* val get_user : *)
+(*   auth:auth *)
+(*   -> ?index:int option *)
+(*   -> ?limit:int option *)
+(*   -> id -> t ApiTypes.Page.t Api.t *)
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

@@ -1,24 +1,11 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
 (** Medias (pictures, sounds, videos) API methods                             *)
 
-(* ************************************************************************** *)
-(** {3 Media}                                                                 *)
-(* ************************************************************************** *)
-
-module type MEDIA =
-sig
-  type t =
-      {
-	title : string;
-	url   : ApiTypes.url;
-      }
-  val from_json : Yojson.Basic.json -> t
-end
-module Media : MEDIA
+open ApiTypes
 
 (* ************************************************************************** *)
 (** {3 Picture}                                                               *)
@@ -41,10 +28,27 @@ module Picture : PICTURE
 
 module type VIDEO =
 sig
+  type provider =
+    | Youtube
+    | DailyMotion
+    | Vimeo
+    | Unknown
   type t =
     {
-      provider : ApiTypes.url;
+      provider  : provider;
+      video_url : url;
+      thumbnail : Picture.t;
     }
   val from_json : Yojson.Basic.json -> t
+  val provider_to_string : provider -> string
+  val provider_of_string : string -> provider
 end
 module Video : VIDEO
+
+(* ************************************************************************** *)
+(** {3 Media}                                                                 *)
+(* ************************************************************************** *)
+
+type media =
+  | Picture of Picture.t
+  | Video   of Video.t

@@ -3,7 +3,7 @@
 ## Description: Makefile compiling the OCaml example of the API               ##
 ## Author: Tuxkowo                                                            ##
 ## Modified by: db0 (db0company@gmail.com, http://db0.fr/)                    ##
-## Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   ##
+## Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   ##
 ## ########################################################################## ##
 
 NAME		=	api.cma
@@ -19,7 +19,6 @@ SRC		=	\
 			apiUser.ml \
 			apiAuth.ml \
 			apiAchievement.ml \
-			apiConversation.ml \
 			apiAchievementStatus.ml \
 			apiActivity.ml \
 			\
@@ -34,7 +33,6 @@ SRCI		=	\
 			apiUser.mli \
 			apiAuth.mli \
 			apiAchievement.mli \
-			apiConversation.mli \
 			apiAchievementStatus.mli \
 			apiActivity.mli \
 			\

@@ -2,8 +2,10 @@
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Description: Test cases                                                    *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/Public-API   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
 (* ************************************************************************** *)
+
+open ApiTypes
 
 (* ************************************************************************** *)
 (* Library configuration                                                      *)
@@ -12,8 +14,7 @@
 let _ =
   let open ApiConf in
       verbose := true;
-      base_url := "http://paysdu42.fr:2048/api/v1";
-      set_all_output "test.txt"
+      base_url := "http://paysdu42.fr:2048/api/v1"
 
 (* ************************************************************************** *)
 (* Tests configuration                                                        *)
@@ -41,8 +42,8 @@ let random_string (length : int) : string =
 let print_title str =
   ApiDump.lprint_endline ("\n\n\n## " ^ str)
 
-(* Function to display a list (give it to the test function)                  *)
-let listprint res = ApiDump.list res ApiDump.print
+(* Function to display a page (give it to the test function)                  *)
+let pageprint res = ApiDump.page res ApiDump.print
 
 (* Calculate the number of success/failure to display the result at the end   *)
 type result = { mutable success: int; mutable failure: int; }
@@ -54,7 +55,7 @@ let print_total () =
   ApiDump.lprint_endline ("
 ####################################################
 
-                      T O T A L
+		      T O T A L
 
   Success    : " ^ (string_of_int total.success) ^ " / " ^ t ^ "
   Failure    : " ^ (string_of_int total.failure) ^ " / " ^ t ^ "
@@ -68,14 +69,13 @@ let print_total () =
 (* ************************************************************************** *)
 
 let login = random_string 5
-and lang = ApiTypes.Lang.default
+and lang = Lang.default
 and firstname = "Barbara"
 and lastname = "Lepage"
-and gender = ApiTypes.Gender.Female
-and birthday = ApiTypes.Date.of_string "1991-05-30"
+and gender = Gender.Female
+and birthday = Date.of_string "1991-05-30"
 and password = "helloworld"
 and email = random_string 2 ^ "@gmail.com"
-and auth = ref (ApiTypes.Error ApiError.generic)
 and someone_else = "db0"
 
 (* ************************************************************************** *)
@@ -85,7 +85,7 @@ and someone_else = "db0"
 let test
     ?(f = ApiDump.print) (* function to display the result of the test        *)
     ?(t = false)         (* true if the test should fail (so it's a success)  *)
-    (result : 'a Api.t) : unit =
+    (result : 'a Api.t) : 'a Api.t =
   let _failure () = total.failure <- total.failure + 1
   and _success () = total.success <- total.success + 1 in
   let failure () = if t then _success () else _failure ()
@@ -105,80 +105,144 @@ let test
       f r;
       ApiDump.lprint_endline "\n  ----> SUCCESS\n"
     end in
-  match result with
-    | ApiTypes.Error  e -> on_error e
-    | ApiTypes.Result r -> on_result r
+  (match result with
+    | Error  e -> on_error e
+    | Result r -> on_result r);
+  result
+
+let auth_test
+    ?(f = ApiDump.print) (* function to display the result of the test        *)
+    ?(t = false)         (* true if the test should fail (so it's a success)  *)
+    (test_launcher : auth -> 'a Api.t) = function
+  | Error e -> print_endline "Auth test skipped"; Error e
+  | Result auth ->
+    test ~f:f ~t:t (test_launcher (ApiAuth.auth_to_api auth))
 
 (* ************************************************************************** *)
 (* It's testing time \o/                                                      *)
 (* ************************************************************************** *)
 
-let test_with_auth auth =
-  let auth = match auth with
-  | ApiTypes.Error e -> ApiTypes.Curl (login, password)
-  | ApiTypes.Result auth -> ApiTypes.Token auth.ApiAuth.token in
-  begin
-    print_title "Get my tokens";
-    test ~f:listprint (ApiAuth.get_user ~auth:auth login);
-
-    print_title "Add an achievement";
-    test (ApiAchievement.post
-            ~auth:auth
-            ~name:(random_string 5)
-            ~description:(Some (random_string 10))
-            ());
-
-    (* print_title "Get users"; *)
-    (* test  ~f:listprint (ApiUser.get ~auth:auth *)
-    (*                       ~term:(Some "a") ~limit:(Some 2) ()); *)
-
-    (* print_title "Get one user"; *)
-    (* test (ApiUser.get_user ~auth:(Some auth) login); *)
-
-(*     print_title "Delete a user (myself)"; *)
-(*     test (ApiUser.delete ~auth:auth login); *)
-
-(*     print_title "Get the user I just deleted (should fail because the \ *)
-(* auth token should not exists anymore)"; *)
-(*     test ~t:true (ApiUser.get_user ~auth:(Some auth) login); *)
-
-    (* print_title "Get my own authentication tokens"; *)
-    (* test ~f:listprint (ApiAuth.get auth); *)
-
-    (* print_title "Get someone else's authentication tokens"; *)
-    (* test ~f:listprint (ApiAuth.get_user ~auth:auth someone_else); *)
-
-    ApiDump.lprint_endline "End of auth test"
-  end
-
 let _ =
 
-  print_title "Get achievements without being logged in";
-  test ~f:listprint (ApiAchievement.get ~lang:(Some lang) ());
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Users tests (without auth)                    #";
+  ApiDump.lprint_endline "#################################################";
 
-  (* print_title "Get one user without login"; *)
-  (* test (ApiUser.get_user ~lang:(Some lang) someone_else); *)
+  (* print_title "Create a new user"; *)
+  (* test (ApiUser.create *)
+  (* 	  ~login:login *)
+  (* 	  ~email:email *)
+  (* 	  ~password:password *)
+  (* 	  ~lang:lang *)
+  (* 	  ~firstname:(Some firstname) *)
+  (* 	  ~lastname:(Some lastname) *)
+  (* 	  ~gender:(Some gender) *)
+  (* 	  ~birthday:(Some birthday) *)
+  (* 	  ()); *)
+  ApiDump.lprint_endline "No test";
 
-  print_title "Create a new user";
-  test (ApiUser.create
-          ~login:login
-          ~email:email
-          ~password:password
-          ~lang:lang
-          ~firstname:(Some firstname)
-          ~lastname:(Some lastname)
-          ~gender:(Some gender)
-          ~birthday:(Some birthday)
-          ());
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Authentication tests                          #";
+  ApiDump.lprint_endline "#################################################";
 
-  print_title "Get an authentication token using this user";
-  test (let _auth = ApiAuth.login login password in
-        auth := _auth; _auth);
+  (* print_title "Authenticate using a login and a password"; *)
+  (* let auth = test (ApiAuth.login ...); *)
+  ApiDump.lprint_endline "No test";
 
-  test_with_auth !auth;
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Achievements tests                            #";
+  ApiDump.lprint_endline "#################################################";
 
-(*   print_title "Get the user I just deleted (should fail because the \ *)
-(* user does not exists anymore)"; *)
-(*   test ~t:true (ApiUser.get_user ~lang:(Some lang) login); *)
+  print_title "Get achievements";
+  let page1 = test (ApiAchievement.get ~req:(Lang lang) ()) in
+  (* Note: It is also possible to search through achievements using "term" *)
+
+  print_title "Get next page of achievements";
+  (match page1 with (* Check the previous page*)
+    | Error e -> ApiDump.lprint_endline "The previous page failed"
+    | Result page1 ->
+      match Page.next page1 with (* Check if there is a next page *)
+	| None -> ApiDump.lprint_endline "It was the last page"
+	| Some nextpage ->
+	  ignore (test (ApiAchievement.get ~req:(Lang lang)
+			  ~page:nextpage ())));
+
+  print_title "Get one achievement";
+  (match page1 with (* Check if the list exists *)
+    | Error e -> ApiDump.lprint_endline "The previous tests failed"
+    | Result page ->
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      then ApiDump.lprint_endline "No elements available"
+      else ignore
+	(test (ApiAchievement.get_one ~req:(Lang lang)
+		 (* Get the id of the first element *)
+		 ((List.hd page.Page.items).ApiAchievement.info.Info.id))));
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Users tests (with auth)                       #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+(* PRIVATE *)
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Roles tests                                   #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+(* /PRIVATE *)
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Game Network tests                            #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Achievements statuses tests                   #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Achievement statuses comments tests           #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Playground tests                              #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Feed tests                                    #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Notifications tests                           #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# News tests                                    #";
+  ApiDump.lprint_endline "#################################################";
+
+  ApiDump.lprint_endline "No test";
 
   print_total ()
