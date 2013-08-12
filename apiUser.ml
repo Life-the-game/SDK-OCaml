@@ -89,7 +89,7 @@ let get ~auth ?(page = Page.default_parameters) ?(term = []) () =
 let get_one ?(auth = None) id =
   Api.go
     ~path:["users"; id]
-    ~req:(Api.opt_auth auth)
+    ~req:(opt_auth auth)
     from_json
 
 (* (\* ************************************************************************** *\) *)
