@@ -44,9 +44,6 @@ We use a bunch of custom types for all our methods in the API, available in the 
 
 The [`Api` module](http://life.db0.fr/api/OCaml/v2/Api.html) contains the [`go` function](http://life.db0.fr/api/OCaml/v2/Api.html#VALgo) that pretty much handles everything for you to call an API method and return its result (generate the URL, execute the method, parse the result, unwrap the elements, ...).
 
-To understand the purpose of each parameters of the `go` function,
-refer to [the documentation]
-
 ###### The (optional) `rtype` parameter
 
 This is the type of the HTTP request.
