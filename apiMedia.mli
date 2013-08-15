@@ -49,6 +49,9 @@ module Video : VIDEO
 (** {3 Media}                                                                 *)
 (* ************************************************************************** *)
 
-type media =
+type t =
   | Picture of Picture.t
   | Video   of Video.t
+  | Media   of (string * string)
+
+val from_json : Yojson.Basic.json -> t

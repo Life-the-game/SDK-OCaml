@@ -93,7 +93,13 @@ end
 (* Media                                                                      *)
 (* ************************************************************************** *)
 
-type media =
+type t =
   | Picture of Picture.t
   | Video   of Video.t
+  | Media   of (string * string)
 
+let from_json c =
+  match c |> member "type" |> to_string with
+    | "picture" -> Picture (Picture.from_json c)
+    | "video"   -> Video (Video.from_json c)
+    | other     -> Media (other, c |> to_string)
