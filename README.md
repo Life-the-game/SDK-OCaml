@@ -87,7 +87,7 @@ Default: `GET`
 This is the path in the URL corresponding to the API method.
 
 For instance:
-```
+```ocaml
 ... ~path:["a"; "b"; "c"] ...
 ```
 will call the API method:
@@ -111,7 +111,9 @@ depending on what the API method required. It should never take an optional `req
 since its the caller's job to inforce the requirements.
 * To easily transform an `auth` parameter of the caller into
 a `requirement` parameter of the `go` function, you can use the
-(`opt_auth` function)[http://life.db0.fr/api/OCaml/v2/ApiTypes.html#VALopt_auth]
+[`opt_auth` function](http://life.db0.fr/api/OCaml/v2/ApiTypes.html#VALopt_auth)
+
+Default: `None`
 
 ###### The (optional) `page` parameter
 
@@ -127,15 +129,20 @@ Default: `None`
 * When the content of a parameter is a list, you can use the `list_parameter` function to transform a list of string into a string
 * When some of the caller (API method function) parameters are optional, you can use the `option_filter` to clean your list. Also check out `ExtLib.Option.map` if you need to convert some optional parameters to string.
 
+Default: empty list
+
 ###### The (optional) `post` parameter
 
 * It's the POST data sent within the body of the HTTP request.
 * Its type is defined [here](http://life.db0.fr/api/OCaml/v2/ApiTypes.NETWORK.html#TYPEpost)
 
+Default: `PostEmpty`
+
 ###### The _required_ function parameter
 
 * This function will be called to transform the JSON tree into the OCaml object you want for your request.
 * When the method doesn't return anything, you can give the `noop` function as the function parameter to `go`.
+* When the object is a `Page`, you may use `(Page.from_json from_json)`
 
 ###### The return value
 
