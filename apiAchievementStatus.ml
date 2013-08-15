@@ -37,15 +37,13 @@ end
 type t =
     {
       info             : Info.t;
+      approvement      : Approvable.t;
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
-      state            : Status.t;
-      state_code       : int; (* todo: wtf is that *)
-      message          : string;
-      approvers        : ApiUser.t Page.t;
-      non_approvers    : ApiUser.t Page.t;
-      attached_picture : ApiMedia.Picture.t;
-      score            : int;
+      status           : Status.t;
+      message          : string option;
+      medias           : ApiMedia.t list;
+      url              : url;
     }
 
 (* ************************************************************************** *)
@@ -56,54 +54,113 @@ type t =
 let from_json c =
   let open Yojson.Basic.Util in
       {
-	info        = Info.from_json c;
-	owner            = ApiUser.from_json (c |> member "owner");
-	achievement      = ApiAchievement.from_json (c |> member "achievement");
-	state            = Status.of_string (c |> member "state" |> to_string);
-	state_code       = c |> member "state_code" |> to_int;
-	message          = c |> member "message" |> to_string;
-	approvers        = (Page.from_json ApiUser.from_json
-			      (c |> member "approvers"));
-	non_approvers    = (Page.from_json ApiUser.from_json
-			      (c |> member "non_approvers"));
-	attached_picture = (ApiMedia.Picture.from_json
-			      (c |> member "attached_picture"));
-	score            = c |> member "score" |> to_int;
+        info        = Info.from_json c;
+        approvement      = Approvable.from_json c;
+        owner            = ApiUser.from_json (c |> member "owner");
+        achievement      = ApiAchievement.from_json (c |> member "achievement");
+        status           = Status.of_string (c |> member "status" |> to_string);
+        message          = c |> member "message" |> to_string_option;
+        medias           = c |> member "medias" |>
+            convert_each ApiMedia.from_json;
+        url              = c |> member "url" |> to_string;
       }
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Api Methods                                                                *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* API Methods                                                                *)
+(* ************************************************************************** *)
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Get user's achievement status                                              *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Get achievement statuses                                                   *)
+(* ************************************************************************** *)
 
-(* let get ?(auth = None) ?(lang = None) ?(index = None) ?(limit = None) user_id = *)
-(*   let url = Api.url ~parents:["users"; user_id; "achievement_statuses"] *)
-(*     ~get:(Api.pager index limit []) ~auth:auth ~lang:lang () in *)
-(*   Api.any ~auth:auth ~lang:lang url (List.from_json from_json) *)
+let get ~req ?(page = Page.default_parameters) ?(term = []) ?(status = None) id =
+  Api.go
+    ~path:["users"; id; "achievement_statuses"]
+    ~req:(Some req)
+    ~page:(Some page)
+    ~get:(Network.option_filter
+            [("term", Some (Network.list_parameter term));
+             ("status", Option.map Status.to_string status)])
+    (Page.from_json from_json)
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Add a new achievement in a user's list                                     *\) *)
-(* (\*   The upload_picture argument is an optional string wich is the path of    *\) *)
-(* (\*   file corresponding to the picture you would like to upload.              *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Get one achievement status                                                 *)
+(* ************************************************************************** *)
 
-(* let add ~auth ~achievement ~state_code ~message *)
-(*     ?(upload_picture = None) user_id = *)
-(*   let go with_picture picture_content = *)
-(*     let url = Api.url ~parents:["users"; user_id; "achievement_statuses"] *)
-(*       ~get:[("achievement_id", achievement); *)
-(* 	      ("state_code", string_of_int state_code); *)
-(* 	      ("message", message); *)
-(* 	      ("upload_picture", string_of_bool with_picture); *)
-(* 	      ] ~auth:(Some auth) () in *)
-(*     Api.go ~auth:(Some auth) ~rtype:POST url from_json in *)
-(*   match upload_picture with *)
-(*     | None         -> go false "" *)
-(*     | Some picture -> go true  "" *)
-(* (\* todo: send a post data with the file, check file exists *\) *)
+let get_one ~req user_id achievement_id =
+  Api.go
+    ~path:["users"; user_id; "achievement_status"; achievement_id]
+    ~req:(Some req)
+    from_json
+
+(* ************************************************************************** *)
+(* Create an achievement status                                               *)
+(* ************************************************************************** *)
+
+let create ~auth ~achievement ~status
+(* PRIVATE *)
+    ?(user = None)
+(* /PRIVATE *)
+    ?(message = "") ?(medias = []) () =
+  let post_parameters =
+    Network.empty_filter
+      [("achievement_id", achievement);
+       ("status",         Status.to_string status);
+       ("message",        message);
+      ] in
+  let post = if List.length medias != 0
+    then Network.PostMultiPart
+      (post_parameters,
+       (List.map (fun media -> ("medias", media)) medias))
+    else Network.PostList post_parameters in
+  Api.go
+    ~rtype:POST
+    ~path:(
+(* PRIVATE *)
+    (match user with
+      | Some user_id -> ["users"; user_id]
+      | None         -> []) @
+(* /PRIVATE *)
+      ["achievement_statuses"])
+    ~req:(Some (Auth auth))
+    ~post:post
+    from_json
+
+(* ************************************************************************** *)
+(* Edit an achievement status                                                 *)
+(* ************************************************************************** *)
+
+let edit ~auth
+(* PRIVATE *)
+    ?(user = None)
+(* /PRIVATE *)
+    ?(status = None)
+    ?(message = None)
+    ?(add_medias = [])
+    ?(remove_medias = [])
+    id =
+  let post_parameters =
+    (Network.option_filter
+       [("status", Option.map Status.to_string status);
+        ("remove_medias", Some (Network.list_parameter remove_medias));
+       ]) @ (match message with Some m -> [("message", m)] | None -> []) in
+  let post = if List.length add_medias != 0
+    then Network.PostMultiPart
+      (post_parameters,
+       (List.map (fun media -> ("medias", media)) add_medias))
+    else Network.PostList post_parameters in
+  Api.go
+    ~rtype:PUT
+    ~path:(
+(* PRIVATE *)
+    (match user with
+      | Some user_id -> ["users"; user_id]
+      | None         -> []) @
+(* /PRIVATE *)
+      ["achievement_statuses"; id])
+    ~req:(Some (Auth auth))
+    ~post:post
+    from_json
 
 (* (\* ************************************************************************** *\) *)
 (* (\* Delete an achievement status                                               *\) *)
@@ -130,18 +187,6 @@ let from_json c =
 (* let delete ~auth id = *)
 (*   let url = Api.url ~parents:["achievement_statuses"; id] ~auth:(Some auth) () in *)
 (*   Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Edit (put) an achievement status                                           *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let edit ~auth ?(state_code = None) ?(message = None) id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; id] ~auth:(Some auth) *)
-(*         ~get:(Api.option_filter *)
-(*         [("state_code", Option.map string_of_int state_code); *)
-(*         ("message", message); *)
-(*         ]) () in *)
-(*     Api.go ~auth:(Some auth) ~rtype:PUT url from_json *)
 
 (* (\* ************************************************************************** *\) *)
 (* (\* Get approvers for an achievement status                                    *\) *)
