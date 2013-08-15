@@ -10,15 +10,46 @@ It is a complete library that allows you to integrate our API in any of your OCa
 The full documentation of the API with the list of objects and methods:
 * [API full documentation](http://life.db0.fr/api/OCaml/v2/).
 
+## Install it
+
+#### Requirements
+
+* OCaml
+* Lib OCaml: Extlib
+* Lib OCaml: Curl
+* Lib OCaml: Calendar
+* Lib OCaml: Yojson [Yojson](http://mjambon.com/yojson.html)
+ * + Yojson dependencies: [easy-format, biniou, cppo, yojson](http://mjambon.com/releases)
+
+#### Compile
+
+* Type `make` to compile the library.
+* Type `make example` to compile the unit tests.
+* To compile the libraby with your project: `ocamlfind ocamlc api.cma yourfile.ml -linkpkg`
+
 ## User corner
 
 Since the API is not released to the public and not stable yet, it is useless to integrate this library into your project for now.
 
-However, you can feed your curiosity with the `example.ml` file. It will show you how to use the library.
+However, you can feed your curiosity with the following sample of code, or skim through the `example.ml` file. It will show you how to use the library.
+
 You can also generate the documentation using `make doc`, or browse it [here](http://life.db0.fr/api/OCaml/v2/).
 
 If you're interested in our project, you can follow the news
 [on our website](http://eip.epitech.eu/2014/lavieestunjeu/).
+
+#### Sample
+
+```ocaml
+match ApiUser.get_one "Arthur42" with
+  | Error error -> ApiDump.error error
+  | Result user -> print_endline
+    ("Arthur42's gender is a " ^
+        match user.ApiUser.gender with
+          | Gender.Male   -> "guy"
+          | Gender.Female -> "girl"
+          | _             -> "weirdo")
+```
 
 ## Developer corner
 
