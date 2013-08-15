@@ -6,17 +6,20 @@
 (** API Special Types                                                         *)
 
 (* ************************************************************************** *)
-(* Summary:                                                                   *)
-(* - API Response                                                             *)
-(* - Network stuff (GET POST ...)                                             *)
-(* - Explicit types for parameters                                            *)
-(* - Languages                                                                *)
-(* - Requirements (Auth, Lang, ...)                                           *)
-(* - Date & Time                                                              *)
-(* - Information Element                                                      *)
-(* - List Pagination                                                          *)
-(* - Gender                                                                   *)
-(* - Privacy                                                                  *)
+(* {3 Summary}                                                                *)
+(* {ol                                                                        *)
+(* {- API Response }                                                          *)
+(* {- Explicit types for parameters }                                         *)
+(* {- Network stuff (GET POST ...) }                                          *)
+(* {- Languages }                                                             *)
+(* {- Requirements (Auth, Lang, ...) }                                        *)
+(* {- Date & Time }                                                           *)
+(* {- Information Element }                                                   *)
+(* {- Approvable elements }                                                   *)
+(* {- List Pagination }                                                       *)
+(* {- Gender }                                                                *)
+(* {- Privacy }                                                               *)
+(* }                                                                          *)
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
@@ -26,6 +29,23 @@
 type 'a response =
   | Result of 'a
   | Error of ApiError.t
+
+(* ************************************************************************** *)
+(** {3 Explicit types for parameters}                                         *)
+(* ************************************************************************** *)
+
+type id       = string
+type login    = string
+type password = string
+type email    = string
+type url      = string
+type token    = string
+type path     = string list
+type parameters = (string (* key *) * string (* value *)) list
+type file = (string (* name *) * string list (* path *))
+(* PRIVATE *)
+type ip       = string
+(* /PRIVATE *)
 
 (* ************************************************************************** *)
 (** {3 Network stuff (GET POST ...)}                                          *)
@@ -38,32 +58,21 @@ sig
     | POST
     | PUT
     | DELETE
-  type parameters = (string * string) list
   type post =
     | PostText of string
     | PostList of parameters
+    | PostMultiPart of parameters * file list
     | PostEmpty
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
-(** Clean an option list by removing all the "None" elements *)
-  val option_filter :
-    (string * string option) list
-    -> (string * string) list
+(** Clean an option list by removing all the "None" and empty elements.
+    Note that the order of the list will be reversed. *)
+  val option_filter  : (string * string option) list -> parameters
+  val empty_filter   :  parameters -> parameters
   val list_parameter : string list -> string
 end
 module Network : NETWORK
-
-(* ************************************************************************** *)
-(** {3 Explicit types for parameters}                                         *)
-(* ************************************************************************** *)
-
-type id       = string
-type login    = string
-type password = string
-type email    = string
-type url      = string
-type token    = string
 
 (* ************************************************************************** *)
 (** {3 Languages}                                                             *)
@@ -135,20 +144,39 @@ module Date : DATE
 
 (* ************************************************************************** *)
 (** {3 Information Element}                                                   *)
+(**  Almost all API object contains this object                               *)
 (* ************************************************************************** *)
 
-(* Almost all method data contains these information                          *)
 module type INFO =
 sig
   type t =
       {
-	id           : string;
-	creation     : DateTime.t;
-	modification : DateTime.t;
+        id           : string;
+        creation     : DateTime.t;
+        modification : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
 end
 module Info : INFO
+
+(* ************************************************************************** *)
+(** {3 Approvable elements}                                                   *)
+(**   Approvable elements contain this object AND MUST contain Info as well   *)
+(* ************************************************************************** *)
+
+module type APPROVABLE =
+sig
+  type t =
+      {
+        approvers_total    : int;
+        disapprovers_total : int;
+        approved           : bool option;
+        disapproved        : bool option;
+        score              : int;
+      }
+  val from_json : Yojson.Basic.json -> t
+end
+module Approvable : APPROVABLE
 
 (* ************************************************************************** *)
 (** {3 List Pagination}                                                       *)
@@ -167,9 +195,9 @@ sig
       {
         server_size : int;
         index       : int;
-	limit       : int;
-	order       : order;
-	direction   : direction;
+        limit       : int;
+        order       : order;
+        direction   : direction;
         items       : 'a list;
       }
   type parameters =

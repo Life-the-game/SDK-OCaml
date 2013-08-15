@@ -71,11 +71,14 @@ let curl_perform ~path ~get ~post ~rtype () =
 
   let post =
     let open Network in
-	(match post with
-	  | PostText s -> s
-	  | PostList l -> parameters_to_string l
-	  | PostEmpty  -> "") in
-
+        (match post with
+          | PostEmpty  -> ""
+          | PostText s -> s
+          | PostList l -> parameters_to_string l
+          | PostMultiPart (parameters, files) ->
+            parameters_to_string parameters
+            (* todo: files*)
+        ) in
     Buffer.clear result;
     Curl.set_customrequest c (Network.to_string rtype);
     Curl.set_postfields c post;
@@ -92,10 +95,8 @@ let curl_perform ~path ~get ~post ~rtype () =
 (* Internal tools for extra parameters                                        *)
 (* ************************************************************************** *)
 
-let req_parameters
-    (parameters : Network.parameters)
-    (req : requirements option)
-    : Network.parameters =
+let req_parameters (parameters : parameters) (req : requirements option)
+    : parameters =
   let auth_parameters = function
     | Token t -> ("token", t)
     | _       -> ("todo", "oauth")
@@ -107,26 +108,24 @@ let req_parameters
     | Some (Both (a, l)) ->
       (auth_parameters a)::(lang_parameters l)::parameters
 
-let page_parameters
-    (parameters : Network.parameters)
-    (page : Page.parameters option)
-    : Network.parameters =
+let page_parameters (parameters : parameters) (page : Page.parameters option)
+    : parameters =
   match page with
   | Some (index, limit, order, direction) ->
-    Network.option_filter
-      [("index", Option.map string_of_int index);
-       ("limit", Option.map string_of_int limit);
-       ("order", Option.map Page.order_to_string order);
-       ("direction", Option.map
-	 Page.direction_to_string direction);
-      ]
-  | None -> []
+    (Network.option_filter
+       [("index", Option.map string_of_int index);
+        ("limit", Option.map string_of_int limit);
+        ("order", Option.map Page.order_to_string order);
+        ("direction", Option.map
+          Page.direction_to_string direction);
+       ]) @ parameters
+  | None -> parameters
 
 let extra_parameters
-    (parameters : Network.parameters)
+    (parameters : parameters)
     (req : requirements option)
     (page : Page.parameters option)
-    : Network.parameters =
+    : parameters =
   page_parameters (req_parameters parameters req) page
 
 (* ************************************************************************** *)
@@ -151,21 +150,21 @@ let go
   try
     (let result =
        curl_perform ~path:path
-	 ~get:get ~post:post ~rtype:rtype () in
+         ~get:get ~post:post ~rtype:rtype () in
      let json = Yojson.Basic.from_string result in
      let open Yojson.Basic.Util in
      let error_json = json |> member "error"
-	|> to_option ApiError.from_json in
+        |> to_option ApiError.from_json in
      match error_json with
        | Some error -> Error error
        | None ->
-	 let content = json |> member "element" in
-	 Result (from_json content))
+         let content = json |> member "element" in
+         Result (from_json content))
 
   with
     | Yojson.Basic.Util.Type_error (msg, tree) ->
       Error (ApiError.invalid_json
-			(msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
+                        (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
     | Yojson.Json_error msg ->
       Error (ApiError.invalid_json msg)
     | Curl.CurlException (_, _, _) -> Error

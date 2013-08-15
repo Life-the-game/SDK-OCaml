@@ -14,6 +14,23 @@ type 'a response =
   | Error of ApiError.t
 
 (* ************************************************************************** *)
+(* Explicit types for parameters                                              *)
+(* ************************************************************************** *)
+
+type id       = string
+type login    = string
+type password = string
+type email    = string
+type url      = string
+type token    = string
+type path     = string list
+type parameters = (string (* key *) * string (* value *)) list
+type file = (string (* name *) * string list (* path *))
+(* PRIVATE *)
+type ip       = string
+(* /PRIVATE *)
+
+(* ************************************************************************** *)
 (* Network stuff (GET POST ...)                                               *)
 (* ************************************************************************** *)
 
@@ -24,18 +41,16 @@ sig
     | POST
     | PUT
     | DELETE
-  type parameters = (string * string) list
   type post =
     | PostText of string
     | PostList of parameters
+    | PostMultiPart of parameters * file list
     | PostEmpty
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
-(* Clean an option list by removing all the "None" elements *)
-  val option_filter :
-    (string * string option) list
-    -> (string * string) list
+  val option_filter  : (string * string option) list -> parameters
+  val empty_filter   :  parameters -> parameters
   val list_parameter : string list -> string
 end
 module Network : NETWORK =
@@ -45,10 +60,12 @@ struct
     | POST
     | PUT
     | DELETE
-  type parameters = (string * string) list
+  type parameters = (string (* key *) * string (* value *)) list
+  type file = (string (* name *) * string list (* path *))
   type post =
     | PostText of string
     | PostList of parameters
+    | PostMultiPart of parameters * file list
     | PostEmpty
   let default = GET
   let to_string = function
@@ -62,28 +79,25 @@ struct
     | "PUT"    -> PUT
     | "DELETE" -> DELETE
     | _        -> default
-(* Clean an option list by removing all the "None" elements *)
   let option_filter l =
     let rec aux acc = function
-      | []   -> List.rev acc
+      | []   -> acc
       | (k, v)::t ->
-	(match v with
-	  | Some v -> aux ((k, v)::acc) t
-	  | None   -> aux acc t) in
+        (match v with
+          | Some "" -> aux acc t
+          | Some v -> aux ((k, v)::acc) t
+          | None   -> aux acc t) in
+    aux [] l
+  let empty_filter l =
+    let rec aux acc = function
+      | []   -> acc
+      | (k, v)::t ->
+        if v = ""
+        then aux acc t
+        else aux ((k, v)::acc) t in
     aux [] l
   let list_parameter = String.concat ","
 end
-
-(* ************************************************************************** *)
-(* Explicit types for parameters                                              *)
-(* ************************************************************************** *)
-
-type id       = string
-type login    = string
-type password = string
-type email    = string
-type url      = string
-type token    = string
 
 (* ************************************************************************** *)
 (* Languages                                                                  *)
@@ -199,16 +213,16 @@ end
 
 (* ************************************************************************** *)
 (* Information Element                                                        *)
+(*   Almost all API object contain this object                                *)
 (* ************************************************************************** *)
 
-(* Almost all method data contains these information                          *)
 module type INFO =
 sig
   type t =
       {
-	id           : string;
-	creation     : DateTime.t;
-	modification : DateTime.t;
+        id           : string;
+        creation     : DateTime.t;
+        modification : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
 end
@@ -216,19 +230,57 @@ module Info : INFO =
 struct
   type t =
       {
-	id           : string;
-	creation     : DateTime.t;
-	modification : DateTime.t;
+        id           : string;
+        creation     : DateTime.t;
+        modification : DateTime.t;
       }
   let from_json c =
     let open Yojson.Basic.Util in
-	{
-	  id           = c |> member "id" |> to_string;
-	  creation     = DateTime.of_string
+        {
+          id           = c |> member "id" |> to_string;
+          creation     = DateTime.of_string
             (c |> member "creation" |> to_string);
-	  modification = DateTime.of_string
+          modification = DateTime.of_string
             (c |> member "creation" |> to_string);
-	}
+        }
+end
+
+(* ************************************************************************** *)
+(* Approvable elements                                                        *)
+(*   Approvable elements contain this object AND MUST contain Info as well    *)
+(* ************************************************************************** *)
+
+module type APPROVABLE =
+sig
+  type t =
+      {
+        approvers_total    : int;
+        disapprovers_total : int;
+        approved           : bool option;
+        disapproved        : bool option;
+        score              : int;
+      }
+  val from_json : Yojson.Basic.json -> t
+end
+module Approvable : APPROVABLE =
+struct
+  type t =
+      {
+        approvers_total    : int;
+        disapprovers_total : int;
+        approved           : bool option;
+        disapproved        : bool option;
+        score              : int;
+      }
+  let from_json c =
+    let open Yojson.Basic.Util in
+        {
+          approvers_total    = c |> member "approvers_total" |> to_int;
+          disapprovers_total = c |> member "disapprovers_total" |> to_int;
+          approved           = c |> member "approved" |> to_bool_option;
+          disapproved        = c |> member "disapproved" |> to_bool_option;
+          score              = c |> member "score" |> to_int;
+        }
 end
 
 (* ************************************************************************** *)
@@ -248,9 +300,9 @@ sig
       {
         server_size : int;
         index       : int;
-	limit       : int;
-	order       : order;
-	direction   : direction;
+        limit       : int;
+        order       : order;
+        direction   : direction;
         items       : 'a list;
       }
   type parameters =
@@ -288,9 +340,9 @@ struct
       {
         server_size : int;
         index       : int;
-	limit       : int;
-	order       : order;
-	direction   : direction;
+        limit       : int;
+        order       : order;
+        direction   : direction;
         items       : 'a list;
       }
   type parameters =
@@ -303,13 +355,13 @@ struct
     let nextpage = page.index + page.limit in
     if nextpage < page.server_size
     then Some (Some nextpage, Some page.limit,
-	       Some page.order, Some page.direction)
+               Some page.order, Some page.direction)
     else None
   let previous page =
     let previouspage = page.index + page.limit in
     if previouspage >= 0
     then Some (Some previouspage, Some page.limit,
-	       Some page.order, Some page.direction)
+               Some page.order, Some page.direction)
     else None
   let default_order = Smart
   let order_to_string = function
@@ -335,15 +387,15 @@ struct
     | _      -> default_direction
   let from_json f c =
     let open Yojson.Basic.Util in
-	{
-	  server_size = c |> member "server_size" |> to_int;
-	  index       = c |> member "index"       |> to_int;
-	  limit       = c |> member "limit"       |> to_int;
-	  order       = order_of_string (c |> member "order" |> to_string);
-	  direction   = direction_of_string
-	    (c |> member "direction" |> to_string);
-	  items       = convert_each f (c |> member "items");
-	}
+        {
+          server_size = c |> member "server_size" |> to_int;
+          index       = c |> member "index"       |> to_int;
+          limit       = c |> member "limit"       |> to_int;
+          order       = order_of_string (c |> member "order" |> to_string);
+          direction   = direction_of_string
+            (c |> member "direction" |> to_string);
+          items       = convert_each f (c |> member "items");
+        }
 end
 
 (* ************************************************************************** *)

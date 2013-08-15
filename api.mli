@@ -24,7 +24,7 @@ val go :
   -> ?path:string list            (** URL/path/ *)
   -> ?req:requirements option     (** auth or lang? *)
   -> ?page:Page.parameters option (** index, limit, ... *)
-  -> ?get:Network.parameters      (** GET parameters (URL?a=b&c=d) *)
+  -> ?get:parameters              (** GET parameters (URL?a=b&c=d) *)
   -> ?post:Network.post           (** POST parameters *)
   -> (Yojson.Basic.json -> 'a)    (** Function to transform from JSON *)
   -> 'a t
