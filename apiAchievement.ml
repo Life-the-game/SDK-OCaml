@@ -34,18 +34,18 @@ type t =
 let rec from_json c =
   let open Yojson.Basic.Util in
       {
-	info               = Info.from_json c;
-	name               = c |> member "name" |> to_string;
-	description        = c |> member "description" |> to_string_option;
-	badge              = (c |> member "badge"
+        info               = Info.from_json c;
+        name               = c |> member "name" |> to_string;
+        description        = c |> member "description" |> to_string_option;
+        badge              = (c |> member "badge"
                                 |> to_option ApiMedia.Picture.from_json);
-	category           = c |> member "category" |> to_bool;
-	child_achievements = Page.from_json
-	  from_json (c |> member "child_achievements");
-	secret             = c |> member "secret" |> to_bool;
-	discoverable       = c |> member "discoverable" |> to_bool;
-	keywords           = convert_each to_string (c |> member "keywords");
-	url                = c |> member "url" |> to_string;
+        category           = c |> member "category" |> to_bool;
+        child_achievements = Page.from_json
+          from_json (c |> member "child_achievements");
+        secret             = c |> member "secret" |> to_bool;
+        discoverable       = c |> member "discoverable" |> to_bool;
+        keywords           = convert_each to_string (c |> member "keywords");
+        url                = c |> member "url" |> to_string;
       }
 
 (* ************************************************************************** *)
@@ -62,7 +62,7 @@ let get ~req ?(page = Page.default_parameters)
     ~path:["achievements"]
     ~req:(Some req)
     ~page:(Some page)
-    ~get:[("term", Network.list_parameter term)]
+    ~get:(Network.empty_filter [("term", Network.list_parameter term)])
     (Page.from_json from_json)
 
 (* ************************************************************************** *)
@@ -84,9 +84,9 @@ let get_one ~req id =
 (*     ~auth:(Some auth) () in *)
 (*   Api.go ~auth:(Some auth) ~rtype:POST *)
 (*     ~post:(PostList (Api.option_filter *)
-(* 		       [("name", Some name); *)
-(* 			("description", description); *)
-(* 		       ])) url from_json *)
+(*                        [("name", Some name); *)
+(*                         ("description", description); *)
+(*                        ])) url from_json *)
 
 (* (\* ************************************************************************** *\) *)
 (* (\* Edit (put) an Achievement                                                  *\) *)
