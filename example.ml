@@ -42,6 +42,10 @@ let random_string (length : int) : string =
 let print_title str =
   ApiDump.lprint_endline ("\n\n\n## " ^ str)
 
+let impossible str =
+  ApiDump.lprint_endline ("  IMPOSSIBLE to run this test because "
+                          ^ str)
+
 (* Function to display a page (give it to the test function)                  *)
 let pageprint res = ApiDump.page res ApiDump.print
 
@@ -53,14 +57,14 @@ let total = { success = 0; failure = 0; }
 let print_total () =
   let t = string_of_int (total.success + total.failure) in
   ApiDump.lprint_endline ("
-####################################################
+#################################################
 
-		      T O T A L
+                      T O T A L
 
   Success    : " ^ (string_of_int total.success) ^ " / " ^ t ^ "
   Failure    : " ^ (string_of_int total.failure) ^ " / " ^ t ^ "
 
-####################################################
+#################################################
 
 ")
 
@@ -76,7 +80,9 @@ and gender = Gender.Female
 and birthday = Date.of_string "1991-05-30"
 and password = "helloworld"
 and email = random_string 2 ^ "@gmail.com"
-and someone_else = "db0"
+and message = random_string 30
+and picture = ["example.png"]
+and picture2 = ["example2.jpg"]
 
 (* ************************************************************************** *)
 (* Test generic function                                                      *)
@@ -114,7 +120,8 @@ let auth_test
     ?(f = ApiDump.print) (* function to display the result of the test        *)
     ?(t = false)         (* true if the test should fail (so it's a success)  *)
     (test_launcher : auth -> 'a Api.t) = function
-  | Error e -> print_endline "Auth test skipped"; Error e
+  | Error e -> impossible "it requires authentication that previously failed";
+    Error e
   | Result auth ->
     test ~f:f ~t:t (test_launcher (ApiAuth.auth_to_api auth))
 
@@ -128,27 +135,27 @@ let _ =
   ApiDump.lprint_endline "# Users tests (without auth)                    #";
   ApiDump.lprint_endline "#################################################";
 
-  (* print_title "Create a new user"; *)
-  (* test (ApiUser.create *)
-  (* 	  ~login:login *)
-  (* 	  ~email:email *)
-  (* 	  ~password:password *)
-  (* 	  ~lang:lang *)
-  (* 	  ~firstname:(Some firstname) *)
-  (* 	  ~lastname:(Some lastname) *)
-  (* 	  ~gender:(Some gender) *)
-  (* 	  ~birthday:(Some birthday) *)
-  (* 	  ()); *)
-  ApiDump.lprint_endline "No test";
+  print_title "Create a new user";
+  let user =
+    test (ApiUser.create
+              ~login:login
+              ~email:email
+              ~password:password
+              ~lang:lang
+              ~firstname:firstname
+              ~lastname:lastname
+              ~gender:gender
+              ~birthday:(Some birthday)
+            ~avatar:picture
+              ()) in
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Authentication tests                          #";
   ApiDump.lprint_endline "#################################################";
 
-  (* print_title "Authenticate using a login and a password"; *)
-  (* let auth = test (ApiAuth.login ...); *)
-  ApiDump.lprint_endline "No test";
+  print_title "Authenticate using a login and a password";
+  let auth = test (ApiAuth.login login password) in
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -156,36 +163,55 @@ let _ =
   ApiDump.lprint_endline "#################################################";
 
   print_title "Get achievements";
-  let page1 = test (ApiAchievement.get ~req:(Lang lang) ()) in
+  let achievements = test ~f:pageprint (ApiAchievement.get ~req:(Lang lang) ()) in
   (* Note: It is also possible to search through achievements using "term" *)
 
   print_title "Get next page of achievements";
-  (match page1 with (* Check the previous page*)
-    | Error e -> ApiDump.lprint_endline "The previous page failed"
-    | Result page1 ->
-      match Page.next page1 with (* Check if there is a next page *)
-	| None -> ApiDump.lprint_endline "It was the last page"
-	| Some nextpage ->
-	  ignore (test (ApiAchievement.get ~req:(Lang lang)
-			  ~page:nextpage ())));
+  (match achievements with (* Check the previous page*)
+    | Error e -> impossible "the previous page failed"
+    | Result achievements ->
+      match Page.next achievements with (* Check if there is a next page *)
+        | None -> ApiDump.lprint_endline "It was the last page"
+        | Some nextpage ->
+          ignore (test ~f:pageprint (ApiAchievement.get ~req:(Lang lang)
+                                       ~page:nextpage ())));
 
   print_title "Get one achievement";
-  (match page1 with (* Check if the list exists *)
-    | Error e -> ApiDump.lprint_endline "The previous tests failed"
+  (match achievements with (* Check if the list exists *)
+    | Error e -> impossible "the previous tests failed"
     | Result page ->
       if page.Page.server_size == 0 (* Check if there are elements to get *)
       then ApiDump.lprint_endline "No elements available"
-      else ignore
-	(test (ApiAchievement.get_one ~req:(Lang lang)
-		 (* Get the id of the first element *)
-		 ((List.hd page.Page.items).ApiAchievement.info.Info.id))));
+      else
+        let achievement_id =
+          (List.hd page.Page.items).ApiAchievement.info.Info.id in
+        ignore (test (ApiAchievement.get_one
+                        ~req:(Lang lang) achievement_id)));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Users tests (with auth)                       #";
   ApiDump.lprint_endline "#################################################";
 
-  ApiDump.lprint_endline "No test";
+  print_title "Get users";
+  let users = auth_test (fun auth ->
+    ApiUser.get ~auth:auth ~term:["th"] ()) auth in
+
+  print_title "Get one user...";
+  (match users with (* Check if the list exists *)
+    | Error e -> impossible "the previous tests failed"
+    | Result page ->
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      then ApiDump.lprint_endline "No elements available"
+      else
+        let user_id = (List.hd page.Page.items).ApiUser.info.Info.id in
+
+  print_title "with auth";
+        ignore (auth_test (fun auth ->
+          (ApiUser.get_one ~auth:(Some auth) user_id)) auth);
+
+  print_title "without auth";
+        ignore (test (ApiUser.get_one user_id)); ());
 
 (* PRIVATE *)
   ApiDump.lprint_endline "\n";
@@ -208,7 +234,61 @@ let _ =
   ApiDump.lprint_endline "# Achievements statuses tests                   #";
   ApiDump.lprint_endline "#################################################";
 
-  ApiDump.lprint_endline "No test";
+  print_title "Create an achievement status";
+  (match achievements with (* Check if some achievements exists *)
+    | Error e -> impossible "previously failed to get achievements"
+    | Result page ->
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      then ApiDump.lprint_endline "there's no achievement available"
+      else
+        let achievement_id =
+          (List.hd page.Page.items).ApiAchievement.info.Info.id in
+        ignore (auth_test (fun auth ->
+          ApiAchievementStatus.create ~auth:auth
+            ~achievement:achievement_id
+            ~status:ApiAchievementStatus.Status.Objective
+            ~message:message ()) auth));
+
+  print_title "Get my objectives ordered by name limit 2 with auth";
+  let achievements_statuses =
+    auth_test ~f:pageprint (fun auth ->
+      ApiAchievementStatus.get
+        ~req:(Auth auth)
+        ~page:(None, Some 2, Some Page.Alphabetic, None)
+        ~status:(Some ApiAchievementStatus.Status.Objective)
+        login) auth in
+
+  print_title "Get one achievement status...";
+  (match achievements_statuses with (* Check if the list exists *)
+    | Error e -> impossible "the previous tests failed"
+    | Result page ->
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      then ApiDump.lprint_endline "there's no elements available"
+      else
+        (match user with
+          | Error e -> impossible "the user has not been created"
+          | Result user ->
+            let achievement_status_id =
+              (List.hd page.Page.items).ApiAchievementStatus.info.Info.id
+            and user_id = user.ApiUser.info.Info.id in
+
+  print_title "with auth";
+            ignore (auth_test (fun auth ->
+              ApiAchievementStatus.get_one ~req:(Auth auth)
+                user_id achievement_status_id) auth);
+
+  print_title "with lang";
+            ignore (test (ApiAchievementStatus.get_one ~req:(Lang lang)
+                            user_id achievement_status_id));
+
+  print_title "Unlock this ojective + add pictures + remove message";
+            ignore (auth_test (fun auth ->
+              ApiAchievementStatus.edit ~auth:auth
+                ~status:(Some ApiAchievementStatus.Status.Achieved)
+                ~message:(Some "")
+                ~add_medias:[picture; picture2]
+                achievement_status_id) auth);
+        ));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
