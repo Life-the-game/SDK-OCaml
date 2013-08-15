@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
 (* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml    *)
 (* ************************************************************************** *)
 (** Authentication API methods                                                *)
 
@@ -13,18 +13,27 @@ open ApiTypes
 
 type t =
     {
-      info       : ApiTypes.Info.t;
-      user       : ApiUser.t;
-      token      : token;
-      expiration : ApiTypes.DateTime.t;
+      info           : ApiTypes.Info.t;
+      user           : ApiUser.t;
+(* PRIVATE *)
+      ip             : ip;
+      user_agent     : string;
+(* /PRIVATE *)
+      token          : token;
+      expiration     : ApiTypes.DateTime.t;
+      facebook_token : string option;
     }
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 API Methods}                                                           *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(** {3 API Methods}                                                           *)
+(* ************************************************************************** *)
 
-(* (\** Login (create token)                                                      *\) *)
-(* val login : login -> password -> t Api.t *)
+(** Login (create token)                                                      *)
+val login :
+(* PRIVATE *)
+    ?ip: ip ->
+(* /PRIVATE *)
+  login -> password -> t Api.t
 
 (* (\** Logout (delete token)                                                     *\) *)
 (* val logout : t -> unit Api.t *)
