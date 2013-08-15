@@ -40,24 +40,25 @@ type t =
 (** Get users                                                                 *)
 val get :
   auth:auth
+  -> term:string list
   -> ?page:Page.parameters
-  -> ?term:string list
   -> unit -> t Page.t Api.t
 
 (** Get a user                                                                *)
 val get_one : ?auth:auth option -> id -> t Api.t
 
-(* (\** Create a user                                                             *\) *)
-(* val create : *)
-(*   login:login *)
-(*   -> email:email *)
-(*   -> password:string *)
-(*   -> lang:Lang.t *)
-(*   -> ?firstname:string option *)
-(*   -> ?lastname:string option *)
-(*   -> ?gender:Gender.t option *)
-(*   -> ?birthday:Date.t option *)
-(*   -> unit -> t Api.t *)
+(** Create a user                                                             *)
+val create :
+  login:login
+  -> password:string
+  -> email:email
+  -> lang:Lang.t
+  -> ?firstname:string
+  -> ?lastname:string
+  -> ?gender:Gender.t
+  -> ?birthday:Date.t option
+  -> ?avatar:path
+  -> unit -> t Api.t
 
 (* (\** Delete a user                                                             *\) *)
 (* val delete : auth:auth -> id -> unit Api.t *)

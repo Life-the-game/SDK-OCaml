@@ -43,27 +43,27 @@ let from_json c =
   let open Yojson.Basic.Util in
   let open ApiMedia in
       {
-	info        = Info.from_json c;
-	login       = c |> member "login" |> to_string;
-	firstname   = c |> member "firstname" |> to_string_option;
-	lastname    = c |> member "lastname" |> to_string_option;
-	name        = c |> member "name" |> to_string_option;
-	avatar      = c |> member "avatar" |> to_option Picture.from_json;
-	gender      = Gender.of_string (c |> member "gender" |> to_string);
-	birthday    = c |> member "birthday" |> to_option
-	    (fun d -> Date.of_string (d |> to_string));
-	lang        = Lang.from_string (c |> member "lang" |> to_string);
+        info        = Info.from_json c;
+        login       = c |> member "login" |> to_string;
+        firstname   = c |> member "firstname" |> to_string_option;
+        lastname    = c |> member "lastname" |> to_string_option;
+        name        = c |> member "name" |> to_string_option;
+        avatar      = c |> member "avatar" |> to_option Picture.from_json;
+        gender      = Gender.of_string (c |> member "gender" |> to_string);
+        birthday    = c |> member "birthday" |> to_option
+            (fun d -> Date.of_string (d |> to_string));
+        lang        = Lang.from_string (c |> member "lang" |> to_string);
 (* PRIVATE *)
-	email       = c |> member "email" |> to_string_option;
+        email       = c |> member "email" |> to_string_option;
 (* /PRIVATE *)
-	score       = c |> member "score" |> to_int;
-	level       = c |> member "level" |> to_int;
-	is_friend   = c |> member "is_friend" |> to_bool_option;
-	game_network_total = c |> member "game_network_total"
-	  |> to_int;
-	other_game_network_total = c |> member "other_game_network_total"
-	  |> to_int;
-	url         = c |> member "url" |> to_string;
+        score       = c |> member "score" |> to_int;
+        level       = c |> member "level" |> to_int;
+        is_friend   = c |> member "is_friend" |> to_bool_option;
+        game_network_total = c |> member "game_network_total"
+          |> to_int;
+        other_game_network_total = c |> member "other_game_network_total"
+          |> to_int;
+        url         = c |> member "url" |> to_string;
       }
 
 (* ************************************************************************** *)
@@ -74,7 +74,7 @@ let from_json c =
 (* Get users                                                                  *)
 (* ************************************************************************** *)
 
-let get ~auth ?(page = Page.default_parameters) ?(term = []) () =
+let get ~auth ~term ?(page = Page.default_parameters) () =
   Api.go
     ~path:["users"]
     ~req:(Some (Auth auth))
@@ -92,24 +92,31 @@ let get_one ?(auth = None) id =
     ~req:(opt_auth auth)
     from_json
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Create a user                                                              *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Create a user                                                              *)
+(* ************************************************************************** *)
 
-(* let create ~login ~email ~password ~lang ?(firstname = None) ?(lastname = None) *)
-(*     ?(gender = None) ?(birthday = None) () = *)
-(*   let url = Api.url ~parents:["users"] ~lang:(Some lang) () in *)
-(*   Api.go ~rtype:POST ~lang:(Some lang) *)
-(*     ~post:(PostList (Api.option_filter *)
-(* 		       [("login", Some login); *)
-(* 			("email", Some email); *)
-(* 			("password", Some password); *)
-(* 			("firstname", firstname); *)
-(* 			("lastname", lastname); *)
-(* 			("gender", Option.map Gender.to_string gender); *)
-(* 			("birthday", Option.map Date.to_string birthday); *)
-(* 		       ])) url from_json *)
-
+let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
+    ?(gender = Gender.default) ?(birthday = None) ?(avatar = []) () =
+  let post_parameters =
+    Network.option_filter
+      [("login",     Some login);
+       ("email",     Some email);
+       ("password",  Some password);
+       ("firstname", Some firstname);
+       ("lastname",  Some lastname);
+       ("gender",    Some (Gender.to_string gender));
+       ("birthday",  Option.map Date.to_string birthday);
+      ] in
+  let post = if List.length avatar != 0
+    then Network.PostMultiPart (post_parameters, [("avatar", avatar)])
+    else Network.PostList post_parameters in
+  Api.go
+    ~rtype:POST
+    ~path:["users"]
+    ~req:(Some (Lang lang))
+    ~post:post
+    from_json
 
 (* (\* ************************************************************************** *\) *)
 (* (\* Delete a user                                                              *\) *)
@@ -127,13 +134,13 @@ let get_one ?(auth = None) id =
 (*     ?(lastname = None) ?(gender = None) ?(birthday = None) id = *)
 (*   let url = Api.url ~parents:["users"; id] ~auth:(Some auth) *)
 (*     ~get:(Api.option_filter *)
-(* 	    [("email", email); *)
-(* 	     ("password", password); *)
-(* 	     ("firstname", firstname); *)
-(* 	     ("lastname", lastname); *)
-(* 	     ("gender", Option.map Gender.to_string gender); *)
-(* 	     ("birthday", Option.map Date.to_string birthday); *)
-(* 	    ]) () in *)
+(*             [("email", email); *)
+(*              ("password", password); *)
+(*              ("firstname", firstname); *)
+(*              ("lastname", lastname); *)
+(*              ("gender", Option.map Gender.to_string gender); *)
+(*              ("birthday", Option.map Date.to_string birthday); *)
+(*             ]) () in *)
 (*   Api.go ~auth:(Some auth) ~rtype:PUT url from_json *)
 
 (* (\* ************************************************************************** *\) *)
