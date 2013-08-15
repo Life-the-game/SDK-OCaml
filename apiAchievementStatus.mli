@@ -24,41 +24,60 @@ module Status : STATUS
 type t =
     {
       info             : Info.t;
+      approvement      : Approvable.t;
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
-      state            : Status.t;
-      state_code       : int;
-      message          : string;
-      approvers        : ApiUser.t ApiTypes.Page.t;
-      non_approvers    : ApiUser.t ApiTypes.Page.t;
-      attached_picture : ApiMedia.Picture.t;
-      score            : int;
+      status           : Status.t;
+      message          : string option;
+      medias           : ApiMedia.t list;
+      url              : url;
     }
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 API Methods}                                                           *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(** {3 API Methods}                                                           *)
+(* ************************************************************************** *)
 
-(* (\** Get user's achievement status'                                            *\) *)
-(* val get : *)
-(*   ?auth:auth option -> ?lang:Lang.t option *)
-(*   -> ?index:int option -> ?limit:int option *)
-(*   -> id -> t ApiTypes.Page.t Api.t *)
+(** Get achievement statuses                                                  *)
+val get :
+  req:requirements
+  -> ?page:Page.parameters
+  -> ?term: string list
+  -> ?status:Status.t option
+  -> id -> t ApiTypes.Page.t Api.t
 
-(* (\** Add a new achievement in a user's listo. *)
-(*     The upload_picture argument is an optional string wich is the path of *)
-(*     file corresponding to the picture you would like to upload.             *\) *)
-(* val add : *)
-(*   auth:auth -> achievement:id -> state_code:int -> message:string *)
-(*   -> ?upload_picture:string option -> id -> t Api.t *)
+(** Get one achievement status                                                *)
+val get_one :
+  req:requirements
+  -> id -> id -> t Api.t
+(** The first id is the user_id, the second is the achievement status id      *)
+
+(** Create an achievement status                                              *)
+val create :
+  auth:auth
+  -> achievement:id
+  -> status:Status.t
+(* PRIVATE *)
+  -> ?user: id option
+(* /PRIVATE *)
+  -> ?message:string
+  -> ?medias:path list
+  -> unit -> t Api.t
+
+(** Edit an achievement status                                                *)
+val edit :
+  auth:auth
+(* PRIVATE *)
+  -> ?user: id option
+(* /PRIVATE *)
+  -> ?status:Status.t option
+  -> ?message:string option
+  -> ?add_medias:path list
+  -> ?remove_medias:id list
+  -> id -> t Api.t
 
 (* (\** Delete an achievement status                                            *\) *)
 (* val delete : *)
 (*     auth:auth -> id -> id -> unit Api.t *)
-
-(* (\** Get the details of one achievement status                               *\) *)
-(* val get_one : *)
-(*   auth:auth -> id -> t Api.t *)
 
 (* (\** Delete user's achievement status                                        *\) *)
 (* val delete : *)
