@@ -73,14 +73,19 @@ let from_json c =
 (* Get achievement statuses                                                   *)
 (* ************************************************************************** *)
 
-let get ~req ?(page = Page.default_parameters) ?(term = []) ?(status = None) id =
+let get ~req ?(page = Page.default_parameters) ?(term = [])
+    ?(achievements = []) ?(with_medias = None)
+    ?(status = None) id =
   Api.go
     ~path:["users"; id; "achievement_statuses"]
     ~req:(Some req)
     ~page:(Some page)
     ~get:(Network.option_filter
             [("term", Some (Network.list_parameter term));
-             ("status", Option.map Status.to_string status)])
+	     ("achievements", Some (Network.list_parameter achievements));
+	     ("with_medias", Option.map string_of_bool with_medias);
+             ("status", Option.map Status.to_string status);
+	    ])
     (Page.from_json from_json)
 
 (* ************************************************************************** *)

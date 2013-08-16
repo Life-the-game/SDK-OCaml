@@ -57,12 +57,19 @@ let rec from_json c =
 (* ************************************************************************** *)
 
 let get ~req ?(page = Page.default_parameters)
-    ?(term = []) () =
+    ?(term = []) ?(with_badge = None) ?(is_category = None)
+    ?(is_secret = None) ?(is_discoverable = None) () =
   Api.go
     ~path:["achievements"]
     ~req:(Some req)
     ~page:(Some page)
-    ~get:(Network.empty_filter [("term", Network.list_parameter term)])
+    ~get:(Network.option_filter
+	    [("term", Some (Network.list_parameter term));
+	     ("with_badge", Option.map string_of_bool with_badge);
+	     ("is_category", Option.map string_of_bool is_category);
+	     ("is_secret", Option.map string_of_bool is_secret);
+	     ("is_discoverable", Option.map string_of_bool is_discoverable);
+	    ])
     (Page.from_json from_json)
 
 (* ************************************************************************** *)

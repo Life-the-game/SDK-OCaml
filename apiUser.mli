@@ -27,7 +27,7 @@ type t =
 (* /PRIVATE *)
       score                    : int;
       level                    : int;
-      is_friend                : bool option;
+      in_game_network          : bool option;
       game_network_total       : int;
       other_game_network_total : int;
       url                      : url;
@@ -42,6 +42,14 @@ val get :
   auth:auth
   -> term:string list
   -> ?page:Page.parameters
+  -> ?with_avatar: bool option
+  -> ?genders: Gender.t list
+  -> ?lang: Lang.t list
+  -> ?min_score: int option
+  -> ?max_score: int option
+  -> ?min_level: int option
+  -> ?max_level: int option
+  -> ?is_in_network: bool option
   -> unit -> t Page.t Api.t
 
 (** Get a user                                                                *)

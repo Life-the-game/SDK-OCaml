@@ -42,6 +42,8 @@ val get :
   req:requirements
   -> ?page:Page.parameters
   -> ?term: string list
+  -> ?achievements: id list
+  -> ?with_medias: bool option
   -> ?status:Status.t option
   -> id -> t ApiTypes.Page.t Api.t
 

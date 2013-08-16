@@ -34,6 +34,10 @@ val get :
   req:requirements
   -> ?page:Page.parameters
   -> ?term:string list
+  -> ?with_badge: bool option
+  -> ?is_category: bool option
+  -> ?is_secret: bool option
+  -> ?is_discoverable: bool option
   -> unit -> t Page.t Api.t
 
 (** Get one Achievement                                                       *)

@@ -36,7 +36,7 @@ let from_json content =
         user       = ApiUser.from_json (content |> member "user");
 (* PRIVATE *)
         ip         = content |> member "ip" |> to_string;
-        user_agent = content |> member "user-agent" |> to_string;
+        user_agent = content |> member "user_agent" |> to_string;
 (* /PRIVATE *)
         token      = content |> member "token" |> to_string;
         expiration = DateTime.of_string
