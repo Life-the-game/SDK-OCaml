@@ -83,6 +83,8 @@ and email = random_string 2 ^ "@gmail.com"
 and message = random_string 30
 and picture = ["example.png"]
 and picture2 = ["example2.jpg"]
+and achievement_name = random_string 15
+and achievement_description = random_string 30
 
 (* ************************************************************************** *)
 (* Test generic function                                                      *)
@@ -161,6 +163,14 @@ let _ =
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Achievements tests                            #";
   ApiDump.lprint_endline "#################################################";
+
+(* PRIVATE *)
+  print_title "Create an achievement";
+  auth_test (fun auth ->
+    ApiAchievement.create ~auth:auth ~name:achievement_name
+      ~description:achievement_description ~badge:picture
+      ~keywords:["hello"; "world"] ()) auth;
+(* /PRIVATE *)
 
   print_title "Get achievements";
   let achievements = test ~f:pageprint (ApiAchievement.get ~req:(Lang lang) ()) in

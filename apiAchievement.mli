@@ -45,12 +45,22 @@ val get_one :
   req:requirements
   -> id -> t Api.t
 
-(* (\** Create a new Achievement                                                  *\) *)
-(* val post : *)
-(*   auth:auth *)
-(*   -> name:string *)
-(*   -> ?description:string option *)
-(*   -> unit -> t Api.t *)
+(* PRIVATE *)
+
+(** Create a new Achievement                                                  *)
+val create :
+  auth:auth
+  -> name:string
+  -> description:string
+  -> ?parents:id list
+  -> ?badge:path
+  -> ?category:bool
+  -> ?secret:bool
+  -> ?discoverable:bool
+  -> ?keywords:string list
+  -> unit -> t Api.t
+
+(* /PRIVATE *)
 
 (* (\** Edit (put) an Achievement                                                 *\) *)
 (* val edit : *)

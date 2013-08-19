@@ -82,9 +82,37 @@ let get_one ~req id =
     ~req:(Some req)
     from_json
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Create a new Achievement                                                   *\) *)
-(* (\* ************************************************************************** *\) *)
+(* PRIVATE *)
+
+(* ************************************************************************** *)
+(* Create a new Achievement                                                   *)
+(* ************************************************************************** *)
+
+let create ~auth ~name ~description ?(parents = []) ?(badge = [])
+    ?(category = false) ?(secret = false) ?(discoverable = true)
+    ?(keywords = []) () =
+  let post_parameters =
+    Network.empty_filter
+      [("name", name);
+       ("description", description);
+       ("parents", Network.list_parameter parents);
+       ("category", string_of_bool category);
+       ("secret", string_of_bool secret);
+       ("discoverable", string_of_bool discoverable);
+       ("keywords", Network.list_parameter keywords);
+      ] in
+  let post =
+    Network.PostMultiPart
+      (post_parameters, Network.files_filter [("badge", badge)],
+      ApiMedia.Picture.path_to_contenttype) in
+  Api.go
+    ~rtype:POST
+    ~path:["achievements"]
+    ~req:(Some (Auth auth))
+    ~post:post
+    from_json
+
+(* /PRIVATE *)
 
 (* let post ~auth ~name ?(description = None) () = *)
 (*   let url = Api.url ~parents:["achievements"] *)
