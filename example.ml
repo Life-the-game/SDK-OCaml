@@ -166,10 +166,10 @@ let _ =
 
 (* PRIVATE *)
   print_title "Create an achievement";
-  auth_test (fun auth ->
+  ignore (auth_test (fun auth ->
     ApiAchievement.create ~auth:auth ~name:achievement_name
       ~description:achievement_description ~badge:picture
-      ~keywords:["hello"; "world"] ()) auth;
+      ~keywords:["hello"; "world"] ()) auth);
 (* /PRIVATE *)
 
   print_title "Get achievements";
@@ -352,5 +352,15 @@ let _ =
 	ignore (auth_test ~t:"CLIENT_InvalidFileFormat" (fun auth ->
 	  ApiAchievementStatus.edit ~auth:auth
 	    ~add_medias:[["hack.sh"]] achievement_status_id) auth));
+
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Logout                                        #";
+  ApiDump.lprint_endline "#################################################";
+
+  print_title "Logout (remove token)";
+  ignore (match auth with
+    | Error e -> impossible "it requires authentication that previously failed";
+      Error e
+    | Result auth -> test (ApiAuth.logout auth));
 
   print_total ()

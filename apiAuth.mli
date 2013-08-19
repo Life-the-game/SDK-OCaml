@@ -35,8 +35,8 @@ val login :
 (* /PRIVATE *)
   login -> password -> t Api.t
 
-(* (\** Logout (delete token)                                                     *\) *)
-(* val logout : t -> unit Api.t *)
+(** Logout (delete token)                                                     *)
+val logout : t -> unit Api.t
 
 (* (\** Get information about a token                                             *\) *)
 (* val get_token : token -> t Api.t *)

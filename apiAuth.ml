@@ -13,14 +13,14 @@ open Network
 
 type t =
     {
-      info           : ApiTypes.Info.t;
+      info           : Info.t;
       user           : ApiUser.t;
 (* PRIVATE *)
       ip             : ip;
       user_agent     : string;
 (* /PRIVATE *)
       token          : token;
-      expiration     : ApiTypes.DateTime.t;
+      expiration     : DateTime.t;
       facebook_token : string option;
     }
 
@@ -48,7 +48,7 @@ let from_json content =
 (* Transform an API object returned by the login function into an api type
    required by most of the API methods                                        *)
 let auth_to_api auth =
-  ApiTypes.Token auth.token
+  Token auth.token
 
 let opt_auth_to_api = function
   | Some auth -> Some (auth_to_api auth)
@@ -79,12 +79,16 @@ let login
                 ]))
     from_json
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Logout (delete token)                                                      *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Logout (delete token)                                                      *)
+(* ************************************************************************** *)
 
-(* let logout token = *)
-(*   Api.noop ~rtype:DELETE (Api.url ~parents:["tokens"; token.token] ()) *)
+let logout auth =
+  Api.go
+    ~rtype:DELETE
+    ~path:["users"; auth.user.ApiUser.info.Info.id;
+	   "tokens"; auth.token]
+    Api.noop
 
 (* (\* ************************************************************************** *\) *)
 (* (\* Get information about a token                                              *\) *)
