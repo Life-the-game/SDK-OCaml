@@ -10,6 +10,7 @@
 (* {ol                                                                        *)
 (* {- API Response }                                                          *)
 (* {- Explicit types for parameters }                                         *)
+(* {- Files }                                                                 *)
 (* {- Network stuff (GET POST ...) }                                          *)
 (* {- Languages }                                                             *)
 (* {- Requirements (Auth, Lang, ...) }                                        *)
@@ -40,12 +41,23 @@ type password = string
 type email    = string
 type url      = string
 type token    = string
-type path     = string list
-type parameters = (string (* key *) * string (* value *)) list
-type file = (string (* name *) * string list (* path *))
 (* PRIVATE *)
 type ip       = string
 (* /PRIVATE *)
+
+type parameters = (string (* key *) * string (* value *)) list
+
+(* ************************************************************************** *)
+(** {3 Files}                                                                 *)
+(* ************************************************************************** *)
+
+type path = string list
+
+val path_to_string : path -> string
+
+type contenttype = string
+
+type file = (string (* name *) * path)
 
 (* ************************************************************************** *)
 (** {3 Network stuff (GET POST ...)}                                          *)
@@ -61,7 +73,7 @@ sig
   type post =
     | PostText of string
     | PostList of parameters
-    | PostMultiPart of parameters * file list
+    | PostMultiPart of parameters * file list * (path -> contenttype option)
     | PostEmpty
   val default   : t
   val to_string : t -> string
@@ -70,7 +82,9 @@ sig
     Note that the order of the list will be reversed. *)
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
+  val files_filter   : file list -> file list
   val list_parameter : string list -> string
+  val multiple_files : string -> path list -> file list
 end
 module Network : NETWORK
 

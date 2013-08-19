@@ -60,6 +60,13 @@ let requirement_missing =
     code    = -25;
   }
 
+let invalid_format =
+  {
+    message = "Invalid file format";
+    stype   = "CLIENT_InvalidFileFormat";
+    code    = -8;
+  }
+
 let invalid_argument msg =
   {
     message = msg;

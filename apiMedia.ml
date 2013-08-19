@@ -20,6 +20,7 @@ sig
       url_big   : url;
     }
   val from_json : Yojson.Basic.json -> t
+  val path_to_contenttype : path -> contenttype option
 end
 
 module Picture : PICTURE =
@@ -34,6 +35,12 @@ struct
       url_small = c |> member "url_small" |> to_string;
       url_big   = c |> member "url_big"   |> to_string;
     }
+  let path_to_contenttype path =
+    match List.hd (List.rev path) with (* todo get ext *)
+    | "jpg" -> Some ""
+    | "png" -> Some ""
+    | "bmp" -> Some ""
+    | _     -> None
 end
 
 (* ************************************************************************** *)
@@ -41,6 +48,35 @@ end
 (* ************************************************************************** *)
 
 module type VIDEO =
+sig
+  type t =
+    {
+      url       : url;
+      thumbnail : Picture.t;
+    }
+  val from_json : Yojson.Basic.json -> t
+  val path_to_contenttype : path -> contenttype option
+end
+
+module Video : VIDEO =
+struct
+  type t =
+    {
+      url       : url;
+      thumbnail : Picture.t;
+    }
+  let from_json c =
+    {
+      url       = c |> member "url" |> to_string;
+      thumbnail = Picture.from_json (c |> member "thumbnail");
+    }
+  let path_to_contenttype path =
+    match List.hd (List.rev path) with (* todo get ext *)
+    | "mp4" -> Some ""
+    | _     -> None
+end
+
+module type EXTERNALVIDEO =
 sig
   type provider =
     | Youtube
@@ -57,8 +93,7 @@ sig
   val provider_to_string : provider -> string
   val provider_of_string : string -> provider
 end
-
-module Video : VIDEO =
+module ExternalVideo : EXTERNALVIDEO =
 struct
   type provider =
     | Youtube
@@ -96,10 +131,20 @@ end
 type t =
   | Picture of Picture.t
   | Video   of Video.t
+  | ExternalVideo of ExternalVideo.t
   | Media   of (string * string)
 
 let from_json c =
   match c |> member "type" |> to_string with
     | "picture" -> Picture (Picture.from_json c)
     | "video"   -> Video (Video.from_json c)
+    | "external_video" -> ExternalVideo (ExternalVideo.from_json c)
     | other     -> Media (other, c |> to_string)
+
+let path_to_contenttype path =
+  match Picture.path_to_contenttype path with
+    | Some c -> Some c
+    | None ->
+      match Video.path_to_contenttype path with
+	| Some c -> Some c
+	| None -> None

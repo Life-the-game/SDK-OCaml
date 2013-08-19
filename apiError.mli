@@ -30,4 +30,5 @@ val generic             : t
 val network             : string -> t
 val invalid_json        : string -> t
 val requirement_missing : t
+val invalid_format      : t
 val invalid_argument    : string -> t

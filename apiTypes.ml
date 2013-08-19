@@ -23,12 +23,23 @@ type password = string
 type email    = string
 type url      = string
 type token    = string
-type path     = string list
-type parameters = (string (* key *) * string (* value *)) list
-type file = (string (* name *) * string list (* path *))
 (* PRIVATE *)
 type ip       = string
 (* /PRIVATE *)
+
+type parameters = (string (* key *) * string (* value *)) list
+
+(* ************************************************************************** *)
+(* Files                                                                      *)
+(* ************************************************************************** *)
+
+type path = string list
+
+let path_to_string = String.concat "/" (* todo dirsep unix *)
+
+type contenttype = string
+
+type file = (string (* name *) * path)
 
 (* ************************************************************************** *)
 (* Network stuff (GET POST ...)                                               *)
@@ -44,14 +55,16 @@ sig
   type post =
     | PostText of string
     | PostList of parameters
-    | PostMultiPart of parameters * file list
+    | PostMultiPart of parameters * file list * (path -> contenttype option)
     | PostEmpty
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
+  val files_filter   : file list -> file list
   val list_parameter : string list -> string
+  val multiple_files : string -> path list -> file list
 end
 module Network : NETWORK =
 struct
@@ -61,11 +74,10 @@ struct
     | PUT
     | DELETE
   type parameters = (string (* key *) * string (* value *)) list
-  type file = (string (* name *) * string list (* path *))
   type post =
     | PostText of string
     | PostList of parameters
-    | PostMultiPart of parameters * file list
+    | PostMultiPart of parameters * file list * (path -> contenttype option)
     | PostEmpty
   let default = GET
   let to_string = function
@@ -96,7 +108,16 @@ struct
         then aux acc t
         else aux ((k, v)::acc) t in
     aux [] l
+  let files_filter l =
+    let rec aux acc = function
+      | []   -> acc
+      | (_, [])::t -> aux acc t
+      | v::t -> aux (v::acc) t in
+    aux [] l
   let list_parameter = String.concat ","
+  let multiple_files name =
+    List.fold_left (fun l path ->
+      match path with [] -> l | path -> (name, path)::l) []
 end
 
 (* ************************************************************************** *)
@@ -453,3 +474,4 @@ struct
     | "discutable" -> Hardcore
     | _            -> default
 end
+

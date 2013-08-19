@@ -124,9 +124,11 @@ let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
        ("gender",    Some (Gender.to_string gender));
        ("birthday",  Option.map Date.to_string birthday);
       ] in
-  let post = if List.length avatar != 0
-    then Network.PostMultiPart (post_parameters, [("avatar", avatar)])
-    else Network.PostList post_parameters in
+  let post =
+    Network.PostMultiPart
+      (post_parameters,
+       Network.files_filter [("avatar", avatar)],
+       ApiMedia.Picture.path_to_contenttype) in
   Api.go
     ~rtype:POST
     ~path:["users"]

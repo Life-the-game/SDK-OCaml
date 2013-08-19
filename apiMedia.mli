@@ -19,6 +19,7 @@ sig
       url_big   : ApiTypes.url;
     }
   val from_json : Yojson.Basic.json -> t
+  val path_to_contenttype : path -> contenttype option
 end
 module Picture : PICTURE
 
@@ -27,6 +28,18 @@ module Picture : PICTURE
 (* ************************************************************************** *)
 
 module type VIDEO =
+sig
+  type t =
+    {
+      url       : url;
+      thumbnail : Picture.t;
+    }
+  val from_json : Yojson.Basic.json -> t
+  val path_to_contenttype : path -> contenttype option
+end
+module Video : VIDEO
+
+module type EXTERNALVIDEO =
 sig
   type provider =
     | Youtube
@@ -43,7 +56,7 @@ sig
   val provider_to_string : provider -> string
   val provider_of_string : string -> provider
 end
-module Video : VIDEO
+module ExternalVideo : EXTERNALVIDEO
 
 (* ************************************************************************** *)
 (** {3 Media}                                                                 *)
@@ -52,6 +65,10 @@ module Video : VIDEO
 type t =
   | Picture of Picture.t
   | Video   of Video.t
+  | ExternalVideo of ExternalVideo.t
   | Media   of (string * string)
 
 val from_json : Yojson.Basic.json -> t
+
+(** Will check for all the know medias formats *)
+val path_to_contenttype : path -> contenttype option

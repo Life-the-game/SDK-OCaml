@@ -47,6 +47,8 @@ let disconnect () =
 (* Curl Method handling                                                       *)
 (* ************************************************************************** *)
 
+exception InvalidFileFormat
+
 (* Return a text from a url using Curl and HTTP Auth (if needed).
  * Error handling with exceptions to catch                                    *)
 let curl_perform ~path ~get ~post ~rtype () =
@@ -69,25 +71,42 @@ let curl_perform ~path ~get ~post ~rtype () =
       if (String.length str) = 0 then str else "?" ^ str in
      !ApiConf.base_url ^ path ^ get in
 
-  let post =
-    let open Network in
-        (match post with
-          | PostEmpty  -> ""
-          | PostText s -> s
-          | PostList l -> parameters_to_string l
-          | PostMultiPart (parameters, files) ->
-            parameters_to_string parameters
-            (* todo: files*)
-        ) in
+  let post_string str =
+    ApiDump.verbose (" ## POST data: " ^ str);
+    Curl.set_postfields c str in
+  let post_list l = post_string (parameters_to_string l)
+  and post_multipart (parameters, files, checker) =
+    ApiDump.verbose " ## POST multi-part data:";
+    let parameter (name, value) =
+      ApiDump.verbose (name ^ "=" ^ value);
+      Curl.CURLFORM_CONTENT (name, value, Curl.DEFAULT)
+    and file (name, path) =
+      match checker path with
+	| None -> raise InvalidFileFormat
+	| Some contenttype ->
+	  (let path = path_to_string path in
+	   ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
+  			    ^ "(" ^ contenttype ^ ")");
+	   Curl.CURLFORM_FILE
+             (name, path, Curl.CONTENTTYPE contenttype)) in
+    let l = (List.map parameter parameters)
+      @ (List.map file files) in
+    Curl.set_httppost c l in
+  let open Network in
+  (match post with
+    | PostEmpty  -> ()
+    | PostText s -> post_string s
+    | PostList l -> post_list l
+    | PostMultiPart (p, f, c) -> if List.length f = 0
+      then post_list p else post_multipart (p, f, c));
+
     Buffer.clear result;
     Curl.set_customrequest c (Network.to_string rtype);
-    Curl.set_postfields c post;
     Curl.set_url c url;
     Curl.perform c;
 
     let text = Buffer.contents result in
     ApiDump.verbose (" ## URL: " ^ url);
-    ApiDump.verbose (" ## POST data: " ^ post);
     ApiDump.verbose (" ## Content received:\n" ^ text);
     text
 
@@ -171,6 +190,7 @@ let go
       (ApiError.network !error_buffer)
     | Failure msg -> Error (ApiError.network msg)
     | Invalid_argument s -> Error (ApiError.invalid_argument s)
+    | InvalidFileFormat -> Error ApiError.invalid_format
     | _ -> Error ApiError.generic
 
 (* ************************************************************************** *)

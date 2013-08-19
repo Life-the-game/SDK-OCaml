@@ -90,22 +90,23 @@ and picture2 = ["example2.jpg"]
 
 let test
     ?(f = ApiDump.print) (* function to display the result of the test        *)
-    ?(t = false)         (* true if the test should fail (so it's a success)  *)
+    ?(t = "") (* not empty if the test should fail (so it's a success)  *)
     (result : 'a Api.t) : 'a Api.t =
   let _failure () = total.failure <- total.failure + 1
   and _success () = total.success <- total.success + 1 in
-  let failure () = if t then _success () else _failure ()
-  and success () = if t then _failure () else _success () in
+  let failure e = if t = "" || t != e.ApiError.stype
+    then _failure () else _success ()
+  and success r = if t != "" then _failure () else _success () in
   let on_error e =
     begin
-      failure ();
+      failure e;
       ApiDump.error e;
       ApiDump.lprint_endline "\n  ----> FAILURE\n";
       if stop_on_error then exit 1
     end
   and on_result r =
     begin
-      success ();
+      success r;
       if print_success
       then ApiDump.lprint_endline "\n  ## OCaml object generated:\n";
       f r;
@@ -117,8 +118,7 @@ let test
   result
 
 let auth_test
-    ?(f = ApiDump.print) (* function to display the result of the test        *)
-    ?(t = false)         (* true if the test should fail (so it's a success)  *)
+    ?(f = ApiDump.print) ?(t = "")
     (test_launcher : auth -> 'a Api.t) = function
   | Error e -> impossible "it requires authentication that previously failed";
     Error e
@@ -324,5 +324,23 @@ let _ =
   ApiDump.lprint_endline "#################################################";
 
   ApiDump.lprint_endline "No test";
+
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Client Errors tests                           #";
+  ApiDump.lprint_endline "#################################################";
+
+  print_title "Invalid file format";
+  (match achievements_statuses with (* Check if the list exists *)
+    | Error e -> impossible "the previous achievement_status tests failed"
+    | Result page ->
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      then ApiDump.lprint_endline "there's no elements available"
+      else
+        let achievement_status_id =
+          (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in
+	ignore (auth_test ~t:"CLIENT_InvalidFileFormat" (fun auth ->
+	  ApiAchievementStatus.edit ~auth:auth
+	    ~add_medias:[["hack.sh"]] achievement_status_id) auth));
 
   print_total ()

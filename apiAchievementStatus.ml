@@ -116,7 +116,8 @@ let create ~auth ~achievement ~status
   let post = if List.length medias != 0
     then Network.PostMultiPart
       (post_parameters,
-       (List.map (fun media -> ("medias", media)) medias))
+       (List.map (fun media -> ("medias", media)) medias),
+      ApiMedia.path_to_contenttype)
     else Network.PostList post_parameters in
   Api.go
     ~rtype:POST
@@ -149,11 +150,11 @@ let edit ~auth
        [("status", Option.map Status.to_string status);
         ("remove_medias", Some (Network.list_parameter remove_medias));
        ]) @ (match message with Some m -> [("message", m)] | None -> []) in
-  let post = if List.length add_medias != 0
-    then Network.PostMultiPart
+  let post =
+    Network.PostMultiPart
       (post_parameters,
-       (List.map (fun media -> ("medias", media)) add_medias))
-    else Network.PostList post_parameters in
+       (Network.multiple_files "medias" add_medias),
+       ApiMedia.path_to_contenttype) in
   Api.go
     ~rtype:PUT
     ~path:(
