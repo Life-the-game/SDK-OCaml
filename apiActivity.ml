@@ -1,15 +1,14 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit user's activities                           *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open ApiTypes
 open Network
 
 (* ************************************************************************** *)
-(* Types                                                                      *)
+(* Type                                                                       *)
 (* ************************************************************************** *)
 
 type t =
@@ -23,13 +22,12 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-(* Take a json tree representing an activity and return an activity element   *)
 let from_json c =
   let open Yojson.Basic.Util in
       {
-	info          = Info.from_json c;
-	activity      = c |> member "activity"      |> to_string;
-	activity_type = c |> member "activity_type" |> to_int;
+        info          = Info.from_json c;
+        activity      = c |> member "activity"      |> to_string;
+        activity_type = c |> member "activity_type" |> to_int;
       }
 
 (* (\* ************************************************************************** *\) *)

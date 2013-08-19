@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml    *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 (** Authentication API methods                                                *)
 
@@ -61,7 +61,6 @@ val logout : t -> unit Api.t
 (** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
 
-(** Take a json tree representing an auth element and return an auth element  *)
 val from_json : Yojson.Basic.json -> t
 
 (** Transform an API object returned by the login function into an api type

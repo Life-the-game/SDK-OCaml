@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 (** Medias (pictures, sounds, videos) API methods                             *)
 

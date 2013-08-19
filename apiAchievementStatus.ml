@@ -1,15 +1,14 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit users' achievements personal lists          *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open ApiTypes
 open Network
 
 (* ************************************************************************** *)
-(* Types                                                                      *)
+(* Type                                                                       *)
 (* ************************************************************************** *)
 
 module type STATUS =
@@ -50,7 +49,6 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-(* Take a json tree representing a user and return an object user             *)
 let from_json c =
   let open Yojson.Basic.Util in
       {
@@ -82,10 +80,10 @@ let get ~req ?(page = Page.default_parameters) ?(term = [])
     ~page:(Some page)
     ~get:(Network.option_filter
             [("term", Some (Network.list_parameter term));
-	     ("achievements", Some (Network.list_parameter achievements));
-	     ("with_medias", Option.map string_of_bool with_medias);
+             ("achievements", Some (Network.list_parameter achievements));
+             ("with_medias", Option.map string_of_bool with_medias);
              ("status", Option.map Status.to_string status);
-	    ])
+            ])
     (Page.from_json from_json)
 
 (* ************************************************************************** *)

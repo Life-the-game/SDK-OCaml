@@ -149,4 +149,4 @@ The best way to understand how to add or edit API methods is to read the current
 #### Latest version
 
 Latest version of this project is on GitHub:
-* https://github.com/LaVieEstUnJeu/SDK-OCaml
+* https://github.com/Life-the-game/SDK-OCaml 

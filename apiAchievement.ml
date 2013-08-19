@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open ExtLib
@@ -30,7 +30,6 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-(* Take a json tree representing an achievement and return achievement        *)
 let rec from_json c =
   let open Yojson.Basic.Util in
       {
@@ -64,12 +63,12 @@ let get ~req ?(page = Page.default_parameters)
     ~req:(Some req)
     ~page:(Some page)
     ~get:(Network.option_filter
-	    [("term", Some (Network.list_parameter term));
-	     ("with_badge", Option.map string_of_bool with_badge);
-	     ("is_category", Option.map string_of_bool is_category);
-	     ("is_secret", Option.map string_of_bool is_secret);
-	     ("is_discoverable", Option.map string_of_bool is_discoverable);
-	    ])
+            [("term", Some (Network.list_parameter term));
+             ("with_badge", Option.map string_of_bool with_badge);
+             ("is_category", Option.map string_of_bool is_category);
+             ("is_secret", Option.map string_of_bool is_secret);
+             ("is_discoverable", Option.map string_of_bool is_discoverable);
+            ])
     (Page.from_json from_json)
 
 (* ************************************************************************** *)

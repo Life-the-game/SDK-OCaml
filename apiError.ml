@@ -1,8 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Responses Codes                                               *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
@@ -23,9 +22,9 @@ type t =
 let from_json error_json =
   let open Yojson.Basic.Util in
       {
-	message = error_json |> member "message" |> to_string;
-	stype   = error_json |> member "type"    |> to_string;
-	code    = error_json |> member "code"    |> to_int;
+        message = error_json |> member "message" |> to_string;
+        stype   = error_json |> member "type"    |> to_string;
+        code    = error_json |> member "code"    |> to_int;
       }
 
 (* ************************************************************************** *)

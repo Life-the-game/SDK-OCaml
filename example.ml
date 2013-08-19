@@ -1,9 +1,9 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Test cases                                                    *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
+(** Test cases                                                                *)
 
 open ApiTypes
 
@@ -92,7 +92,7 @@ and achievement_description = random_string 30
 
 let test
     ?(f = ApiDump.print) (* function to display the result of the test        *)
-    ?(t = "") (* not empty if the test should fail (so it's a success)  *)
+    ?(t = "") (* not empty if the test should fail (so it's a success)        *)
     (result : 'a Api.t) : 'a Api.t =
   let _failure () = total.failure <- total.failure + 1
   and _success () = total.success <- total.success + 1 in
@@ -349,9 +349,9 @@ let _ =
       else
         let achievement_status_id =
           (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in
-	ignore (auth_test ~t:"CLIENT_InvalidFileFormat" (fun auth ->
-	  ApiAchievementStatus.edit ~auth:auth
-	    ~add_medias:[["hack.sh"]] achievement_status_id) auth));
+        ignore (auth_test ~t:"CLIENT_InvalidFileFormat" (fun auth ->
+          ApiAchievementStatus.edit ~auth:auth
+            ~add_medias:[["hack.sh"]] achievement_status_id) auth));
 
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Logout                                        #";

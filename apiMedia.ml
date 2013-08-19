@@ -1,8 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Medias (pictures, sounds, videos) stuff                       *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open Yojson.Basic.Util
@@ -146,5 +145,5 @@ let path_to_contenttype path =
     | Some c -> Some c
     | None ->
       match Video.path_to_contenttype path with
-	| Some c -> Some c
-	| None -> None
+        | Some c -> Some c
+        | None -> None

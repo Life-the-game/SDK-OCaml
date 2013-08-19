@@ -1,15 +1,14 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: tools to get/edit users                                       *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open ApiTypes
 open Network
 
 (* ************************************************************************** *)
-(* Types                                                                      *)
+(* Type                                                                       *)
 (* ************************************************************************** *)
 
 type t =
@@ -38,7 +37,6 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-(* Take a json tree representing a user and return an object user             *)
 let from_json c =
   let open Yojson.Basic.Util in
   let open ApiMedia in
@@ -84,18 +82,18 @@ let get ~auth ~term ?(page = Page.default_parameters)
     ~req:(Some (Auth auth))
     ~page:(Some page)
     ~get:(Network.option_filter
-	    [("term", Some (Network.list_parameter term));
-	     ("with_avatar", Option.map string_of_bool with_avatar);
-	     ("genders", Some (Network.list_parameter
-				 (List.map Gender.to_string genders)));
-	     ("lang", Some (Network.list_parameter
-			      (List.map Lang.to_string lang)));
-	     ("min_score", Option.map string_of_int min_score);
-	     ("max_score", Option.map string_of_int max_score);
-	     ("min_level", Option.map string_of_int min_level);
-	     ("max_level", Option.map string_of_int max_level);
-	     ("is_in_network", Option.map string_of_bool is_in_network);
-	    ])
+            [("term", Some (Network.list_parameter term));
+             ("with_avatar", Option.map string_of_bool with_avatar);
+             ("genders", Some (Network.list_parameter
+                                 (List.map Gender.to_string genders)));
+             ("lang", Some (Network.list_parameter
+                              (List.map Lang.to_string lang)));
+             ("min_score", Option.map string_of_int min_score);
+             ("max_score", Option.map string_of_int max_score);
+             ("min_level", Option.map string_of_int min_level);
+             ("max_level", Option.map string_of_int max_level);
+             ("is_in_network", Option.map string_of_bool is_in_network);
+            ])
     (Page.from_json from_json)
 
 (* ************************************************************************** *)

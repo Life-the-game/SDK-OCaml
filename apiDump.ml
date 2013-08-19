@@ -1,8 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
-(* Description: Module to pretty print the values returned by the API library *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
@@ -34,11 +33,11 @@ let error e =
 let page l f =
   lprint_endline "[Page]";
   lprint_endline ("  Total items (server_size): " ^
-		    (string_of_int l.ApiTypes.Page.server_size));
+                    (string_of_int l.ApiTypes.Page.server_size));
   lprint_endline ("  Index: " ^
-		    (string_of_int l.ApiTypes.Page.index));
+                    (string_of_int l.ApiTypes.Page.index));
   lprint_endline ("  Limit: " ^
-		    (string_of_int l.ApiTypes.Page.limit));
+                    (string_of_int l.ApiTypes.Page.limit));
   lprint_endline "  Items:";
   if List.length l.ApiTypes.Page.items = 0
   then lprint_endline "    Empty page"

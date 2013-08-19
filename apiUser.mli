@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 (** Users API methods                                                         *)
 
@@ -37,7 +37,7 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
-(** Get users                                                                 *)
+z(** Get users                                                                *)
 val get :
   auth:auth
   -> term:string list
@@ -52,10 +52,10 @@ val get :
   -> ?is_in_network: bool option
   -> unit -> t Page.t Api.t
 
-(** Get a user                                                                *)
+(** Get a user                                                               *)
 val get_one : ?auth:auth option -> id -> t Api.t
 
-(** Create a user                                                             *)
+(** Create a user                                                            *)
 val create :
   login:login
   -> password:string
@@ -106,5 +106,4 @@ val create :
 (** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
 
-(** Take a json tree representing a user and return an object user            *)
 val from_json : Yojson.Basic.json -> t

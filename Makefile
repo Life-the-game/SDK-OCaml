@@ -3,7 +3,7 @@
 ## Description: Makefile compiling the OCaml example of the API               ##
 ## Author: Tuxkowo                                                            ##
 ## Modified by: db0 (db0company@gmail.com, http://db0.fr/)                    ##
-## Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   ##
+## Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    ##
 ## ########################################################################## ##
 
 NAME		=	api.cma

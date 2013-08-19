@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml    *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open ApiTypes
@@ -24,7 +24,6 @@ let writer accum data =
 let result = Buffer.create 4096
 let error_buffer = ref ""
 
-(* Connect to the API using your username and password on GitHub.             *)
 let connect () =
   Curl.global_init Curl.CURLINIT_GLOBALALL;
   let c = Curl.init () in
@@ -50,7 +49,7 @@ let disconnect () =
 exception InvalidFileFormat
 
 (* Return a text from a url using Curl and HTTP Auth (if needed).
- * Error handling with exceptions to catch                                    *)
+   Error handling with exceptions to catch                                    *)
 let curl_perform ~path ~get ~post ~rtype () =
 
   let parameters_to_string parameters =
@@ -82,12 +81,12 @@ let curl_perform ~path ~get ~post ~rtype () =
       Curl.CURLFORM_CONTENT (name, value, Curl.DEFAULT)
     and file (name, path) =
       match checker path with
-	| None -> raise InvalidFileFormat
-	| Some contenttype ->
-	  (let path = path_to_string path in
-	   ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
-  			    ^ "(" ^ contenttype ^ ")");
-	   Curl.CURLFORM_FILE
+        | None -> raise InvalidFileFormat
+        | Some contenttype ->
+          (let path = path_to_string path in
+           ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
+                              ^ "(" ^ contenttype ^ ")");
+           Curl.CURLFORM_FILE
              (name, path, Curl.CONTENTTYPE contenttype)) in
     let l = (List.map parameter parameters)
       @ (List.map file files) in
@@ -151,7 +150,6 @@ let extra_parameters
 (* Make a call to the API                                                     *)
 (* ************************************************************************** *)
 
-(* Handle an API method completely. Take a function to transform the json.    *)
 let go
     ?(rtype = Network.default)
     ?(path = [])
@@ -197,6 +195,4 @@ let go
 (* Various Developers tools                                                   *)
 (* ************************************************************************** *)
 
-(* Helper function to be used as the from_json parameter when methods does
- * not return anything (unit)                                                 *)
 let noop _ = ()

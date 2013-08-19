@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml    *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 (** Call the web-service to handle the API methods                            *)
 
@@ -17,7 +17,7 @@ val disconnect : unit -> unit
 (** Handle an API method completely. Take a function to transform the json.
 
     More detailed information about the parameters on
-    {{: https://github.com/LaVieEstUnJeu/SDK-OCaml#readme} the repository
+    {{: https://github.com/Life-the-game/SDK-OCaml #readme} the repository
     documentation} *)
 val go :
   ?rtype:Network.t                (** GET, POST, ... *)

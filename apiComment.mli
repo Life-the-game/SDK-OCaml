@@ -1,7 +1,7 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: nox                                                                *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml   *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 (** User's commenting API methods                                             *)
 
@@ -77,6 +77,4 @@ type t =
 (** {Tools}                                                                   *)
 (* ************************************************************************** *)
 
-(** Take a json tree representing a comment element                           *)
-(** and return a comment element                                              *)
 val from_json : Yojson.Basic.json -> t

@@ -1,14 +1,14 @@
 (* ************************************************************************** *)
-(* Project: La Vie Est Un Jeu - Public API, example with OCaml                *)
+(* Project: Life - the game, Official OCaml SDK                               *)
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
-(* Latest Version is on GitHub: https://github.com/LaVieEstUnJeu/SDK-OCaml    *)
+(* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
 open ApiTypes
 open Network
 
 (* ************************************************************************** *)
-(* Types                                                                      *)
+(* Type                                                                       *)
 (* ************************************************************************** *)
 
 type t =
@@ -28,7 +28,6 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-(* Take a json tree representing an auth element and return an auth element   *)
 let from_json content =
   let open Yojson.Basic.Util in
       {
@@ -87,7 +86,7 @@ let logout auth =
   Api.go
     ~rtype:DELETE
     ~path:["users"; auth.user.ApiUser.info.Info.id;
-	   "tokens"; auth.token]
+           "tokens"; auth.token]
     Api.noop
 
 (* (\* ************************************************************************** *\) *)
