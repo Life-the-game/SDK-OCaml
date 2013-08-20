@@ -10,15 +10,46 @@ It is a complete library that allows you to integrate our API in any of your OCa
 The full documentation of the API with the list of objects and methods:
 * [API full documentation](http://life.db0.fr/api/OCaml/v2/).
 
+## Install it
+
+#### Requirements
+
+* OCaml
+* Lib OCaml: Extlib
+* Lib OCaml: Curl
+* Lib OCaml: Calendar
+* Lib OCaml: Yojson [Yojson](http://mjambon.com/yojson.html)
+ * + Yojson dependencies: [easy-format, biniou, cppo, yojson](http://mjambon.com/releases)
+
+#### Compile
+
+* Type `make` to compile the library.
+* Type `make example` to compile the unit tests.
+* To compile the libraby with your project: `ocamlfind ocamlc api.cma yourfile.ml -linkpkg`
+
 ## User corner
 
 Since the API is not released to the public and not stable yet, it is useless to integrate this library into your project for now.
 
-However, you can feed your curiosity with the `example.ml` file. It will show you how to use the library.
+However, you can feed your curiosity with the following sample of code, or skim through the `example.ml` file. It will show you how to use the library.
+
 You can also generate the documentation using `make doc`, or browse it [here](http://life.db0.fr/api/OCaml/v2/).
 
 If you're interested in our project, you can follow the news
 [on our website](http://eip.epitech.eu/2014/lavieestunjeu/).
+
+#### Sample
+
+```ocaml
+match ApiUser.get_one "Arthur42" with
+  | Error error -> ApiDump.error error
+  | Result user -> print_endline
+    ("Arthur42's gender is a " ^
+        match user.ApiUser.gender with
+          | Gender.Male   -> "guy"
+          | Gender.Female -> "girl"
+          | _             -> "weirdo")
+```
 
 ## Developer corner
 
@@ -56,7 +87,7 @@ Default: `GET`
 This is the path in the URL corresponding to the API method.
 
 For instance:
-```
+```ocaml
 ... ~path:["a"; "b"; "c"] ...
 ```
 will call the API method:
@@ -80,7 +111,9 @@ depending on what the API method required. It should never take an optional `req
 since its the caller's job to inforce the requirements.
 * To easily transform an `auth` parameter of the caller into
 a `requirement` parameter of the `go` function, you can use the
-(`opt_auth` function)[http://life.db0.fr/api/OCaml/v2/ApiTypes.html#VALopt_auth]
+[`opt_auth` function](http://life.db0.fr/api/OCaml/v2/ApiTypes.html#VALopt_auth)
+
+Default: `None`
 
 ###### The (optional) `page` parameter
 
@@ -96,15 +129,20 @@ Default: `None`
 * When the content of a parameter is a list, you can use the `list_parameter` function to transform a list of string into a string
 * When some of the caller (API method function) parameters are optional, you can use the `option_filter` to clean your list. Also check out `ExtLib.Option.map` if you need to convert some optional parameters to string.
 
+Default: empty list
+
 ###### The (optional) `post` parameter
 
 * It's the POST data sent within the body of the HTTP request.
 * Its type is defined [here](http://life.db0.fr/api/OCaml/v2/ApiTypes.NETWORK.html#TYPEpost)
 
+Default: `PostEmpty`
+
 ###### The _required_ function parameter
 
 * This function will be called to transform the JSON tree into the OCaml object you want for your request.
 * When the method doesn't return anything, you can give the `noop` function as the function parameter to `go`.
+* When the object is a `Page`, you may use `(Page.from_json from_json)`
 
 ###### The return value
 
