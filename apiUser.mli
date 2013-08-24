@@ -37,7 +37,7 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
-z(** Get users                                                                *)
+(** Get users                                                                *)
 val get :
   auth:auth
   -> term:string list
