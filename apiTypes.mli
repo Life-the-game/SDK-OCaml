@@ -7,20 +7,20 @@
 
 (* ************************************************************************** *)
 (** {3 Summary}                                                               *)
-(** {ol                                                                       *)
-(** {- API Response }                                                         *)
-(** {- Explicit types for parameters }                                        *)
-(** {- Files }                                                                *)
-(** {- Network stuff (GET POST ...) }                                         *)
-(** {- Languages }                                                            *)
-(** {- Requirements (Auth, Lang, ...) }                                       *)
-(** {- Date & Time }                                                          *)
-(** {- Information Element }                                                  *)
-(** {- Approvable elements }                                                  *)
-(** {- List Pagination }                                                      *)
-(** {- Gender }                                                               *)
-(** {- Privacy }                                                              *)
-(** }                                                                         *)
+(** {ol
+    {- API Response }
+    {- Explicit types for parameters }
+    {- Files }
+    {- Network stuff (GET POST ...) }
+    {- Languages }
+    {- Requirements (Auth, Lang, ...) }
+    {- Date & Time }
+    {- Information Element }
+    {- Approvable elements }
+    {- List Pagination }
+    {- Gender }
+    {- Privacy }
+    }                                                                         *)
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
