@@ -20,7 +20,9 @@ SRC		=	\
 			apiAuth.ml \
 			apiAchievement.ml \
 			apiAchievementStatus.ml \
-			apiActivity.ml \
+			apiNews.ml \
+			apiPlayground.ml \
+			apiFeed.ml \
 			\
 
 SRCI		=	\
@@ -34,7 +36,9 @@ SRCI		=	\
 			apiAuth.mli \
 			apiAchievement.mli \
 			apiAchievementStatus.mli \
-			apiActivity.mli \
+			apiNews.mli \
+			apiPlayground.mli \
+			apiFeed.mli \
 			\
 
 SRCDOC		=	$(SRCI) $(SRC)
