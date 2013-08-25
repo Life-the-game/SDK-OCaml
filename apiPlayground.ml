@@ -25,7 +25,10 @@ type t =
 
 let from_json c =
   let open Yojson.Basic.Util in
-  let get f n = Option.get (c |> member n |> to_option f) in
+  let get f n =
+    let option_get = function
+    Some a -> a | None -> raise (Invalid_argument n) in
+    option_get (c |> member n |> to_option f) in
   let info = Info.from_json c
   and achs () = get ApiAchievementStatus.from_json "achievement_status"
   and user = get ApiUser.from_json in
