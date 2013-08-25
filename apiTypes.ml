@@ -158,9 +158,9 @@ type auth =
 type requirements =
   | Auth of auth
   | Lang of Lang.t
+  | Auto of (auth option * Lang.t)
   | Both of (auth * Lang.t)
 
-(* Transform an optional auth into a requirement                              *)
 let opt_auth = function
   | Some auth -> Some (Auth auth)
   | None      -> None
