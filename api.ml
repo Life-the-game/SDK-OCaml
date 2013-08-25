@@ -120,10 +120,12 @@ let req_parameters (parameters : parameters) (req : requirements option)
     | _       -> ("todo", "oauth")
   and lang_parameters lang = ("lang", Lang.to_string lang) in
   match req with
-    | None               -> parameters
-    | Some (Auth a)      -> (auth_parameters a)::parameters
-    | Some (Lang l)      -> (lang_parameters l)::parameters
-    | Some (Both (a, l)) ->
+    | None                    -> parameters
+    | Some (Auth a)           -> (auth_parameters a)::parameters
+    | Some (Lang l)           -> (lang_parameters l)::parameters
+    | Some (Auto (Some a, _)) -> (auth_parameters a)::parameters
+    | Some (Auto (None, l))   -> (lang_parameters l)::parameters
+    | Some (Both (a, l))      ->
       (auth_parameters a)::(lang_parameters l)::parameters
 
 let page_parameters (parameters : parameters) (page : Page.parameters option)
