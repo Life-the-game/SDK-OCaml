@@ -8,7 +8,7 @@ It is a complete library that allows you to integrate our API in any of your OCa
 ## API Documentation
 
 The full documentation of the API with the list of objects and methods:
-* [API full documentation](http://life.db0.fr/api/OCaml/v2/).
+* [API full documentation](http://doc.life.tl/api/OCaml/v2/).
 
 ## Install it
 
@@ -33,7 +33,7 @@ Since the API is not released to the public and not stable yet, it is useless to
 
 However, you can feed your curiosity with the following sample of code, or skim through the `example.ml` file. It will show you how to use the library.
 
-You can also generate the documentation using `make doc`, or browse it [here](http://life.db0.fr/api/OCaml/v2/).
+You can also generate the documentation using `make doc`, or browse it [here](http://doc.life.tl/api/OCaml/v2/).
 
 If you're interested in our project, you can follow the news
 [on our website](http://eip.epitech.eu/2014/lavieestunjeu/).
@@ -55,7 +55,7 @@ match ApiUser.get_one "Arthur42" with
 
 You should read the API full documentation (linked above) before reading this one.
 
-It is highly recommended to read either the [generated documentation](http://life.db0.fr/api/OCaml/v2/) or the comments in the source code to understand how this library works.
+It is highly recommended to read either the [generated documentation](http://doc.life.tl/api/OCaml/v2/) or the comments in the source code to understand how this library works.
 
 #### API Methods
 
@@ -69,16 +69,16 @@ These modules usually contains:
 
 #### API Types
 
-We use a bunch of custom types for all our methods in the API, available in the [`ApiTypes` module](http://life.db0.fr/api/OCaml/v2/ApiTypes.html).
+We use a bunch of custom types for all our methods in the API, available in the [`ApiTypes` module](http://doc.life.tl/api/OCaml/v2/ApiTypes.html).
 
 #### How to create an API method function?
 
-The [`Api` module](http://life.db0.fr/api/OCaml/v2/Api.html) contains the [`go` function](http://life.db0.fr/api/OCaml/v2/Api.html#VALgo) that pretty much handles everything for you to call an API method and return its result (generate the URL, execute the method, parse the result, unwrap the elements, ...).
+The [`Api` module](http://doc.life.tl/api/OCaml/v2/Api.html) contains the [`go` function](http://life.db0.fr/api/OCaml/v2/Api.html#VALgo) that pretty much handles everything for you to call an API method and return its result (generate the URL, execute the method, parse the result, unwrap the elements, ...).
 
 ###### The (optional) `rtype` parameter
 
 This is the type of the HTTP request.
-Refer to the [`Network` module](http://life.db0.fr/api/OCaml/v2/ApiTypes.NETWORK.html) for its type and a bunch of useful functions.
+Refer to the [`Network` module](http://doc.life.tl/api/OCaml/v2/ApiTypes.NETWORK.html) for its type and a bunch of useful functions.
 
 Default: `GET`
 
@@ -102,30 +102,30 @@ Default: empty list
 This one might be a little tricky.
 
 * If it's a `None`, then it means there's no requirements
-* If it's a `Some`, then its type is defined [here](http://life.db0.fr/api/OCaml/v2/ApiTypes.html#TYPErequirements)
+* If it's a `Some`, then its type is defined [here](http://doc.life.tl/api/OCaml/v2/ApiTypes.html#TYPErequirements)
 * The `go` caller (API method function) should take as a parameter either:
-a [`req`](http://life.db0.fr/api/OCaml/v2/ApiTypes.html#TYPErequirements),
-an [`auth`](http://life.db0.fr/api/OCaml/v2/ApiTypes.html#TYPEauth),
-or a [`Lang.t`](http://life.db0.fr/api/OCaml/v2/ApiTypes.LANG.html),
+a [`req`](http://doc.life.tl/api/OCaml/v2/ApiTypes.html#TYPErequirements),
+an [`auth`](http://doc.life.tl/api/OCaml/v2/ApiTypes.html#TYPEauth),
+or a [`Lang.t`](http://doc.life.tl/api/OCaml/v2/ApiTypes.LANG.html),
 depending on what the API method required. It should never take an optional `req`,
 since its the caller's job to inforce the requirements.
 * To easily transform an `auth` parameter of the caller into
 a `requirement` parameter of the `go` function, you can use the
-[`opt_auth` function](http://life.db0.fr/api/OCaml/v2/ApiTypes.html#VALopt_auth)
+[`opt_auth` function](http://doc.life.tl/api/OCaml/v2/ApiTypes.html#VALopt_auth)
 
 Default: `None`
 
 ###### The (optional) `page` parameter
 
-* It's a `Some` if the API method returns a [`Page`](http://life.db0.fr/api/OCaml/v2/ApiTypes.PAGE.html)
-* Refer to the [`Page` module](http://life.db0.fr/api/OCaml/v2/ApiTypes.PAGE.html) for its type and a bunch of useful functions.
+* It's a `Some` if the API method returns a [`Page`](http://doc.life.tl/api/OCaml/v2/ApiTypes.PAGE.html)
+* Refer to the [`Page` module](http://doc.life.tl/api/OCaml/v2/ApiTypes.PAGE.html) for its type and a bunch of useful functions.
 
 Default: `None`
 
 ###### The (optional) `get` parameter
 
 * These are the GET parameters of the HTTP request.
-* The type is defined [here](http://life.db0.fr/api/OCaml/v2/ApiTypes.NETWORK.html#TYPEparameters).
+* The type is defined [here](http://doc.life.tl/api/OCaml/v2/ApiTypes.NETWORK.html#TYPEparameters).
 * When the content of a parameter is a list, you can use the `list_parameter` function to transform a list of string into a string
 * When some of the caller (API method function) parameters are optional, you can use the `option_filter` to clean your list. Also check out `ExtLib.Option.map` if you need to convert some optional parameters to string.
 
@@ -134,7 +134,7 @@ Default: empty list
 ###### The (optional) `post` parameter
 
 * It's the POST data sent within the body of the HTTP request.
-* Its type is defined [here](http://life.db0.fr/api/OCaml/v2/ApiTypes.NETWORK.html#TYPEpost)
+* Its type is defined [here](http://doc.life.tl/api/OCaml/v2/ApiTypes.NETWORK.html#TYPEpost)
 
 Default: `PostEmpty`
 
@@ -146,11 +146,11 @@ Default: `PostEmpty`
 
 ###### The return value
 
-The API methods return an Api.t (defined in the [`ApiTypes` module](http://life.db0.fr/api/OCaml/v2/ApiTypes.html)).
-which can contain the content you asked or an error object (defined in the [`ApiError` module](http://life.db0.fr/api/OCaml/v2/ApiError.html)).
+The API methods return an Api.t (defined in the [`ApiTypes` module](http://doc.life.tl/api/OCaml/v2/ApiTypes.html)).
+which can contain the content you asked or an error object (defined in the [`ApiError` module](http://doc.life.tl/api/OCaml/v2/ApiError.html)).
 
 Some errors can also occur on client-side. To keep it simple, we use the same error system as the server-side errors.
-The list of available client-side errors is in the [`ApiError` module](http://life.db0.fr/api/OCaml/v2/ApiError.html).
+The list of available client-side errors is in the [`ApiError` module](http://doc.life.tl/api/OCaml/v2/ApiError.html).
 
 #### The private API
 
