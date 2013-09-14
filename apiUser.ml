@@ -110,7 +110,7 @@ let get_one ?(auth = None) id =
 (* Create a user                                                              *)
 (* ************************************************************************** *)
 
-let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
+    let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
     ?(gender = Gender.default) ?(birthday = None) ?(avatar = []) () =
   let post_parameters =
     Network.option_filter
@@ -133,6 +133,43 @@ let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
     ~req:(Some (Lang lang))
     ~post:post
     from_json
+
+(* ************************************************************************** *)
+(* Edit a user                                                                *)
+(* ************************************************************************** *)
+
+let edit ~auth
+    ?(email = "")
+    ?(old_password = "")
+    ?(password = "")
+    ?(firstname = "")
+    ?(lastname = "")
+    ?(gender = Gender.default)
+    ?(birthday = None)
+    ?(avatar = [])
+    id =
+   let post_parameters =
+    Network.option_filter
+      [("email", Some email);
+       ("password", Some password);
+       ("firstname", Some firstname);
+       ("lastname", Some lastname);
+       ("gender", Some (Gender.to_string gender));
+       ("birthday", Option.map Date.to_string birthday);
+      ] in
+  let post =
+    Network.PostMultiPart
+      (post_parameters,
+       Network.files_filter [("avatar", avatar)],
+       ApiMedia.Picture.path_to_contenttype) in
+  Api.go
+    ~rtype:PUT
+    ~path:["users"; id]
+    ~req:(Some (Auth auth))
+    ~post:post
+    from_json
+
+
 
 (* (\* ************************************************************************** *\) *)
 (* (\* Delete a user                                                              *\) *)

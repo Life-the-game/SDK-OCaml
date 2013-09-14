@@ -14,63 +14,59 @@ open ApiTypes
 type t =
     {
       info          : Info.t;
-      creator       : ApiUser.t;
+      author        : ApiUser.t;
       content       : string;
-      likers_count  : int;
+      medias        : ApiMedia.t list;
     }
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {API Methods}                                                             *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(** {API Methods}                                                             *)
+(* ************************************************************************** *)
 
-(* (\* Get comments on an achievement status                                      *\) *)
-(* val get : *)
-(*     auth:auth *)
-(*     -> ?index:int option *)
-(*     -> ?limit:int option *)
-(*     -> id -> t ApiTypes.List.t Api.t *)
+(* Get comments on an achievement status                                      *)
+val get :
+    req:requirements
+    -> ?page:Page.parameters
+(* PRIVATE *)
+     -> ?user:id option
+(* /PRIVATE *)
+     -> ?with_medias:bool option 
+     -> id -> t ApiTypes.Page.t Api.t 
 
-(* (\* Comments an achievement status                                             *\) *)
-(* val comment : *)
-(*     auth:auth *)
-(*     -> ?user_id:string option *)
-(*     -> ?comment:string option *)
-(*     -> id -> t Api.t *)
+(* Get one specific comment on an achievement status                          *)
+ val get_comment :
+     req:requirements
+(* PRIVATE *)
+    -> ?user:id option
+(* /PRIVATE *)
+     -> id -> id -> t Api.t 
 
-(* (\* Get a comment on an achievement status                                     *\) *)
-(* val get_comment : *)
-(*     auth:auth -> id -> id -> t Api.t *)
+(* Create a comment on an achievement status                                  *)
+ val create :
+     auth:auth
+(* PRIVATE *)
+     -> author:string
+(* /PRIVATE *)
+     -> content:string
+     -> ?medias:path list
+     -> id -> t Api.t 
 
-(* (\* Edit (put) a comment on an achievement status                              *\) *)
-(* val edit    : *)
-(*     auth:auth *)
-(*     -> ?comment:string option *)
-(*     -> id -> id -> t Api.t *)
+(* Approve a comment on an achievement status                                 *)
+val approve :
+    auth:auth
+(* PRIVATE *)
+    -> approver:string
+(* /PRIVATE *)
+    -> id -> id -> unit Api.t
 
-(* (\* Remove a comment from an achievement status                                *\) *)
-(* val remove  : *)
-(*     auth:auth -> id -> id -> unit Api.t *)
+(* Disapprove a comment on an achievement status                              *)
+val disapprove :
+    auth:auth
+(* PRIVATE *)
+    -> disapprover:id
+(* /PRIVATE *)
+    -> id -> id -> unit Api.t
 
-(* (\* Get likers for a comment                                                   *\) *)
-(* val get_likers  : *)
-(*     auth:auth *)
-(*     -> ?index:int option *)
-(*     -> ?limit:int option *)
-(*     -> id -> id -> t List.t Api.t *)
-
-(* (\* Like a comment                                                             *\) *)
-(* val like    : *)
-(*     auth:auth *)
-(*     -> ?user_id:string option *)
-(*     -> id -> id -> unit Api.t *)
-
-(* (\* Remove a like from a comment                                               *\) *)
-(* val remove_like : *)
-(*     auth:auth -> id -> id -> unit Api.t *)
-
-(* (\* Remove a liker from a comment                                              *\) *)
-(* val remove_liker    : *)
-(*     auth:auth -> id -> id -> id -> unit Api.t *)
 
 
 (* ************************************************************************** *)

@@ -68,6 +68,20 @@ val create :
   -> ?avatar:path
   -> unit -> t Api.t
 
+(** Edit a user                                                              *)
+val edit :
+  auth:auth
+  -> ?email:email
+  -> ?old_password:string
+  -> ?password:string
+  -> ?firstname:string
+  -> ?lastname:string
+  -> ?gender:Gender.t
+  -> ?birthday:Date.t option
+  -> ?avatar:path
+  -> id -> t Api.t
+
+
 (* (\** Delete a user                                                             *\) *)
 (* val delete : auth:auth -> id -> unit Api.t *)
 
