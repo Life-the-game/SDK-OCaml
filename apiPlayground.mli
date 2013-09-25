@@ -23,6 +23,15 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
+(** Get activities                                                            *)
+val get :
+    ?page:Page.parameters
+    -> ?activity_type:string list
+(* PRIVATE *)
+    -> ?user:string option
+(* /PRIVATE *)
+    -> unit -> (t Page.t Api.t)
+
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

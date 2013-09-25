@@ -44,3 +44,28 @@ let from_json c =
 (* ************************************************************************** *)
 (* API Methods                                                                *)
 (* ************************************************************************** *)
+
+(* ************************************************************************** *)
+(* Get activities                                                             *)
+(* ************************************************************************** *)
+
+let get ?(page = Page.default_parameters) ?(activity_type = [])
+(* PRIVATE *)
+    ?(user = None)
+(* /PRIVATE *)
+    () =
+    Api.go
+    ~path:(
+        (match user with
+        | Some id -> ["users"; id; "activities"]
+        | None -> ["activities"])
+        )
+    ~page:(Some page)
+    ~get:(Network.option_filter
+        [("type", Some (Network.list_parameter activity_type));]
+    )
+    (Page.from_json from_json)
+
+
+
+
