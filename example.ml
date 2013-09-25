@@ -14,7 +14,7 @@ open ApiTypes
 let _ =
   let open ApiConf in
       verbose := true;
-      base_url := "http://paysdu42.fr:2048/api/v1"
+      base_url := "http://localhost:2049/api/v1"
 
 (* ************************************************************************** *)
 (* Tests configuration                                                        *)
@@ -148,13 +148,15 @@ let _ =
               ~lastname:lastname
               ~gender:gender
               ~birthday:(Some birthday)
-            ~avatar:picture
+              ~avatar:picture
               ()) in
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Authentication tests                          #";
   ApiDump.lprint_endline "#################################################";
+
+  Unix.sleep 1;
 
   print_title "Authenticate using a login and a password";
   let auth = test (ApiAuth.login login password) in
