@@ -21,7 +21,7 @@ type t =
       avatar                   : ApiMedia.Picture.t option;
       gender                   : Gender.t;
       birthday                 : Date.t option;
-      lang                     : Lang.t;
+      (* lang                     : Lang.t; *)
 (* PRIVATE *)
       email                    : email option;
 (* /PRIVATE *)
@@ -50,7 +50,7 @@ let from_json c =
         gender      = Gender.of_string (c |> member "gender" |> to_string);
         birthday    = c |> member "birthday" |> to_option
             (fun d -> Date.of_string (d |> to_string));
-        lang        = Lang.from_string (c |> member "lang" |> to_string);
+        (* lang        = Lang.from_string (c |> member "lang" |> to_string); *)
 (* PRIVATE *)
         email       = c |> member "email" |> to_string_option;
 (* /PRIVATE *)

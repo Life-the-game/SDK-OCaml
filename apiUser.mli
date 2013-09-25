@@ -21,7 +21,7 @@ type t =
       avatar                   : ApiMedia.Picture.t option;
       gender                   : Gender.t;
       birthday                 : Date.t option;
-      lang                     : Lang.t;
+      (* lang                     : Lang.t; *)
 (* PRIVATE *)
       email                    : email option;
 (* /PRIVATE *)
