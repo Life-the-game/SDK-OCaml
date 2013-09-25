@@ -8,6 +8,17 @@ open Yojson.Basic.Util
 open ApiTypes
 
 (* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+(* todo check what happens if the exetions are raised *)
+let extension path =
+  let f = List.hd (List.rev path) in
+  let start = try (String.rindex f '.') + 1 with Not_found -> 0
+  in try String.sub f start ((String.length f) - start)
+    with Invalid_argument s -> ""
+
+(* ************************************************************************** *)
 (* Picture                                                                    *)
 (* ************************************************************************** *)
 
@@ -35,10 +46,10 @@ struct
       url_big   = c |> member "url_big"   |> to_string;
     }
   let path_to_contenttype path =
-    match List.hd (List.rev path) with (* todo get ext *)
-    | "jpg" -> Some ""
-    | "png" -> Some ""
-    | "bmp" -> Some ""
+    match extension path with (* todo get ext *)
+    | "jpg" -> Some "image/jpeg"
+    | "png" -> Some "image/png"
+    | "bmp" -> Some "image/bmp"
     | _     -> None
 end
 
@@ -70,8 +81,8 @@ struct
       thumbnail = Picture.from_json (c |> member "thumbnail");
     }
   let path_to_contenttype path =
-    match List.hd (List.rev path) with (* todo get ext *)
-    | "mp4" -> Some ""
+    match extension path with
+    | "mp4" -> Some "video/mp4"
     | _     -> None
 end
 
