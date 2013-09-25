@@ -211,8 +211,8 @@ sig
         server_size : int;
         index       : int;
         limit       : int;
-        order       : order;
-        direction   : direction;
+        (* order       : order; *)
+        (* direction   : direction; *)
         items       : 'a list;
       }
   type parameters =

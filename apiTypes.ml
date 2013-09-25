@@ -321,8 +321,8 @@ sig
         server_size : int;
         index       : int;
         limit       : int;
-        order       : order;
-        direction   : direction;
+        (* order       : order; *)
+        (* direction   : direction; *)
         items       : 'a list;
       }
   type parameters =
@@ -361,8 +361,8 @@ struct
         server_size : int;
         index       : int;
         limit       : int;
-        order       : order;
-        direction   : direction;
+        (* order       : order; *)
+        (* direction   : direction; *)
         items       : 'a list;
       }
   type parameters =
@@ -375,13 +375,15 @@ struct
     let nextpage = page.index + page.limit in
     if nextpage < page.server_size
     then Some (Some nextpage, Some page.limit,
-               Some page.order, Some page.direction)
+               (* Some page.order, Some page.direction) *)
+	       None, None)
     else None
   let previous page =
     let previouspage = page.index + page.limit in
     if previouspage >= 0
     then Some (Some previouspage, Some page.limit,
-               Some page.order, Some page.direction)
+               (* Some page.order, Some page.direction) *)
+	       None, None)
     else None
   let default_order = Smart
   let order_to_string = function
@@ -411,9 +413,9 @@ struct
           server_size = c |> member "server_size" |> to_int;
           index       = c |> member "index"       |> to_int;
           limit       = c |> member "limit"       |> to_int;
-          order       = order_of_string (c |> member "order" |> to_string);
-          direction   = direction_of_string
-            (c |> member "direction" |> to_string);
+          (* order       = order_of_string (c |> member "order" |> to_string); *)
+          (* direction   = direction_of_string *)
+          (*   (c |> member "direction" |> to_string); *)
           items       = convert_each f (c |> member "items");
         }
 end
