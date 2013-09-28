@@ -51,17 +51,19 @@ type t =
 
 let from_json c =
   let open Yojson.Basic.Util in
-      {
-        info        = Info.from_json c;
-        approvement      = Approvable.from_json c;
-        owner            = ApiUser.from_json (c |> member "owner");
-        achievement      = ApiAchievement.from_json (c |> member "achievement");
-        status           = Status.of_string (c |> member "status" |> to_string);
-        message          = c |> member "message" |> to_string_option;
-        medias           = c |> member "medias" |>
-            convert_each ApiMedia.from_json;
-        url              = c |> member "url" |> to_string;
-      }
+  {
+    info        = Info.from_json c;
+    approvement      = Approvable.from_json c;
+    owner            = ApiUser.from_json (c |> member "owner");
+    achievement      = ApiAchievement.from_json (c |> member "achievement");
+    status           = Status.of_string (c |> member "status" |> to_string);
+    message          = c |> member "message" |> to_string_option;
+    medias           = (match c |> member "medias"
+			   |> to_option (convert_each ApiMedia.from_json) with
+			       | Some l -> l
+			       | None -> []);
+    url              = c |> member "url" |> to_string;
+  }
 
 (* ************************************************************************** *)
 (* API Methods                                                                *)
