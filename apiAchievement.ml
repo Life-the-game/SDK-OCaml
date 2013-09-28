@@ -18,6 +18,7 @@ type t =
       name               : string;
       description        : string option;
       badge              : ApiMedia.Picture.t option;
+      color              : color option;
       category           : bool;
       secret             : bool;
       discoverable       : bool;
@@ -37,6 +38,7 @@ let rec from_json c =
         description        = c |> member "description" |> to_string_option;
         badge              = (c |> member "badge"
                                 |> to_option ApiMedia.Picture.from_json);
+	color              = c |> member "color" |> to_string_option;
         category           = c |> member "category" |> to_bool;
         secret             = c |> member "secret" |> to_bool;
         discoverable       = c |> member "discoverable" |> to_bool;

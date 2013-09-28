@@ -17,6 +17,7 @@ type t =
       name               : string;
       description        : string option;
       badge              : ApiMedia.Picture.t option;
+      color              : color option;
       category           : bool;
       secret             : bool;
       discoverable       : bool;
