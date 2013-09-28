@@ -16,12 +16,12 @@ type t =
       info           : Info.t;
       user           : ApiUser.t;
 (* PRIVATE *)
-      ip             : ip;
-      user_agent     : string;
+      (* ip             : ip; *)
+      (* user_agent     : string; *)
 (* /PRIVATE *)
       token          : token;
       expiration     : DateTime.t;
-      facebook_token : string option;
+      (* facebook_token : string option; *)
     }
 
 (* ************************************************************************** *)
@@ -34,14 +34,14 @@ let from_json content =
         info       = Info.from_json content;
         user       = ApiUser.from_json (content |> member "user");
 (* PRIVATE *)
-        ip         = content |> member "ip" |> to_string;
-        user_agent = content |> member "user_agent" |> to_string;
+        (* ip         = content |> member "ip" |> to_string; *)
+        (* user_agent = content |> member "user_agent" |> to_string; *)
 (* /PRIVATE *)
         token      = content |> member "token" |> to_string;
         expiration = DateTime.of_string
           (content |> member "expiration" |> to_string);
-        facebook_token = content |> member "facebook_token"
-          |> to_string_option;
+        (* facebook_token = content |> member "facebook_token" *)
+        (*   |> to_string_option; *)
       }
 
 (* Transform an API object returned by the login function into an api type

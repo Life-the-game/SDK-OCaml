@@ -16,12 +16,12 @@ type t =
       info           : ApiTypes.Info.t;
       user           : ApiUser.t;
 (* PRIVATE *)
-      ip             : ip;
-      user_agent     : string;
+      (* ip             : ip; *)
+      (* user_agent     : string; *)
 (* /PRIVATE *)
       token          : token;
       expiration     : ApiTypes.DateTime.t;
-      facebook_token : string option;
+      (* facebook_token : string option; *)
     }
 
 (* ************************************************************************** *)
