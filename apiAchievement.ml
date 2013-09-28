@@ -19,10 +19,9 @@ type t =
       description        : string option;
       badge              : ApiMedia.Picture.t option;
       category           : bool;
-      child_achievements : t Page.t;
       secret             : bool;
       discoverable       : bool;
-      keywords           : string list;
+      (* keywords           : string list; *)(*42*)
       url                : url;
     }
 
@@ -39,11 +38,9 @@ let rec from_json c =
         badge              = (c |> member "badge"
                                 |> to_option ApiMedia.Picture.from_json);
         category           = c |> member "category" |> to_bool;
-        child_achievements = Page.from_json
-          from_json (c |> member "child_achievements");
         secret             = c |> member "secret" |> to_bool;
         discoverable       = c |> member "discoverable" |> to_bool;
-        keywords           = convert_each to_string (c |> member "keywords");
+        (* keywords           = convert_each to_string (c |> member "keywords"); *)
         url                = c |> member "url" |> to_string;
       }
 

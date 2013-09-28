@@ -18,10 +18,9 @@ type t =
       description        : string option;
       badge              : ApiMedia.Picture.t option;
       category           : bool;
-      child_achievements : t Page.t;
       secret             : bool;
       discoverable       : bool;
-      keywords           : string list;
+      (* keywords           : string list; *)(*42*)
       url                : url;
     }
 
