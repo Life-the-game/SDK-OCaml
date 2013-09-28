@@ -22,6 +22,7 @@ type password = string
 type email    = string
 type url      = string
 type token    = string
+type color    = string
 (* PRIVATE *)
 type ip       = string
 (* /PRIVATE *)
