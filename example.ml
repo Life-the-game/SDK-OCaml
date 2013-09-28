@@ -14,14 +14,14 @@ open ApiTypes
 let _ =
   let open ApiConf in
       verbose := true;
-      base_url := "http://localhost:2049/api/v1"
+      base_url := "http://localhost:8080/api/v1"
 
 (* ************************************************************************** *)
 (* Tests configuration                                                        *)
 (* ************************************************************************** *)
 
 let print_success = true
-let stop_on_error = false
+let stop_on_error = true
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -170,7 +170,7 @@ let _ =
   print_title "Create an achievement";
   ignore (auth_test (fun auth ->
     ApiAchievement.create ~auth:auth ~name:achievement_name
-      ~description:achievement_description ~badge:picture
+      ~description:achievement_description (* ~badge:picture *)
       ~keywords:["hello"; "world"] ()) auth);
 (* /PRIVATE *)
 
@@ -188,17 +188,17 @@ let _ =
           ignore (test ~f:pageprint (ApiAchievement.get ~req:(Lang lang)
                                        ~page:nextpage ())));
 
-  print_title "Get one achievement";
-  (match achievements with (* Check if the list exists *)
-    | Error e -> impossible "the previous tests failed"
-    | Result page ->
-      if page.Page.server_size == 0 (* Check if there are elements to get *)
-      then ApiDump.lprint_endline "No elements available"
-      else
-        let achievement_id =
-          (List.hd page.Page.items).ApiAchievement.info.Info.id in
-        ignore (test (ApiAchievement.get_one
-                        ~req:(Lang lang) achievement_id)));
+  (* print_title "Get one achievement"; *)
+  (* (match achievements with (\* Check if the list exists *\) *)
+  (*   | Error e -> impossible "the previous tests failed" *)
+  (*   | Result page -> *)
+  (*     if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
+  (*     then ApiDump.lprint_endline "No elements available" *)
+  (*     else *)
+  (*       let achievement_id = *)
+  (*         (List.hd page.Page.items).ApiAchievement.info.Info.id in *)
+  (*       ignore (test (ApiAchievement.get_one *)
+  (*                       ~req:(Lang lang) achievement_id))); *)
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -298,7 +298,7 @@ let _ =
               ApiAchievementStatus.edit ~auth:auth
                 ~status:(Some ApiAchievementStatus.Status.Achieved)
                 ~message:(Some "")
-                ~add_medias:[picture; picture2]
+                (* ~add_medias:[picture; picture2] *)
                 achievement_status_id) auth);
         ));
 
