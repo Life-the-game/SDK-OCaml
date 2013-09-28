@@ -24,13 +24,13 @@ struct
   type t =
     | Objective
     | Achieved
-  let to_string = function (* todo: update the api to use the correct words *)
-    | Objective -> "planned"
-    | Achieved  -> "done"
+  let to_string = function
+    | Objective -> "objective"
+    | Achieved  -> "achieved"
   let of_string = function
-    | "planned" -> Objective
-    | "done"    -> Achieved
-    | _         -> Objective
+    | "objective" -> Objective
+    | "achieved"  -> Achieved
+    | _           -> Objective
 end
 
 type t =
