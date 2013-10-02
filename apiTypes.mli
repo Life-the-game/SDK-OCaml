@@ -188,7 +188,7 @@ sig
         disapprovers_total : int;
         approved           : bool option;
         disapproved        : bool option;
-        score              : int;
+        (* score              : int; *)
       }
   val from_json : Yojson.Basic.json -> t
 end

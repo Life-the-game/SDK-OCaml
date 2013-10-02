@@ -279,7 +279,7 @@ sig
         disapprovers_total : int;
         approved           : bool option;
         disapproved        : bool option;
-        score              : int;
+        (* score              : int; *)
       }
   val from_json : Yojson.Basic.json -> t
 end
@@ -291,7 +291,7 @@ struct
         disapprovers_total : int;
         approved           : bool option;
         disapproved        : bool option;
-        score              : int;
+        (* score              : int; *)
       }
   let from_json c =
     let open Yojson.Basic.Util in
@@ -300,7 +300,7 @@ struct
           disapprovers_total = c |> member "disapprovers_total" |> to_int;
           approved           = c |> member "approved" |> to_bool_option;
           disapproved        = c |> member "disapproved" |> to_bool_option;
-          score              = c |> member "score" |> to_int;
+          (* score              = c |> member "score" |> to_int; *)
         }
 end
 
