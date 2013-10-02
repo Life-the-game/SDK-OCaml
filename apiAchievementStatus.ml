@@ -94,7 +94,7 @@ let get ~req ?(page = Page.default_parameters) ?(term = [])
 
 let get_one ~req user_id achievement_id =
   Api.go
-    ~path:["users"; user_id; "achievement_status"; achievement_id]
+    ~path:[(* "users"; user_id;  *)"achievement_statuses"; achievement_id]
     ~req:(Some req)
     from_json
 
