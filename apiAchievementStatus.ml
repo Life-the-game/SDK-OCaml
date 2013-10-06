@@ -168,109 +168,61 @@ let edit ~auth
     ~post:post
     from_json
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Delete an achievement status                                               *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Approve an achievement status                                              *)
+(* ************************************************************************** *)
 
-(* let delete ~auth user_id as_id = *)
-(*     let url = Api.url ~parents:["user"; user_id; "achievement_statuses"; as_id] *)
-(*         ~auth:(Some auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
+let approve ~auth
+(* PRIVATE *)
+    ~approver
+(* /PRIVATE *)
+    id =
+        let post_parameters =
+            Network.empty_filter
+            [
+(* PRIVATE *)
+                ("approver", approver);
+(* /PRIVATE *)
+            ] in
+        let post = Network.PostList post_parameters in
+        Api.go
+        ~rtype:POST
+        ~path:(
+            ["users"] @
+(* PRIVATE *)
+            [approver] @
+(* /PRIVATE *)
+            ["achievement_statuses"; id; "approvers"])
+        ~req:(Some (Auth auth))
+        ~post:post
+        Api.noop
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Get the details of one achievement status                                  *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Disapprove an achievement status                                           *)
+(* ************************************************************************** *)
 
-(* let get_one ~auth id = *)
-(*   let url = Api.url ~parents:["achievement_statuses"; id] *)
-(*     ~auth:(Some auth) () in *)
-(*   Api.go ~auth:(Some auth) url from_json *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Delete user's achievement status                                           *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let delete ~auth id = *)
-(*   let url = Api.url ~parents:["achievement_statuses"; id] ~auth:(Some auth) () in *)
-(*   Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Get approvers for an achievement status                                    *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get_approvers ~auth ?(index = None) ?(limit = None) id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; id; "approvers"]  *)
-(*         ~auth:(Some auth) *)
-(*         ~get:(Api.pager index limit []) () in *)
-(*     Api.go ~auth:(Some auth) url (List.from_json from_json) *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Approve an achievement status                                              *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let approve ~auth ?(src_user = None) id = *)
-(*     let url = *)
-(*         Api.url ~parents:["achievement_statuses"; id; "approvers"] ~auth:(Some *)
-(*         auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:POST *)
-(*         ~post:(PostList (Api.option_filter [("src_user_id", src_user)])) url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Remove approving from an achievement status                                *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let remove_approve ~auth id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; id; "approvers"] ~auth:(Some *)
-(*         auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Remove an approver from an achievement status                              *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let remove_approver ~auth as_id user_id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; as_id; "approvers"; *)
-(*         user_id] ~auth:(Some auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Get disapprovers for an achievement status                                 *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get_disapprovers ~auth ?(index = None) ?(limit = None) id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; id; "disapprovers"]  *)
-(*         ~auth:(Some auth) *)
-(*         ~get:(Api.pager index limit []) () in *)
-(*     Api.go ~auth:(Some auth) url (List.from_json from_json) *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Disapprove an achievement status                                           *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let disapprove ~auth ?(src_user = None) id = *)
-(*     let url = *)
-(*         Api.url ~parents:["achievement_statuses"; id; "disapprovers"] ~auth:(Some *)
-(*         auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:POST *)
-(*         ~post:(PostList (Api.option_filter [("src_user_id", src_user)])) url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Remove disapproving from an achievement status                             *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let remove_disapprove ~auth id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; id; "disapprovers"] *)
-(*     ~auth:(Some *)
-(*         auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Remove a disapprover from an achievement status                            *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let remove_disapprover ~auth as_id user_id = *)
-(*     let url = Api.url ~parents:["achievement_statuses"; as_id; "disapprovers"; *)
-(*         user_id] ~auth:(Some auth) () in *)
-(*     Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
+let disapprove ~auth
+(* PRIVATE *)
+    ~disapprover
+(* /PRIVATE *)
+    id =
+        let post_parameters =
+            Network.empty_filter
+            [
+(* PRIVATE *)
+                ("disapprover", disapprover);
+(* /PRIVATE *)
+            ] in
+        let post = Network.PostList post_parameters in
+        Api.go
+        ~rtype:POST
+        ~path:(
+            ["users"] @
+(* PRIVATE *)
+            [disapprover] @
+(* /PRIVATE *)
+            ["achievement_statuses"; id; "disapprovers"])
+        ~req:(Some (Auth auth))
+        ~post:post
+        Api.noop
 
