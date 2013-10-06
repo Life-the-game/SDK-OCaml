@@ -77,62 +77,13 @@ val edit :
   -> ?remove_medias:id list
   -> id -> t Api.t
 
-(* (\** Delete an achievement status                                            *\) *)
-(* val delete : *)
-(*     auth:auth -> id -> id -> unit Api.t *)
-
-(* (\** Delete user's achievement status                                        *\) *)
-(* val delete : *)
-(*     auth:auth -> id -> unit Api.t *)
-
-(* (\** Edit (put) an achievement status                                        *\) *)
-(* val edit : *)
-(*     auth:auth *)
-(*     -> ?state_code:int option *)
-(*     -> ?message:string option *)
-(*     -> id -> t Api.t *)
-
-(* (\** Get approvers for an achievement status                                 *\) *)
-(* val get_approvers : *)
-(*     auth:auth *)
-(*     -> ?index:int option *)
-(*     -> ?limit:int option *)
-(*     -> id -> t List.t Api.t *)
-
-(* (\** Approve an achievement status                                           *\) *)
-(* val approve : *)
-(*     auth:auth *)
-(*     -> ?src_user:id option *)
-(*     -> id -> unit Api.t *)
-
-(* (\* Remove approving from an achievement status                              *\) *)
-(* val remove_approve : *)
-(*     auth:auth -> id -> unit Api.t *)
-
-(* (\* Remove an approver from an achievement status                            *\) *)
-(* val remove_approver : *)
-(*     auth:auth -> id -> id -> unit Api.t *)
-
-(* (\** Get disapprovers for an achievement status                              *\) *)
-(* val get_disapprovers : *)
-(*     auth:auth *)
-(*     -> ?index:int option *)
-(*     -> ?limit:int option *)
-(*     -> id -> t List.t Api.t *)
-
-(* (\** Disapprove an achievement status                                        *\) *)
-(* val disapprove : *)
-(*     auth:auth *)
-(*     -> ?src_user:id option *)
-(*     -> id -> unit Api.t *)
-
-(* (\* Remove disapproving from an achievement status                           *\) *)
-(* val remove_disapprove : *)
-(*     auth:auth -> id -> unit Api.t *)
-
-(* (\* Remove a disapprover from an achievement status                          *\) *)
-(* val remove_disapprover : *)
-(*     auth:auth -> id -> id -> unit Api.t *)
+(** Approve an achievement status                                             *)
+val approve :
+  auth:auth
+(* PRIVATE *)
+  -> approver: id option
+(* /PRIVATE *)
+  -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

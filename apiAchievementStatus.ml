@@ -177,6 +177,11 @@ let approve ~auth
     ~approver
 (* /PRIVATE *)
     id =
+        let approver =
+            match approver with
+                | None -> ""
+                | Some user -> user
+        in
         let post_parameters =
             Network.empty_filter
             [
@@ -188,11 +193,12 @@ let approve ~auth
         Api.go
         ~rtype:POST
         ~path:(
-            ["users"] @
+                    ["users"] @
 (* PRIVATE *)
-            [approver] @
+                    [approver] @
 (* /PRIVATE *)
-            ["achievement_statuses"; id; "approvers"])
+                    ["achievement_statuses"; id; "approvers"]
+        )
         ~req:(Some (Auth auth))
         ~post:post
         Api.noop

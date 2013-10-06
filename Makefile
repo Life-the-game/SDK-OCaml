@@ -24,6 +24,7 @@ SRC		=	\
 			apiNews.ml \
 			apiPlayground.ml \
 			apiFeed.ml \
+			apiGameNetwork.ml \
 			\
 
 SRCI		=	\
@@ -41,6 +42,7 @@ SRCI		=	\
 			apiNews.mli \
 			apiPlayground.mli \
 			apiFeed.mli \
+			apiGameNetwork.mli \
 			\
 
 SRCDOC		=	$(SRCI) $(SRC)
