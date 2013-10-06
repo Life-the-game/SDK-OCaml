@@ -14,14 +14,18 @@ open ApiTypes
 let _ =
   let open ApiConf in
       verbose := true;
-      base_url := "http://localhost:8080/api/v1"
+      base_url := "http://localhost:8080/api/v1";
+      (Arg.parse
+         [("-u", Arg.String (fun url -> base_url := url),
+	   "the URL of the web service")]
+         (fun _ -> ()) "./example [-u url]")
 
 (* ************************************************************************** *)
 (* Tests configuration                                                        *)
 (* ************************************************************************** *)
 
 let print_success = true
-let stop_on_error = true
+let stop_on_error = false
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -282,7 +286,7 @@ let _ =
           | Result user ->
             let achievement_status_id =
               (List.hd page.Page.items).ApiAchievementStatus.info.Info.id
-            and user_id = user.ApiUser.info.Info.id in
+            and user_id = user.ApiUser.login in
 
   print_title "with auth";
             ignore (auth_test (fun auth ->
@@ -292,15 +296,16 @@ let _ =
   print_title "with lang";
             ignore (test (ApiAchievementStatus.get_one ~req:(Lang lang)
                             user_id achievement_status_id));
-
-  print_title "Unlock this ojective + add pictures + remove message";
-            ignore (auth_test (fun auth ->
-              ApiAchievementStatus.edit ~auth:auth
-                ~status:(Some ApiAchievementStatus.Status.Achieved)
-                ~message:(Some "")
-                (* ~add_medias:[picture; picture2] *)
-                achievement_status_id) auth);
         ));
+
+  (* print_title "Unlock this ojective + add pictures + remove message"; *)
+  (*           ignore (auth_test (fun auth -> *)
+  (*             ApiAchievementStatus.edit ~auth:auth *)
+  (*               ~status:(Some ApiAchievementStatus.Status.Achieved) *)
+  (*               ~message:(Some "") *)
+  (*               (\* ~add_medias:[picture; picture2] *\) *)
+  (*               achievement_status_id) auth); *)
+  (*       )); *)
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
