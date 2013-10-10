@@ -109,7 +109,8 @@ let test
       failure e;
       ApiDump.error e;
       ApiDump.lprint_endline "\n  ----> FAILURE\n";
-      if stop_on_error then exit 1
+      (* if stop_on_error then print_total (); exit 1 *)
+    ()
     end
   and on_result r =
     begin
@@ -245,39 +246,42 @@ let _ =
   ApiDump.lprint_endline "#################################################";
 
   print_title "Add a user to my Game Network";
+
   (match users with (* Check if the list exists *)
     | Error e -> impossible "the previous tests failed"
     | Result page ->
-            if page.Page.server_size == 0 (* Check if there are elements to get *)
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
       then ApiDump.lprint_endline "No user to add"
       else
           let user_id = (List.hd page.Page.items).ApiUser.login in
 
-          print_title "with auth";
    ignore (auth_test (fun auth ->
-       ApiGameNetwork.add
-          ~auth:auth
-          user_id) auth);
+     ApiGameNetwork.add
+       ~auth:auth
+       user_id) auth);
+
+  print_title "Get following";
+
+  print_title "with auth";
+  ignore (auth_test (fun auth -> ApiGameNetwork.get_mine
+    ~auth:auth ()) auth);
+
+  print_title "without auth (and of someone else)";
+  ignore (test (ApiGameNetwork.get user_id));
+
+
+  print_title "Get followers...";
+
+  print_title "with auth";
+  ignore (auth_test (fun auth -> ApiGameNetwork.get_my_followers
+    ~auth:auth ()) auth);
+
+  print_title "without auth (and of someone else)";
+  ignore (test (ApiGameNetwork.get_followers user_id));
+
   );
 
-  print_title "get users who have me in their game network";
-  (match user with
-  | Error e -> impossible "the user has not been created"
-  | Result user ->
-       
-          print_title "with auth";
-   ignore (auth_test (fun auth -> ApiGameNetwork.get_my_users
-          ~req:(Auth auth)
-          ~page:(None, Some 2, Some Page.Alphabetic, None)
-   () ) auth);
-
-          print_title "with auth";
-   ignore (test (ApiGameNetwork.get_my_users
-          ~req:(Lang lang)
-          ~page:(None, Some 2, Some Page.Alphabetic, None)
-   () ));
-  );
-
+  exit 1;
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -384,7 +388,7 @@ let _ =
             ~medias:[picture; picture2] achievement_status_id) auth));
 
   print_title "Get my comments ordered by name limit 2 with auth";
-  let achievements_statuses_comments =
+  let _ =
       (match achievements_statuses with
     | Error e -> impossible "previously failed to get achievements statuses"
     | Result page ->

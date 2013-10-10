@@ -12,68 +12,44 @@ open Network
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
-(* Get Game Network                                                           *)
+(* Get Game Network (People you follow)                                       *)
 (* ************************************************************************** *)
+(* Auth is optional but gives you more info                                   *)
 
-let get ?(auth = None) ?(page = Page.default_parameters) ?(term = "")
-(* PRIVATE *)
-    ~user
-(* /PRIVATE *)
-    () =
-    Api.go
-        ~path:(
-           ["users"] @
-(* PRIVATE *)
-        [user] @
-(* /PRIVATE *)
-        ["network"])
-        ~req:(opt_auth auth)
-        ~page:(Some page)
-        ~get:(Network.empty_filter
-        [("term", term)])
-        (Page.from_json ApiUser.from_json)
-
-(* ************************************************************************** *)
-(* Get My Game Network                                                        *)
-(* ************************************************************************** *)
-
-let get_mine ~auth ?(page = Page.default_parameters) ?(term="") () =
-    Api.go
-    ~path:(["network"])
-    ~req:(Some(Auth auth))
+let get ?(auth = None) ?(page = Page.default_parameters) ?(term = "") user =
+  Api.go
+    ~path:["users"; user; "network"]
+    ~req:(opt_auth auth)
     ~page:(Some page)
     ~get:(Network.empty_filter
-    [("term", term)])
+            [("term", term)])
+    (Page.from_json ApiUser.from_json)
+
+let get_mine ~auth ?(page = Page.default_parameters) ?(term="") () =
+  Api.go
+    ~path:(["network"])
+    ~req:(Some (Auth auth))
+    ~page:(Some page)
+    ~get:(Network.empty_filter
+	    [("term", term)])
     (Page.from_json ApiUser.from_json)
 
 (* ************************************************************************** *)
-(* Get users who have a specified user in their Game Network                  *)
+(* Get users who have me in their game network (People who follow you)        *)
 (* ************************************************************************** *)
+(* Auth is optional but gives you more info                                   *)
 
-let get_users ~req ?(page = Page.default_parameters)
-(* PRIVATE *)
-    ~user
-(* /PRIVATE *)
-    () =
-        Api.go 
-     ~path:(
-            ["users"] @
-(* PRIVATE *)
-        [user] @
-(* /PRIVATE *)
-        ["others_network"])
-    ~req:(Some req)
+let get_followers ?(auth = None) ?(page = Page.default_parameters) user =
+  Api.go 
+    ~path:["users"; user; "others_network"]
+    ~req:(opt_auth auth)
     ~page:(Some page)
     (Page.from_json ApiUser.from_json)
 
-(* ************************************************************************** *)
-(* Get users who have me in their Game Network                                *)
-(* ************************************************************************** *)
-
-let get_my_users ~req ?(page = Page.default_parameters) () =
-        Api.go 
-     ~path:(["others_network"])
-    ~req:(Some req)
+let get_my_followers ~auth ?(page = Page.default_parameters) () =
+  Api.go 
+    ~path:["others_network"]
+    ~req:(Some (Auth auth))
     ~page:(Some page)
     (Page.from_json ApiUser.from_json)
 
@@ -83,18 +59,18 @@ let get_my_users ~req ?(page = Page.default_parameters) () =
 
 let add ~auth
 (* PRIVATE *)
-    ?(user = None)
+    ?(adder = None)
 (* /PRIVATE *)
-    target_user =
+    added =
         Api.go
         ~rtype:POST
         ~path:(
 (* PRIVATE *)
-            match user with
-            | Some uid -> ["users"; uid; "network"; target_user]
-            | None -> ["network"; target_user]
+          (match adder with
+            | Some adder -> ["users"; adder]
+            | None -> []) @
 (* /PRIVATE *)
-        )
+        ["network"; added])
         ~req:(Some (Auth auth))
         Api.noop
 
@@ -104,18 +80,18 @@ let add ~auth
 
 let delete ~auth
 (* PRIVATE *)
-    ?(user = None)
+    ?(remover = None)
 (* /PRIVATE *)
-    target_user =
+    removed =
         Api.go
         ~rtype:DELETE
         ~path:(
 (* PRIVATE *)
-            match user with
-            | Some uid -> ["users"; uid; "network"; target_user]
-            | None -> ["network"; target_user]
+          (match remover with
+            | Some remover -> ["users"; remover]
+            | None -> []) @
 (* /PRIVATE *)
-        )
+        ["network"; removed])
         ~req:(Some (Auth auth))
         Api.noop
 
