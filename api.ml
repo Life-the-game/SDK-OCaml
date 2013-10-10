@@ -70,8 +70,10 @@ let curl_perform ~path ~get ~post ~rtype () =
       if (String.length str) = 0 then str else "?" ^ str in
      !ApiConf.base_url ^ path ^ get in
 
+  Curl.set_postfieldsize c 0;
   let post_string str =
     ApiDump.verbose (" ## POST data: " ^ str);
+    Curl.set_postfieldsize c (String.length str);
     Curl.set_postfields c str in
   let post_list l = post_string (parameters_to_string l)
   and post_multipart (parameters, files, checker) =
