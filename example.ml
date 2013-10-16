@@ -24,8 +24,8 @@ let _ =
 (* Tests configuration                                                        *)
 (* ************************************************************************** *)
 
-let print_success = true
-let stop_on_error = false
+let print_success = false
+let stop_on_error = true
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)

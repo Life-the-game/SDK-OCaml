@@ -14,6 +14,7 @@ open ApiTypes
 type t =
     {
       info          : Info.t;
+      approvement   : Approvable.t;
       author        : ApiUser.t;
       content       : string;
       medias        : ApiMedia.t list;
@@ -25,31 +26,25 @@ type t =
 
 (* Get comments on an achievement status                                      *)
 val get :
-    req:requirements
-    -> ?page:Page.parameters
-(* PRIVATE *)
-     -> ?user:id option
-(* /PRIVATE *)
-     -> ?with_medias:bool option 
-     -> id -> t ApiTypes.Page.t Api.t 
+  ?page:Page.parameters
+  -> ?with_medias:bool option 
+  -> id -> t ApiTypes.Page.t Api.t 
 
 (* Get one specific comment on an achievement status                          *)
- val get_comment :
-     req:requirements
-(* PRIVATE *)
-    -> ?user:id option
-(* /PRIVATE *)
-     -> id -> id -> t Api.t 
+val get_one :
+  id (** achievement status id *)
+  -> id (** comment id *)
+  -> t Api.t 
 
 (* Create a comment on an achievement status                                  *)
- val create :
-     auth:auth
+val create :
+  auth:auth
 (* PRIVATE *)
-     -> author:string
+  -> ?author:string option
 (* /PRIVATE *)
-     -> content:string
-     -> ?medias:path list
-     -> id -> t Api.t 
+  -> ?medias:path list
+  -> content:string
+  -> id -> t Api.t 
 
 (* Approve a comment on an achievement status                                 *)
 val approve :

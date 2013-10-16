@@ -14,6 +14,7 @@ open Network
 type t =
     {
       info          : Info.t;
+      approvement   : Approvable.t;
       author        : ApiUser.t;
       content       : string;
       medias        : ApiMedia.t list;
@@ -27,6 +28,7 @@ let from_json c =
     let open Yojson.Basic.Util in
     {
         info         = Info.from_json c;
+        approvement  = Approvable.from_json c;
         author       = ApiUser.from_json (c |> member "author");
         content      = c |> member "content" |> to_string;
         medias       = c |> member "medias" |> convert_each ApiMedia.from_json;
@@ -40,78 +42,54 @@ let from_json c =
 (* Get comments on an achievement status                                      *)
 (* ************************************************************************** *)
 
-let get ~req ?(page = Page.default_parameters)
-(* PRIVATE *)
-    ?(user = None)
-(* /PRIVATE *)
-    ?(with_medias = None)
-    id =
-    Api.go
-     ~path:(
-(* PRIVATE *)
-    (match user with
-      | Some user_id -> ["users"; user_id]
-      | None         -> []) @
-(* /PRIVATE *)
-      ["achievement_statuses"; id; "comments"])
-     ~req:(Some req)
-     ~page:(Some page)
-     ~get:(Network.option_filter
-        [
-            ("with_medias", Option.map string_of_bool with_medias);
-        ])
-     (Page.from_json from_json)
-
+let get ?(page = Page.default_parameters) ?(with_medias = None) id =
+  Api.go
+    ~path:["achievement_statuses"; id; "comments"]
+    ~page:(Some page)
+    ~get:(Network.option_filter
+            [("with_medias", Option.map string_of_bool with_medias);
+            ])
+    (Page.from_json from_json)
 
 (* ************************************************************************** *)
 (* Get one specific comment on an achievement status                          *)
 (* ************************************************************************** *)
 
-let get_comment ~req
-(* PRIVATE *)
-    ?(user = None)
-(* /PRIVATE *)
-    comment_id id =
+let get_one achievement_status_id comment_id =
     Api.go
-     ~path:(
-(* PRIVATE *)
-    (match user with
-      | Some user_id -> ["users"; user_id]
-      | None         -> []) @
-(* /PRIVATE *)
-      ["achievement_statuses"; id; "comments"; comment_id])
-     ~req:(Some req)
-    from_json
+      ~path:["achievement_statuses"; achievement_status_id; "comments"; comment_id]
+      from_json
 
 (* ************************************************************************** *)
 (* Create a comment on an achievement status                                  *)
 (* ************************************************************************** *)
+(* PRIVATE *)
+(* Note: Only admin can change the author *)
+(* /PRIVATE *)
 
 let create ~auth
 (* PRIVATE *)
-    ~author
+    ?(author = None)
 (* /PRIVATE *)
+    ?(medias = [])
     ~content
-    ?(medias = []) id =
+    id =
   let post_parameters =
-    Network.empty_filter
-      [
-        ("content", content);
+    Network.option_filter
+      [("content", Some content);
+(* PRIVATE *)
+       ("author", author);
+(* /PRIVATE *)
       ] in
   let post = if List.length medias != 0
     then Network.PostMultiPart
       (post_parameters,
        (List.map (fun media -> ("medias", media)) medias),
-      ApiMedia.path_to_contenttype)
+       ApiMedia.path_to_contenttype)
     else Network.PostList post_parameters in
   Api.go
     ~rtype:POST
-    ~path:(
-        ["users"] @
-(* PRIVATE *)
-        [author] @
-(* /PRIVATE *)
-        ["achievement_statuses"; id; "comments"])
+    ~path:["achievement_statuses"; id; "comments"]
     ~req:(Some (Auth auth))
     ~post:post
     from_json
