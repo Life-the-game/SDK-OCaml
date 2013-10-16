@@ -35,27 +35,12 @@ val login :
 (* /PRIVATE *)
   login -> password -> t Api.t
 
+(** OAuth                                                                     *)
+val oauth : string -> token -> t Api.t
+val facebook : token -> t Api.t
+
 (** Logout (delete token)                                                     *)
 val logout : t -> unit Api.t
-
-(* (\** Get information about a token                                             *\) *)
-(* val get_token : token -> t Api.t *)
-
-(* (\** Get your current active connection tokens. *)
-(*     {i Note: To get the tokens of another user, use {! ApiAuth.get_user}}     *\) *)
-(* val get : *)
-(*   ?index:int option *)
-(*   -> ?limit:int option *)
-(*   -> ApiTypes.auth *)
-(*   -> t ApiTypes.Page.t Api.t *)
-
-(* (\** Get user's authentication tokens *)
-(*     {i Note: This method is for administrative purpose only}                  *\) *)
-(* val get_user : *)
-(*   auth:auth *)
-(*   -> ?index:int option *)
-(*   -> ?limit:int option *)
-(*   -> id -> t ApiTypes.Page.t Api.t *)
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

@@ -79,6 +79,21 @@ let login
     from_json
 
 (* ************************************************************************** *)
+(* OAuth                                                                      *)
+(* ************************************************************************** *)
+
+let oauth provider token =
+  Api.go
+    ~rtype:POST
+    ~path:["oauth"; "external"]
+    ~post:(PostList [("site_name", "facebook");
+		     ("site_token", token)])
+    from_json
+
+let facebook =
+  oauth "facebook"
+
+(* ************************************************************************** *)
 (* Logout (delete token)                                                      *)
 (* ************************************************************************** *)
 
@@ -89,29 +104,3 @@ let logout auth =
            "tokens"; auth.token]
     Api.noop
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Get information about a token                                              *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get_token token_id = *)
-(*   Api.go (Api.url ~parents:["tokens"; token_id] ()) from_json *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Get your current active connection tokens                                  *\) *)
-(* (\*   Note: To get the tokens of another user, use get_user                    *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get ?(index = None) ?(limit = None) auth = *)
-(*   let url = Api.url ~parents:["tokens"] ~auth:(Some auth) *)
-(*     ~get:(Api.pager index limit []) () in *)
-(*   Api.go ~auth:(Some auth) url (List.from_json from_json) *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Get user's authentication tokens                                           *\) *)
-(* (\*   Note: This method is for administrative purpose only                     *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get_user ~auth ?(index = None) ?(limit = None) user_id = *)
-(*   let url = Api.url ~parents:["users"; user_id; "tokens"] ~auth:(Some auth) *)
-(*     ~get:(Api.pager index limit []) () in *)
-(*   Api.go ~auth:(Some auth) url (List.from_json from_json) *)
