@@ -92,9 +92,9 @@ let get ~req ?(page = Page.default_parameters) ?(term = [])
 (* Get one achievement status                                                 *)
 (* ************************************************************************** *)
 
-let get_one ~req user_id achievement_id =
+let get_one ~req achievement_id =
   Api.go
-    ~path:[(* "users"; user_id;  *)"achievement_statuses"; achievement_id]
+    ~path:["achievement_statuses"; achievement_id]
     ~req:(Some req)
     from_json
 
@@ -137,9 +137,6 @@ let create ~auth ~achievement ~status
 (* ************************************************************************** *)
 
 let edit ~auth
-(* PRIVATE *)
-    ?(user = None)
-(* /PRIVATE *)
     ?(status = None)
     ?(message = None)
     ?(add_medias = [])
@@ -157,13 +154,7 @@ let edit ~auth
        ApiMedia.path_to_contenttype) in
   Api.go
     ~rtype:PUT
-    ~path:(
-(* PRIVATE *)
-    (match user with
-      | Some user_id -> ["users"; user_id]
-      | None         -> []) @
-(* /PRIVATE *)
-      ["achievement_statuses"; id])
+    ~path:(["achievement_statuses"; id])
     ~req:(Some (Auth auth))
     ~post:post
     from_json
@@ -192,13 +183,7 @@ let approve ~auth
         let post = Network.PostList post_parameters in
         Api.go
         ~rtype:POST
-        ~path:(
-                    ["users"] @
-(* PRIVATE *)
-                    [approver] @
-(* /PRIVATE *)
-                    ["achievement_statuses"; id; "approvers"]
-        )
+        ~path:(["achievement_statuses"; id; "approvers"])
         ~req:(Some (Auth auth))
         ~post:post
         Api.noop
@@ -222,12 +207,7 @@ let disapprove ~auth
         let post = Network.PostList post_parameters in
         Api.go
         ~rtype:POST
-        ~path:(
-            ["users"] @
-(* PRIVATE *)
-            [disapprover] @
-(* /PRIVATE *)
-            ["achievement_statuses"; id; "disapprovers"])
+        ~path:(["achievement_statuses"; id; "disapprovers"])
         ~req:(Some (Auth auth))
         ~post:post
         Api.noop

@@ -114,12 +114,7 @@ let approve ~auth
     let post = Network.PostList post_parameters in
   Api.go
     ~rtype:POST
-    ~path:(
-        ["users"] @
-(* PRIVATE *)
-        [approver] @
-(* /PRIVATE *)
-        ["achievement_statuses"; id; "comments"; comment_id; "approvers"])
+    ~path:(["comments"; comment_id; "approvers"])
     ~req:(Some (Auth auth))
     ~post:post
     Api.noop
@@ -144,12 +139,7 @@ let disapprove ~auth
     let post = Network.PostList post_parameters in
   Api.go
     ~rtype:POST
-    ~path:(
-        ["users"] @
-(* PRIVATE *)
-        [disapprover] @
-(* /PRIVATE *)
-        ["achievement_statuses"; id; "comments"; comment_id; "disapprovers"])
+    ~path:(["comments"; comment_id; "disapprovers"])
     ~req:(Some (Auth auth))
     ~post:post
     Api.noop

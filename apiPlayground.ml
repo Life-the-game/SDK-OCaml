@@ -51,15 +51,11 @@ let from_json c =
 
 let get ?(page = Page.default_parameters) ?(activity_type = [])
 (* PRIVATE *)
-    ?(user = None)
+    ~user
 (* /PRIVATE *)
     () =
     Api.go
-    ~path:(
-        (match user with
-        | Some id -> ["users"; id; "activities"]
-        | None -> ["activities"])
-        )
+    ~path:(["users"; user; "activities"])
     ~page:(Some page)
     ~get:(Network.option_filter
         [("type", Some (Network.list_parameter activity_type));]

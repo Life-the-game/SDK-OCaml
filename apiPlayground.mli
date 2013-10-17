@@ -28,7 +28,7 @@ val get :
     ?page:Page.parameters
     -> ?activity_type:string list
 (* PRIVATE *)
-    -> ?user:string option
+    -> user:string
 (* /PRIVATE *)
     -> unit -> (t Page.t Api.t)
 
