@@ -52,6 +52,7 @@ val create :
   auth:auth
   -> name:string
   -> description:string
+  -> ?color:color
   -> ?parents:id list
   -> ?badge:path
   -> ?category:bool

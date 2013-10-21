@@ -86,7 +86,7 @@ let get_one ~req id =
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~auth ~name ~description ?(parents = []) ?(badge = [])
+let create ~auth ~name ~description ?(color = "") ?(parents = []) ?(badge = [])
     ?(category = false) ?(secret = false) ?(discoverable = true)
     ?(keywords = []) () =
   let post_parameters =
@@ -97,6 +97,7 @@ let create ~auth ~name ~description ?(parents = []) ?(badge = [])
        ("category", string_of_bool category);
        ("secret", string_of_bool secret);
        ("discoverable", string_of_bool discoverable);
+       ("color", color);
        ("keywords", Network.list_parameter keywords);
       ] in
   let post =
@@ -112,72 +113,3 @@ let create ~auth ~name ~description ?(parents = []) ?(badge = [])
 
 (* /PRIVATE *)
 
-(* let post ~auth ~name ?(description = None) () = *)
-(*   let url = Api.url ~parents:["achievements"] *)
-(*     ~auth:(Some auth) () in *)
-(*   Api.go ~auth:(Some auth) ~rtype:POST *)
-(*     ~post:(PostList (Api.option_filter *)
-(*                        [("name", Some name); *)
-(*                         ("description", description); *)
-(*                        ])) url from_json *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Edit (put) an Achievement                                                  *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let edit ~auth ?(name = None) ?(description = None) id = *)
-(*   let get = Api.option_filter *)
-(*     [("name", name); *)
-(*      ("description", description); *)
-(*     ] in *)
-(*   let url = Api.url ~parents:["achievements"; id] *)
-(*     ~get:get ~auth:(Some auth) () in *)
-(*   Api.go ~auth:(Some auth) ~rtype:PUT url from_json *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Delete an Achievement                                                      *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let delete ~auth id = *)
-(*   let url = Api.url ~parents:["achievements"; id] *)
-(*     ~auth:(Some auth) () in *)
-(*   Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Get an achievement parents                                                 *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get_parents ?(index = None) ?(limit = None) *)
-(*     ?(auth = None) ?(lang = None) id = *)
-(*   let url = Api.url ~parents:["achievements"; id; "parents"] *)
-(*     ~get:(Api.pager index limit []) ~auth:auth ~lang:lang () in *)
-(*   Api.any ~auth:auth ~lang:lang url (List.from_json from_json) *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Get an achievement children                                                *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let get_children ?(index = None) ?(limit = None) *)
-(*     ?(auth = None) ?(lang = None) id = *)
-(*   let url = Api.url ~parents:["achievements"; id; "children"] *)
-(*     ~get:(Api.pager index limit []) ~auth:auth ~lang:lang () in *)
-(*   Api.any ~auth:auth ~lang:lang url (List.from_json from_json) *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Add a child to a parent                                                    *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let add_child ~auth child_id parent_id = *)
-(*   let url = Api.url ~parents:["achievements"; parent_id; "children"] *)
-(*     ~auth:(Some auth) () in *)
-(*   Api.noop ~auth:(Some auth) ~rtype:POST *)
-(*     ~post:(PostList [("achievement_id", child_id)]) url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Remove a child from a parent                                               *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let delete_child ~auth child_id parent_id = *)
-(*   let url = Api.url ~parents:["achievements"; parent_id; "children"; child_id] *)
-(*     ~auth:(Some auth) () in *)
-(*   Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
