@@ -477,3 +477,62 @@ struct
     | _            -> default
 end
 
+(* ************************************************************************** *)
+(* Color                                                                      *)
+(* ************************************************************************** *)
+
+let colors =
+  [
+    ("green", "#26b671");
+    ("lightgreen", "#4eda97");
+    ("lightlightgreen", "#8ee7bc");
+    ("darkgreen", "#14623d");
+    ("darkdarkgreen", "#115334");
+    ("blue", "#3498db");
+    ("lightblue", "#75b9e7");
+    ("lightlightblue", "#b6daf2");
+    ("darkblue", "#196090");
+    ("darkdarkblue", "#16527a");
+    ("purple", "#9b59b6");
+    ("lightpurple", "#bb8ecd");
+    ("lightlightpurple", "#dbc3e5");
+    ("darkpurple", "#623475");
+    ("darkdarkpurple", "#542c64");
+    ("nightblue", "#34495e");
+    ("lightnightblue", "#4f6f8f");
+    ("lightlightnightblue", "#7795b4");
+    ("darknightblue", "#10161c");
+    ("darkdarknightblue", "#0d1318");
+    ("yellow", "#f1c40f");
+    ("lightyellow", "#f5d657");
+    ("lightlightyellow", "#f9e8a0");
+    ("darkyellow", "#927608");
+    ("darkdarkyellow", "#7c6407");
+    ("orange", "#ec5e00");
+    ("lightorange", "#ff883a");
+    ("lightlightorange", "#ffb686");
+    ("darkorange", "#863500");
+    ("darkdarkorange", "#722d00");
+    ("red", "#e74c3c");
+    ("lightred", "#ef8b80");
+    ("lightlightred", "#f5b4ae");
+    ("darkred", "#a82315");
+    ("darkdarkred", "#8f1d12");
+    ("grey", "#bdc3c7");
+    ("lightgrey", "#e6e9ea");
+    ("lightlightgrey", "#ffffff");
+    ("darkgrey", "#869198");
+    ("darkdarkgrey", "#727b81");
+    ("pink", "#f17288");
+    ("lightpink", "#f8b8c3");
+    ("lightlightpink", "#fffdfd");
+    ("darkpink", "#e6173b");
+    ("darkdarkpink", "#c41332");
+    ("main", "#26b671");
+    ("lightmain", "#4eda97");
+    ("lightlightmain", "#8ee7bc");
+    ("darkmain", "#14623d");
+    ("darkdarkmain", "#115334");
+  ]
+
+let name_to_color color = List.assoc color colors
