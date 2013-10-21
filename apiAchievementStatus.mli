@@ -50,8 +50,7 @@ val get :
 (** Get one achievement status                                                *)
 val get_one :
   req:requirements
-  -> id -> id -> t Api.t
-(** The first id is the user_id, the second is the achievement status id      *)
+  -> id -> t Api.t
 
 (** Create an achievement status                                              *)
 val create :
@@ -68,9 +67,6 @@ val create :
 (** Edit an achievement status                                                *)
 val edit :
   auth:auth
-(* PRIVATE *)
-  -> ?user: id option
-(* /PRIVATE *)
   -> ?status:Status.t option
   -> ?message:string option
   -> ?add_medias:path list
