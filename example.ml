@@ -154,7 +154,7 @@ let _ =
               ~lastname:lastname
               ~gender:gender
               ~birthday:(Some birthday)
-              ~avatar:picture
+              (* ~avatar:picture *)
               ()) in
 
   ApiDump.lprint_endline "\n";
@@ -250,10 +250,10 @@ let _ =
   (match users with (* Check if the list exists *)
     | Error e -> impossible "the previous tests failed"
     | Result page ->
-      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      if page.Page.server_size < 2 (* Check if there are elements to get *)
       then ApiDump.lprint_endline "No user to add"
       else
-          let user_id = (List.hd page.Page.items).ApiUser.login in
+          let user_id = (List.nth page.Page.items 2).ApiUser.login in
 
    ignore (auth_test (fun auth ->
      ApiGameNetwork.add
@@ -383,7 +383,6 @@ let _ =
           (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in
         ignore (auth_test (fun auth ->
           ApiComment.create ~auth:auth
-            ~author:login
             ~content:comment_description
             ~medias:[picture; picture2] achievement_status_id) auth));
 
@@ -392,16 +391,12 @@ let _ =
       (match achievements_statuses with
     | Error e -> impossible "previously failed to get achievements statuses"
     | Result page ->
-            if page.Page.server_size == 0
+      if page.Page.server_size == 0
       then ApiDump.lprint_endline "there's no achievement status available"
       else
           let achievement_status_id =
               (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in
-        ignore (auth_test ~f:pageprint (fun auth ->
-              ApiComment.get
-        ~req:(Auth auth)
-        ~page:(None, Some 2, Some Page.Alphabetic, None)
-      achievement_status_id) auth)) in
+        ignore (test ~f:pageprint (ApiComment.get achievement_status_id))) in
 
 (*  print_title "Get one achievement status comment";
   (match achievements_statuses_comments with (* Check if the list exists *)
