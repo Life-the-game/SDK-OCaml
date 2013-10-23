@@ -77,9 +77,18 @@ val edit :
 val approve :
   auth:auth
 (* PRIVATE *)
-  -> approver: id option
+  -> approver: id
 (* /PRIVATE *)
   -> id -> unit Api.t
+
+(** Disapprove an achievement status                                          *)
+val disapprove :
+  auth:auth
+(* PRIVATE *)
+  -> disapprover: id
+(* /PRIVATE *)
+  -> id -> unit Api.t
+
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

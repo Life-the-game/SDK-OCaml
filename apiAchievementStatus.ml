@@ -168,11 +168,6 @@ let approve ~auth
     ~approver
 (* /PRIVATE *)
     id =
-        let approver =
-            match approver with
-                | None -> ""
-                | Some user -> user
-        in
         let post_parameters =
             Network.empty_filter
             [

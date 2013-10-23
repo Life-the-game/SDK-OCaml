@@ -281,7 +281,6 @@ let _ =
 
   );
 
-  exit 1;
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -324,16 +323,16 @@ let _ =
           | Result user ->
             let achievement_status_id =
               (List.hd page.Page.items).ApiAchievementStatus.info.Info.id
-            and user_id = user.ApiUser.login in
+            (* and user_id = user.ApiUser.login *) in
 
   print_title "with auth";
             ignore (auth_test (fun auth ->
               ApiAchievementStatus.get_one ~req:(Auth auth)
-                user_id achievement_status_id) auth);
+                achievement_status_id) auth);
 
-  print_title "with lang";
+(*  print_title "with lang";
             ignore (test (ApiAchievementStatus.get_one ~req:(Lang lang)
-                            user_id achievement_status_id));
+                            user_id achievement_status_id)); *)
         ));
 
   (* print_title "Unlock this ojective + add pictures + remove message"; *)
@@ -362,7 +361,7 @@ let _ =
             ignore (auth_test (fun auth ->
               ApiAchievementStatus.approve ~auth:auth
 (* PRIVATE *)
-            ~approver:(Some user_id)
+            ~approver:user_id
 (* /PRIVATE *)
          achievement_status_id) auth)
             ));
