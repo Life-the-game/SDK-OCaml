@@ -32,3 +32,5 @@ val invalid_json        : string -> t
 val requirement_missing : t
 val invalid_format      : t
 val invalid_argument    : string -> t
+val auth_required       : t
+val notfound            : t

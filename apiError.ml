@@ -42,33 +42,47 @@ let network msg =
   {
     message = msg;
     stype   = "CLIENT_NetworkError";
-    code    = -45;
+    code    = -2;
   }
 
 let invalid_json msg =
   {
     message = "The JSON tree response is not formatted as expected: " ^ msg;
     stype   = "CLIENT_InvalidJSON";
-    code    = -18;
+    code    = -3;
   }
 
 let requirement_missing =
   {
     message = "One requirement is missing";
     stype   = "CLIENT_RequirementMissing";
-    code    = -25;
+    code    = -4;
   }
 
 let invalid_format =
   {
     message = "Invalid file format";
     stype   = "CLIENT_InvalidFileFormat";
-    code    = -8;
+    code    = -5;
   }
 
 let invalid_argument msg =
   {
     message = msg;
     stype   = "CLIENT_InvalidArgument";
-    code    = -4;
+    code    = -6;
+  }
+
+let auth_required =
+  {
+    message = "Authentication required";
+    stype   = "CLIENT_AuthenticationRequired";
+    code    = -7;
+  }
+
+let notfound =
+  {
+    message = "Not found";
+    stype   = "NotFound";
+    code    = 1011;
   }
