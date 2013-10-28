@@ -64,6 +64,9 @@ let from_json c =
         url         = c |> member "url" |> to_string;
       }
 
+let equal u1 u2 =
+  u1.login = u2.login
+
 (* ************************************************************************** *)
 (* API Methods                                                                *)
 (* ************************************************************************** *)
@@ -169,29 +172,3 @@ let edit ~auth
     ~post:post
     from_json
 
-
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Delete a user                                                              *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let delete ~auth id = *)
-(*   let url = Api.url ~parents:["users"; id] ~auth:(Some auth) () in *)
-(*   Api.noop ~auth:(Some auth) ~rtype:DELETE url *)
-
-(* (\* ************************************************************************** *\) *)
-(* (\* Edit (put) a user                                                          *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let edit ~auth ?(email = None) ?(password = None) ?(firstname = None) *)
-(*     ?(lastname = None) ?(gender = None) ?(birthday = None) id = *)
-(*   let url = Api.url ~parents:["users"; id] ~auth:(Some auth) *)
-(*     ~get:(Api.option_filter *)
-(*             [("email", email); *)
-(*              ("password", password); *)
-(*              ("firstname", firstname); *)
-(*              ("lastname", lastname); *)
-(*              ("gender", Option.map Gender.to_string gender); *)
-(*              ("birthday", Option.map Date.to_string birthday); *)
-(*             ]) () in *)
-(*   Api.go ~auth:(Some auth) ~rtype:PUT url from_json *)
