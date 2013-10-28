@@ -25,12 +25,9 @@ type t =
 
 (** Get activities                                                            *)
 val get :
-    ?page:Page.parameters
-    -> ?activity_type:string list
-(* PRIVATE *)
-    -> user:string
-(* /PRIVATE *)
-    -> unit -> (t Page.t Api.t)
+  ?page:Page.parameters
+  -> ?activity_type:string list
+  -> id -> (t Page.t Api.t)
 
 
 (* ************************************************************************** *)
