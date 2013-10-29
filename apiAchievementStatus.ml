@@ -11,28 +11,6 @@ open Network
 (* Type                                                                       *)
 (* ************************************************************************** *)
 
-module type STATUS =
-sig
-  type t =
-    | Objective
-    | Achieved
-  val to_string : t -> string
-  val of_string : string -> t
-end
-module Status : STATUS =
-struct
-  type t =
-    | Objective
-    | Achieved
-  let to_string = function
-    | Objective -> "objective"
-    | Achieved  -> "achieved"
-  let of_string = function
-    | "objective" -> Objective
-    | "achieved"  -> Achieved
-    | _           -> Objective
-end
-
 type t =
     {
       info             : Info.t;

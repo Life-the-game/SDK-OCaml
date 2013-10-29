@@ -11,6 +11,12 @@ open ApiTypes
 (** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
+type achievement_status =
+    {
+      id     : id;
+      status : Status.t;
+    }
+
 type t =
     {
       info               : Info.t;
@@ -22,6 +28,7 @@ type t =
       secret             : bool;
       discoverable       : bool;
       (* keywords           : string list; *)(*42*)
+      achievement_status : achievement_status option;
       url                : url;
     }
 

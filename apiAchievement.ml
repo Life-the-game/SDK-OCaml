@@ -9,8 +9,14 @@ open ApiTypes
 open Network
 
 (* ************************************************************************** *)
-(* Type                                                                       *)
+(* Types                                                                      *)
 (* ************************************************************************** *)
+
+type achievement_status =
+    {
+      id     : id;
+      status : Status.t;
+    }
 
 type t =
     {
@@ -23,6 +29,7 @@ type t =
       secret             : bool;
       discoverable       : bool;
       (* keywords           : string list; *)(*42*)
+      achievement_status : achievement_status option;
       url                : url;
     }
 
@@ -43,6 +50,12 @@ let rec from_json c =
         secret             = c |> member "secret" |> to_bool;
         discoverable       = c |> member "discoverable" |> to_bool;
         (* keywords           = convert_each to_string (c |> member "keywords"); *)
+	achievement_status = c |> member "achievement_status" |> to_option
+	    (fun c -> {
+	      id     = c |> member "id" |> to_string;
+	      status = Status.of_string (c |> member "status" |> to_string);
+	     }
+	    );
         url                = c |> member "url" |> to_string;
       }
 

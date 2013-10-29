@@ -18,6 +18,7 @@
     {- Information Element }
     {- Approvable elements }
     {- List Pagination }
+    {- Status }
     {- Gender }
     {- Privacy }
     }                                                                         *)
@@ -182,6 +183,7 @@ module Info : INFO
 
 module type APPROVABLE =
 sig
+  type vote = Approved | Disapproved
   type t =
       {
         approvers_total    : int;
@@ -189,8 +191,11 @@ sig
         approved           : bool option;
         disapproved        : bool option;
         (* score              : int; *)
+	vote               : vote option;
       }
   val from_json : Yojson.Basic.json -> t
+  val to_string : vote -> string
+  val of_string : string -> vote
 end
 module Approvable : APPROVABLE
 
@@ -252,6 +257,20 @@ sig
   val of_string : string -> t
 end
 module Gender : GENDER
+
+(* ************************************************************************** *)
+(** {3 Status}                                                                *)
+(* ************************************************************************** *)
+
+module type STATUS =
+sig
+  type t =
+    | Objective
+    | Achieved
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Status : STATUS
 
 (* ************************************************************************** *)
 (** {3 Privacy}                                                               *)

@@ -273,6 +273,7 @@ end
 
 module type APPROVABLE =
 sig
+  type vote = Approved | Disapproved
   type t =
       {
         approvers_total    : int;
@@ -280,11 +281,15 @@ sig
         approved           : bool option;
         disapproved        : bool option;
         (* score              : int; *)
+	vote               : vote option;
       }
   val from_json : Yojson.Basic.json -> t
+  val to_string : vote -> string
+  val of_string : string -> vote
 end
 module Approvable : APPROVABLE =
 struct
+  type vote = Approved | Disapproved
   type t =
       {
         approvers_total    : int;
@@ -292,7 +297,15 @@ struct
         approved           : bool option;
         disapproved        : bool option;
         (* score              : int; *)
+	vote               : vote option;
       }
+  let to_string = function
+    | Approved     -> "approved"
+    | Disapproved  -> "disapproved"
+  let of_string = function
+    | "approved"     -> Approved
+    | "disapproved"  -> Disapproved
+    | _              -> Approved
   let from_json c =
     let open Yojson.Basic.Util in
         {
@@ -301,6 +314,8 @@ struct
           approved           = c |> member "approved" |> to_bool_option;
           disapproved        = c |> member "disapproved" |> to_bool_option;
           (* score              = c |> member "score" |> to_int; *)
+	  vote               = c |> member "vote" |> to_option
+	      (fun vote -> of_string (vote |> to_string));
         }
 end
 
@@ -447,6 +462,32 @@ struct
     | "other"     -> Other
     | "undefined" -> Other
     | _           -> default
+end
+
+(* ************************************************************************** *)
+(* Status                                                                     *)
+(* ************************************************************************** *)
+
+module type STATUS =
+sig
+  type t =
+    | Objective
+    | Achieved
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Status : STATUS =
+struct
+  type t =
+    | Objective
+    | Achieved
+  let to_string = function
+    | Objective -> "objective"
+    | Achieved  -> "achieved"
+  let of_string = function
+    | "objective" -> Objective
+    | "achieved"  -> Achieved
+    | _           -> Objective
 end
 
 (* ************************************************************************** *)
