@@ -14,7 +14,7 @@ open ApiTypes
 type t =
     {
       info           : ApiTypes.Info.t;
-      user           : ApiUser.t;
+      mutable user   : ApiUser.t;
 (* PRIVATE *)
       (* ip             : ip; *)
       (* user_agent     : string; *)

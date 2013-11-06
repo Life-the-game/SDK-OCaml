@@ -14,7 +14,7 @@ open Network
 type t =
     {
       info           : Info.t;
-      user           : ApiUser.t;
+      mutable user   : ApiUser.t;
 (* PRIVATE *)
       (* ip             : ip; *)
       (* user_agent     : string; *)
