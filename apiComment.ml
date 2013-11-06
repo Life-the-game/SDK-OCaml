@@ -31,10 +31,7 @@ let from_json c =
         (* approvement  = Approvable.from_json c; *)
         author       = ApiUser.from_json (c |> member "author");
         content      = c |> member "content" |> to_string;
-	medias       = (match c |> member "medias"
-			   |> to_option (convert_each ApiMedia.from_json) with
-			       | Some l -> l
-			       | None -> []);
+	medias       = Api.convert_each c "medias" ApiMedia.from_json;
     }
 
 (* ************************************************************************** *)
