@@ -12,7 +12,7 @@ open Network
 (* ************************************************************************** *)
 
 type activity =
-  | NetworkAddition     of (ApiUser.t * ApiUser.t)
+  | NetworkAddition     of ApiUser.t
   | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
   | News                of ApiNews.t
   | AchievementUnlocked of ApiAchievementStatus.t
@@ -57,7 +57,7 @@ let from_json c =
   in {
     info = Info.from_json c;
     owner = ApiUser.from_json (c |> member "owner");
-    template = c |> member "templace" |> to_string;
+    template = c |> member "template" |> to_string;
     activity =  match c |> member "type" |> to_string with
 
       | "new_media" -> NewMedia (get_first achievement_statuses,
@@ -72,7 +72,7 @@ let from_json c =
 
       | "level_reached" -> LevelReached (c |> member "metadata" |> to_int)
 
-      | "network_addition" -> NetworkAddition (get_first users, get_nth 2 users)
+      | "network_addition" -> NetworkAddition (get_first users)
 
       | stype -> Other (stype, get_list users, get_list achievement_statuses,
 			get_list medias, get_list news,
