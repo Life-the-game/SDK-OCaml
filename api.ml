@@ -72,12 +72,12 @@ let curl_perform ~path ~get ~post ~rtype () =
 
   Curl.set_postfieldsize c 0;
   let post_string str =
-    ApiDump.verbose (" ## POST data: " ^ str);
+    (* ApiDump.verbose (" ## POST data: " ^ str); *)
     Curl.set_postfieldsize c (String.length str);
     Curl.set_postfields c str in
   let post_list l = post_string (parameters_to_string l)
   and post_multipart (parameters, files, checker) =
-    ApiDump.verbose " ## POST multi-part data:";
+    (* ApiDump.verbose " ## POST multi-part data:";*)
     let parameter (name, value) =
       ApiDump.verbose (name ^ "=" ^ value);
       Curl.CURLFORM_CONTENT (name, value, Curl.DEFAULT)
@@ -86,8 +86,8 @@ let curl_perform ~path ~get ~post ~rtype () =
         | None -> raise InvalidFileFormat
         | Some contenttype ->
           (let path = path_to_string path in
-           ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
-                              ^ "(" ^ contenttype ^ ")");
+           (* ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
+                              ^ "(" ^ contenttype ^ ")"); *)
            Curl.CURLFORM_FILE
              (name, path, Curl.CONTENTTYPE contenttype)) in
     let l = (List.map parameter parameters)
