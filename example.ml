@@ -299,7 +299,7 @@ let _ =
         ignore (auth_test (fun auth ->
           ApiAchievementStatus.create ~auth:auth
             ~achievement:achievement_id
-            ~status:ApiAchievementStatus.Status.Objective
+            ~status:Status.Objective
             ~message:message ()) auth));
 
   print_title "Get my objectives ordered by name limit 2 with auth";
@@ -308,7 +308,7 @@ let _ =
       ApiAchievementStatus.get
         ~req:(Auth auth)
         ~page:(None, Some 2, Some Page.Alphabetic, None)
-        ~status:(Some ApiAchievementStatus.Status.Objective)
+        ~status:(Some Status.Objective)
         login) auth in
 
   print_title "Get one achievement status...";
@@ -383,7 +383,8 @@ let _ =
         ignore (auth_test (fun auth ->
           ApiComment.create ~auth:auth
             ~content:comment_description
-            ~medias:[picture; picture2] achievement_status_id) auth));
+            (* ~medias:[picture; picture2] *)
+	    achievement_status_id) auth));
 
   print_title "Get my comments ordered by name limit 2 with auth";
   let _ =
@@ -446,7 +447,12 @@ auth));
   ApiDump.lprint_endline "# Playground tests                              #";
   ApiDump.lprint_endline "#################################################";
 
-  ApiDump.lprint_endline "No test";
+  print_title "Get Playground";
+  print_title "with auth";
+  auth_test (fun auth ->
+    ApiPlayground.get ~auth:(Some auth) login) auth;
+  print_title "without auth";
+  test (ApiPlayground.get login);
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";

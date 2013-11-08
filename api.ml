@@ -154,6 +154,8 @@ let extra_parameters
 (* Make a call to the API                                                     *)
 (* ************************************************************************** *)
 
+exception ParseError of string
+
 let go
     ?(rtype = Network.default)
     ?(path = [])
@@ -191,8 +193,9 @@ let go
     | Curl.CurlException (_, _, _) -> Error
       (ApiError.network !error_buffer)
     | Failure msg -> Error (ApiError.network msg)
-    | Invalid_argument s -> Error (ApiError.invalid_argument s)
+    | Invalid_argument s -> Error (ApiError.invalid_json s)
     | InvalidFileFormat -> Error ApiError.invalid_format
+    | ParseError e -> Error (ApiError.invalid_json e)
     | _ -> Error ApiError.generic
 
 (* ************************************************************************** *)
@@ -200,3 +203,9 @@ let go
 (* ************************************************************************** *)
 
 let noop _ = ()
+
+let convert_each c name f =
+  let open Yojson.Basic.Util in
+  match c |> member name |> to_option (convert_each f) with
+    | Some l -> l
+    | None -> []

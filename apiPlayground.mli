@@ -11,13 +11,26 @@ open ApiTypes
 (** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
-type t =
-  | NetworkAddition     of (Info.t * ApiUser.t * ApiUser.t)
-  | NewMedia            of (Info.t * ApiAchievementStatus.t * ApiMedia.t)
-  | News                of (Info.t * ApiNews.t)
-  | AchievementUnlocked of (Info.t * ApiAchievementStatus.t)
-  | NewObjective        of (Info.t * ApiAchievementStatus.t)
-  | LevelReached        of (Info.t * ApiUser.t)
+type activity =
+  | NetworkAddition     of ApiUser.t
+  | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
+  | News                of ApiNews.t
+  | AchievementUnlocked of ApiAchievementStatus.t
+  | NewObjective        of ApiAchievementStatus.t
+  | LevelReached        of int
+  | Other               of (string
+			    * ApiUser.t list
+			    * ApiAchievementStatus.t list
+			    * ApiMedia.t list
+			    * ApiNews.t list
+			    * string option)
+
+type t = {
+  info : Info.t;
+  owner : ApiUser.t;
+  template : string;
+  activity : activity;
+}
 
 (* ************************************************************************** *)
 (** {3 API Methods}                                                           *)
@@ -25,7 +38,8 @@ type t =
 
 (** Get activities                                                            *)
 val get :
-  ?page:Page.parameters
+  ?auth:auth option
+  -> ?page:Page.parameters
   -> ?activity_type:string list
   -> id -> (t Page.t Api.t)
 

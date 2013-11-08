@@ -36,10 +36,7 @@ let from_json c =
     achievement      = ApiAchievement.from_json (c |> member "achievement");
     status           = Status.of_string (c |> member "status" |> to_string);
     message          = c |> member "message" |> to_string_option;
-    medias           = (match c |> member "medias"
-			   |> to_option (convert_each ApiMedia.from_json) with
-			       | Some l -> l
-			       | None -> []);
+    medias           = Api.convert_each c "medias" ApiMedia.from_json;
     url              = c |> member "url" |> to_string;
   }
 
