@@ -14,7 +14,7 @@ open Network
 type t =
     {
       info          : Info.t;
-      (* approvement   : Approvable.t; *)
+      approvement   : Approvable.t;
       author        : ApiUser.t;
       content       : string;
       medias        : ApiMedia.t list;
@@ -28,7 +28,7 @@ let from_json c =
     let open Yojson.Basic.Util in
     {
         info         = Info.from_json c;
-        (* approvement  = Approvable.from_json c; *)
+        approvement  = Approvable.from_json c;
         author       = ApiUser.from_json (c |> member "author");
         content      = c |> member "content" |> to_string;
 	medias       = Api.convert_each c "medias" ApiMedia.from_json;
@@ -85,7 +85,7 @@ let create ~auth
     then Network.PostMultiPart
       (post_parameters,
        (List.map (fun media -> ("medias", media)) medias),
-       ApiMedia.path_to_contenttype)
+       ApiMedia.checker)
     else Network.PostList post_parameters in
   Api.go
     ~rtype:POST

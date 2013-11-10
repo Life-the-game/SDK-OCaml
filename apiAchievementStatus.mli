@@ -51,7 +51,7 @@ val create :
   -> ?user: id option
 (* /PRIVATE *)
   -> ?message:string
-  -> ?medias:path list
+  -> ?medias:file list
   -> unit -> t Api.t
 
 (** Edit an achievement status                                                *)
@@ -59,7 +59,7 @@ val edit :
   auth:auth
   -> ?status:Status.t option
   -> ?message:string option
-  -> ?add_medias:path list
+  -> ?add_medias:file list
   -> ?remove_medias:id list
   -> id -> t Api.t
 

@@ -61,7 +61,7 @@ val create :
   -> description:string
   -> ?color:color
   -> ?parents:id list
-  -> ?badge:path
+  -> ?badge:file
   -> ?category:bool
   -> ?secret:bool
   -> ?discoverable:bool
@@ -69,38 +69,6 @@ val create :
   -> unit -> t Api.t
 
 (* /PRIVATE *)
-
-(* (\** Edit (put) an Achievement                                                 *\) *)
-(* val edit : *)
-(*   auth:auth *)
-(*   -> ?name:string option *)
-(*   -> ?description:(string option) *)
-(*   -> id -> t Api.t *)
-
-(* (\** Delete an Achievement                                                     *\) *)
-(* val delete : auth:auth -> id -> unit Api.t *)
-
-(* (\** Get an achievement parents                                                *\) *)
-(* val get_parents : *)
-(*   ?index:int option *)
-(*   -> ?limit:int option *)
-(*   -> ?auth:auth option *)
-(*   -> ?lang:Lang.t option *)
-(*   -> id -> t List.t Api.t *)
-
-(* (\** Get an achievement children                                               *\) *)
-(* val get_children : *)
-(*   ?index:int option *)
-(*   -> ?limit:int option *)
-(*   -> ?auth:auth option *)
-(*   -> ?lang:Lang.t option *)
-(*   -> id -> t List.t Api.t *)
-
-(* (\** Add a child to a parent                                                   *\) *)
-(* val add_child : auth:auth -> id -> id -> unit Api.t *)
-
-(* (\** Remove a child from a parent                                              *\) *)
-(* val delete_child : auth:auth -> id -> id -> unit Api.t *)
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

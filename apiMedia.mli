@@ -8,6 +8,18 @@
 open ApiTypes
 
 (* ************************************************************************** *)
+(** {3 Tools}                                                                 *)
+(* ************************************************************************** *)
+
+val extension : string -> string
+val extension_of_path : path -> string
+val checker : contenttype -> bool
+
+val guess_contenttype : string -> contenttype
+val guess_contenttype_from_extension : string -> contenttype
+val guess_contenttype_from_path : path -> contenttype
+
+(* ************************************************************************** *)
 (** {3 Picture}                                                               *)
 (* ************************************************************************** *)
 
@@ -19,7 +31,8 @@ sig
       url_big   : ApiTypes.url;
     }
   val from_json : Yojson.Basic.json -> t
-  val path_to_contenttype : path -> contenttype option
+  val contenttypes : contenttype list
+  val checker : contenttype -> bool
 end
 module Picture : PICTURE
 
@@ -35,7 +48,8 @@ sig
       thumbnail : Picture.t;
     }
   val from_json : Yojson.Basic.json -> t
-  val path_to_contenttype : path -> contenttype option
+  val contenttypes : contenttype list
+  val checker : contenttype -> bool
 end
 module Video : VIDEO
 
@@ -69,6 +83,3 @@ type t =
   | Media   of (string * string)
 
 val from_json : Yojson.Basic.json -> t
-
-(** Will check for all the know medias formats *)
-val path_to_contenttype : path -> contenttype option

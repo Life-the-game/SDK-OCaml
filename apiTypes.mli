@@ -53,13 +53,12 @@ type parameters = (string (* key *) * string (* value *)) list
 (** {3 Files}                                                                 *)
 (* ************************************************************************** *)
 
+type contenttype = string
 type path = string list
+type file = (path * contenttype)
+type file_parameter = (string (* name *) * file)
 
 val path_to_string : path -> string
-
-type contenttype = string
-
-type file = (string (* name *) * path)
 
 (* ************************************************************************** *)
 (** {3 Network stuff (GET POST ...)}                                          *)
@@ -75,7 +74,7 @@ sig
   type post =
     | PostText of string
     | PostList of parameters
-    | PostMultiPart of parameters * file list * (path -> contenttype option)
+    | PostMultiPart of parameters * file_parameter list * (contenttype -> bool)
     | PostEmpty
   val default   : t
   val to_string : t -> string
@@ -84,9 +83,9 @@ sig
     Note that the order of the list will be reversed. *)
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
-  val files_filter   : file list -> file list
+  val files_filter   : file_parameter list -> file_parameter list
   val list_parameter : string list -> string
-  val multiple_files : string -> path list -> file list
+  val multiple_files : string -> file list -> file_parameter list
 end
 module Network : NETWORK
 

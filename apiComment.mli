@@ -14,7 +14,7 @@ open ApiTypes
 type t =
     {
       info          : Info.t;
-      (* approvement   : Approvable.t; *)
+      approvement   : Approvable.t;
       author        : ApiUser.t;
       content       : string;
       medias        : ApiMedia.t list;
@@ -42,7 +42,7 @@ val create :
 (* PRIVATE *)
   -> ?author:string option
 (* /PRIVATE *)
-  -> ?medias:path list
+  -> ?medias:file list
   -> content:string
   -> id -> t Api.t 
 

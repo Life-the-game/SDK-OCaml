@@ -65,7 +65,7 @@ val create :
   -> ?lastname:string
   -> ?gender:Gender.t
   -> ?birthday:Date.t option
-  -> ?avatar:path
+  -> ?avatar:file
   -> unit -> t Api.t
 
 (** Edit a user                                                              *)
@@ -78,7 +78,7 @@ val edit :
   -> ?lastname:string
   -> ?gender:Gender.t
   -> ?birthday:Date.t option
-  -> ?avatar:path
+  -> ?avatar:file
   -> id -> t Api.t
 
 (* ************************************************************************** *)

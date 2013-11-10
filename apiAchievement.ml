@@ -99,7 +99,8 @@ let get_one ~req id =
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~auth ~name ~description ?(color = "") ?(parents = []) ?(badge = [])
+let create ~auth ~name ~description ?(color = "") ?(parents = [])
+    ?(badge = ([], ""))
     ?(category = false) ?(secret = false) ?(discoverable = true)
     ?(keywords = []) () =
   let post_parameters =
@@ -116,7 +117,7 @@ let create ~auth ~name ~description ?(color = "") ?(parents = []) ?(badge = [])
   let post =
     Network.PostMultiPart
       (post_parameters, Network.files_filter [("badge", badge)],
-      ApiMedia.Picture.path_to_contenttype) in
+      ApiMedia.Picture.checker) in
   Api.go
     ~rtype:POST
     ~path:["achievements"]

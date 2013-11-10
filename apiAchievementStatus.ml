@@ -92,7 +92,7 @@ let create ~auth ~achievement ~status
     then Network.PostMultiPart
       (post_parameters,
        (List.map (fun media -> ("medias", media)) medias),
-      ApiMedia.path_to_contenttype)
+      ApiMedia.checker)
     else Network.PostList post_parameters in
   Api.go
     ~rtype:POST
@@ -126,7 +126,7 @@ let edit ~auth
     Network.PostMultiPart
       (post_parameters,
        (Network.multiple_files "medias" add_medias),
-       ApiMedia.path_to_contenttype) in
+       ApiMedia.checker) in
   Api.go
     ~rtype:PUT
     ~path:(["achievement_statuses"; id])

@@ -85,8 +85,8 @@ and birthday = Date.of_string "1991-05-30"
 and password = "helloworld"
 and email = random_string 2 ^ "@gmail.com"
 and message = random_string 30
-and picture = ["example.png"]
-and picture2 = ["example2.jpg"]
+and picture = (["example.png"], "image/png")
+and picture2 = (["example2.jpg"], "image/jpeg")
 and achievement_name = random_string 15
 and achievement_description = random_string 30
 and comment_description = random_string 30
@@ -154,9 +154,10 @@ let _ =
               ~lastname:lastname
               ~gender:gender
               ~birthday:(Some birthday)
-              (* ~avatar:picture *)
+              ~avatar:picture
               ()) in
 
+  exit 1;
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Authentication tests                          #";
@@ -491,7 +492,7 @@ auth));
           (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in
         ignore (auth_test ~t:"CLIENT_InvalidFileFormat" (fun auth ->
           ApiAchievementStatus.edit ~auth:auth
-            ~add_medias:[["hack.sh"]] achievement_status_id) auth));
+            ~add_medias:[(["hack.sh"], "beurp")] achievement_status_id) auth));
 
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Logout                                        #";

@@ -12,11 +12,31 @@ open ApiTypes
 (* ************************************************************************** *)
 
 (* todo check what happens if the exetions are raised *)
-let extension path =
-  let f = List.hd (List.rev path) in
-  let start = try (String.rindex f '.') + 1 with Not_found -> 0
-  in try String.sub f start ((String.length f) - start)
+let extension filename =
+  let start = try (String.rindex filename '.') + 1 with Not_found -> 0
+  in try String.sub filename start ((String.length filename) - start)
     with Invalid_argument s -> ""
+
+let extension_of_path path =
+  try extension (List.hd (List.rev path))
+  with Failure _ -> ""
+
+let checker l contenttype = List.exists ((=) contenttype) l
+
+let guess_contenttype_from_extension = function
+  | "jpg" | "jpeg" | "jpe" -> "image/jpeg"
+  | "png" -> "image/png"
+  | "bmp" -> "image/bmp"
+  | "gif" -> "image/gif"
+  | "mp4" | "mp4v" | "mpg4" -> "video/mp4"
+  | "mpeg" | "mpg" | "mpe" | "m1v" | "m2v" -> "video/mpeg"
+  | _ -> "text/plain"
+
+let guess_contenttype filename =
+  guess_contenttype_from_extension (extension filename)
+
+let guess_contenttype_from_path path =
+  guess_contenttype_from_extension (extension_of_path path)
 
 (* ************************************************************************** *)
 (* Picture                                                                    *)
@@ -30,7 +50,8 @@ sig
       url_big   : url;
     }
   val from_json : Yojson.Basic.json -> t
-  val path_to_contenttype : path -> contenttype option
+  val contenttypes : contenttype list
+  val checker : contenttype -> bool
 end
 
 module Picture : PICTURE =
@@ -45,12 +66,12 @@ struct
       url_small = c |> member "url_small" |> to_string;
       url_big   = c |> member "url_big"   |> to_string;
     }
-  let path_to_contenttype path =
-    match extension path with (* todo get ext *)
-    | "jpg" -> Some "image/jpeg"
-    | "png" -> Some "image/png"
-    | "bmp" -> Some "image/bmp"
-    | _     -> None
+  let contenttypes = [
+    "image/jpeg";
+    "image/png";
+    "image/bmp";
+  ]
+  let checker = checker contenttypes
 end
 
 (* ************************************************************************** *)
@@ -65,7 +86,8 @@ sig
       thumbnail : Picture.t;
     }
   val from_json : Yojson.Basic.json -> t
-  val path_to_contenttype : path -> contenttype option
+  val contenttypes : contenttype list
+  val checker : contenttype -> bool
 end
 
 module Video : VIDEO =
@@ -80,10 +102,10 @@ struct
       url       = c |> member "url" |> to_string;
       thumbnail = Picture.from_json (c |> member "thumbnail");
     }
-  let path_to_contenttype path =
-    match extension path with
-    | "mp4" -> Some "video/mp4"
-    | _     -> None
+  let contenttypes = [
+    "video/mp4";
+  ]
+  let checker = checker contenttypes
 end
 
 module type EXTERNALVIDEO =
@@ -151,10 +173,4 @@ let from_json c =
     | "external_video" -> ExternalVideo (ExternalVideo.from_json c)
     | other     -> Media (other, c |> to_string)
 
-let path_to_contenttype path =
-  match Picture.path_to_contenttype path with
-    | Some c -> Some c
-    | None ->
-      match Video.path_to_contenttype path with
-        | Some c -> Some c
-        | None -> None
+let checker = checker (Picture.contenttypes @ Video.contenttypes)

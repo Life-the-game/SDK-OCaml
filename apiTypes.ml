@@ -33,13 +33,12 @@ type parameters = (string (* key *) * string (* value *)) list
 (* Files                                                                      *)
 (* ************************************************************************** *)
 
+type contenttype = string
 type path = string list
+type file = (path * contenttype)
+type file_parameter = (string (* name *) * file)
 
 let path_to_string = String.concat "/" (* todo dirsep unix *)
-
-type contenttype = string
-
-type file = (string (* name *) * path)
 
 (* ************************************************************************** *)
 (* Network stuff (GET POST ...)                                               *)
@@ -55,16 +54,16 @@ sig
   type post =
     | PostText of string
     | PostList of parameters
-    | PostMultiPart of parameters * file list * (path -> contenttype option)
+    | PostMultiPart of parameters * file_parameter list * (contenttype -> bool)
     | PostEmpty
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
-  val files_filter   : file list -> file list
+  val files_filter   : file_parameter list -> file_parameter list
   val list_parameter : string list -> string
-  val multiple_files : string -> path list -> file list
+  val multiple_files : string -> file list -> file_parameter list
 end
 module Network : NETWORK =
 struct
@@ -77,7 +76,7 @@ struct
   type post =
     | PostText of string
     | PostList of parameters
-    | PostMultiPart of parameters * file list * (path -> contenttype option)
+    | PostMultiPart of parameters * file_parameter list * (contenttype -> bool)
     | PostEmpty
   let default = GET
   let to_string = function
@@ -111,13 +110,13 @@ struct
   let files_filter l =
     let rec aux acc = function
       | []   -> acc
-      | (_, [])::t -> aux acc t
+      | (_, ([], _))::t -> aux acc t
       | v::t -> aux (v::acc) t in
     aux [] l
   let list_parameter = String.concat ","
   let multiple_files name =
-    List.fold_left (fun l path ->
-      match path with [] -> l | path -> (name, path)::l) []
+    List.fold_left (fun l ((path, _) as file) ->
+      match path with [] -> l | path -> (name, file)::l) []
 end
 
 (* ************************************************************************** *)

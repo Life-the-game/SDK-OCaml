@@ -113,8 +113,8 @@ let get_one ?(auth = None) id =
 (* Create a user                                                              *)
 (* ************************************************************************** *)
 
-    let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
-    ?(gender = Gender.default) ?(birthday = None) ?(avatar = []) () =
+let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
+    ?(gender = Gender.default) ?(birthday = None) ?(avatar = ([], "")) () =
   let post_parameters =
     Network.option_filter
       [("login",     Some login);
@@ -129,7 +129,7 @@ let get_one ?(auth = None) id =
     Network.PostMultiPart
       (post_parameters,
        Network.files_filter [("avatar", avatar)],
-       ApiMedia.Picture.path_to_contenttype) in
+       ApiMedia.Picture.checker) in
   Api.go
     ~rtype:POST
     ~path:["users"]
@@ -149,7 +149,7 @@ let edit ~auth
     ?(lastname = "")
     ?(gender = Gender.default)
     ?(birthday = None)
-    ?(avatar = [])
+    ?(avatar = ([], ""))
     id =
    let post_parameters =
     Network.option_filter
@@ -164,7 +164,7 @@ let edit ~auth
     Network.PostMultiPart
       (post_parameters,
        Network.files_filter [("avatar", avatar)],
-       ApiMedia.Picture.path_to_contenttype) in
+       ApiMedia.Picture.checker) in
   Api.go
     ~rtype:PUT
     ~path:["users"; id]

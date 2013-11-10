@@ -81,15 +81,15 @@ let curl_perform ~path ~get ~post ~rtype () =
     let parameter (name, value) =
       ApiDump.verbose (name ^ "=" ^ value);
       Curl.CURLFORM_CONTENT (name, value, Curl.DEFAULT)
-    and file (name, path) =
-      match checker path with
-        | None -> raise InvalidFileFormat
-        | Some contenttype ->
-          (let path = path_to_string path in
+    and file (name, (path, contenttype)) =
+      if checker contenttype
+      then
+	let path = path_to_string path in
            (* ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
-                              ^ "(" ^ contenttype ^ ")"); *)
-           Curl.CURLFORM_FILE
-             (name, path, Curl.CONTENTTYPE contenttype)) in
+              ^ "(" ^ contenttype ^ ")"); *)
+        Curl.CURLFORM_FILE
+          (name, path, Curl.CONTENTTYPE contenttype)
+      else raise InvalidFileFormat in
     let l = (List.map parameter parameters)
       @ (List.map file files) in
     Curl.set_httppost c l in
