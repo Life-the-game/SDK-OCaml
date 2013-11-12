@@ -355,6 +355,7 @@ sig
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
     -> 'a t
+  val just_limit : int -> parameters
   val default_order : order
   val order_to_string : order -> string
   val order_of_string : string -> order
@@ -385,6 +386,7 @@ struct
    * int option (* limit*)
    * order option
    * direction option)
+  let just_limit n = (None, Some n, None, None)
   let default_parameters = (None, None, None, None)
   let next page =
     let nextpage = page.index + page.limit in
