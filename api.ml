@@ -42,6 +42,10 @@ let disconnect () =
       Curl.global_cleanup ()
     | _ -> ()
 
+let reconnect () =
+  disconnect ();
+  ignore (connect ())
+
 (* ************************************************************************** *)
 (* Curl Method handling                                                       *)
 (* ************************************************************************** *)
@@ -107,8 +111,11 @@ let curl_perform ~path ~get ~post ~rtype () =
     Curl.perform c;
 
     let text = Buffer.contents result in
-    ApiDump.verbose (" ## URL: " ^ url);
+    ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url);
     ApiDump.verbose (" ## Content received:\n" ^ text);
+    (match post with
+      | PostMultiPart _ -> reconnect ()
+      | _ -> ());
     text
 
 (* ************************************************************************** *)
