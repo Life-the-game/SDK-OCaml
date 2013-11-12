@@ -23,7 +23,8 @@ let extension_of_path path =
 
 let checker l contenttype = List.exists ((=) contenttype) l
 
-let guess_contenttype_from_extension = function
+let guess_contenttype_from_extension extension =
+  match String.lowercase extension with
   | "jpg" | "jpeg" | "jpe" -> "image/jpeg"
   | "png" -> "image/png"
   | "bmp" -> "image/bmp"
