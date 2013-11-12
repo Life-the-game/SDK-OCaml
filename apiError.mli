@@ -9,11 +9,21 @@
 (** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
+type detail =
+    {
+      dcode : int;
+      dtype : string;
+      dmessage : string;
+      key : string;
+      value : string;
+    }
+
 type t =
     {
       message : string;
       stype   : string;
       code    : int;
+      details : detail list;
     }
 
 (* ************************************************************************** *)
