@@ -40,7 +40,7 @@ type t =
 (** Get users                                                                *)
 val get :
   auth:auth
-  -> term:string list
+  -> ?term:string list
   -> ?page:Page.parameters
   -> ?with_avatar: bool option
   -> ?genders: Gender.t list

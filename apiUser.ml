@@ -75,7 +75,7 @@ let equal u1 u2 =
 (* Get users                                                                  *)
 (* ************************************************************************** *)
 
-let get ~auth ~term ?(page = Page.default_parameters)
+let get ~auth ?(term = []) ?(page = Page.default_parameters)
     ?(with_avatar = None) ?(genders = [])
     ?(lang = []) ?(min_score = None) ?(max_score = None)
     ?(min_level = None) ?(max_level = None)
