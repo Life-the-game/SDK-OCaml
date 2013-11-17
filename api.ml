@@ -44,7 +44,7 @@ let disconnect () =
 
 let reconnect () =
   disconnect ();
-  ignore (connect ())
+  connect ()
 
 (* ************************************************************************** *)
 (* Curl Method handling                                                       *)
@@ -88,7 +88,7 @@ let curl_perform ~path ~get ~post ~rtype () =
     and file (name, (path, contenttype)) =
       if checker contenttype
       then
-	let path = path_to_string path in
+        let path = path_to_string path in
            (* ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
               ^ "(" ^ contenttype ^ ")"); *)
         Curl.CURLFORM_FILE
@@ -105,17 +105,14 @@ let curl_perform ~path ~get ~post ~rtype () =
     | PostMultiPart (p, f, c) -> if List.length f = 0
       then post_list p else post_multipart (p, f, c));
 
-    Buffer.clear result;
+    Buffer.reset result;
     Curl.set_customrequest c (Network.to_string rtype);
     Curl.set_url c url;
     Curl.perform c;
 
     let text = Buffer.contents result in
-    ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url);
-    ApiDump.verbose (" ## Content received:\n" ^ text);
-    (match post with
-      | PostMultiPart _ -> reconnect ()
-      | _ -> ());
+    (* ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url); *)
+    (* ApiDump.verbose (" ## Content received:\n" ^ text); *)
     text
 
 (* ************************************************************************** *)
