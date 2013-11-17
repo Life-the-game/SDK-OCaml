@@ -24,7 +24,7 @@ let get ~auth ?(page = Page.default_parameters) ?(activity_type = [])
 (* PRIVATE *)
     (match user with
       | Some user_id -> ["users"; user_id]
-      | None         -> []) @
+      | None         -> ["users"; "self"]) @
 (* /PRIVATE *)
       ["feed"])
     ~req:(Some (Auth auth))

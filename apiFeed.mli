@@ -16,7 +16,5 @@ val get :
   auth:auth
   -> ?page:Page.parameters
   -> ?activity_type: string list
-(* PRIVATE *)
   -> ?user:id option
-(* /PRIVATE *)
   -> unit -> ApiPlayground.t Page.t Api.t
