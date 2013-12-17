@@ -114,6 +114,14 @@ let auth_required =
     details = [];
   }
 
+let file_not_found =
+  {
+    message = "File not found";
+    stype   = "CLIENT_FileNotFound";
+    code    = -8;
+    details = [];
+  }
+
 let notfound =
   {
     message = "Not found";

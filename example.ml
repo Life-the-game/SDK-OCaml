@@ -157,7 +157,6 @@ let _ =
               ~avatar:picture
               ()) in
 
-  exit 1;
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Authentication tests                          #";
@@ -168,6 +167,26 @@ let _ =
   print_title "Authenticate using a login and a password";
   let auth = test (ApiAuth.login login password) in
 
+  print_title "Get one user...";
+  print_title "with auth";
+        ignore (auth_test (fun auth ->
+          (ApiUser.get_one ~auth:(Some auth) login)) auth);
+
+  print_title "Logout (remove token)";
+  ignore (match auth with
+    | Error e -> impossible "it requires authentication that previously failed";
+      Error e
+    | Result auth -> test (ApiAuth.logout auth));
+
+  let auth = test (ApiAuth.login login password) in
+
+  print_title "Get one user...";
+  print_title "with auth";
+  ignore (auth_test (fun auth ->
+    (ApiUser.get_one ~auth:(Some auth) login)) auth);
+  
+  exit 1;
+	
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Achievements tests                            #";
@@ -177,7 +196,7 @@ let _ =
   print_title "Create an achievement";
   ignore (auth_test (fun auth ->
     ApiAchievement.create ~auth:auth ~name:achievement_name
-      ~description:achievement_description (* ~badge:picture *)
+      ~description:achievement_description ~badge:picture
       ~keywords:["hello"; "world"] ()) auth);
 (* /PRIVATE *)
 
@@ -384,7 +403,7 @@ let _ =
         ignore (auth_test (fun auth ->
           ApiComment.create ~auth:auth
             ~content:comment_description
-            (* ~medias:[picture; picture2] *)
+            ~medias:[picture; picture2]
 	    achievement_status_id) auth));
 
   print_title "Get my comments ordered by name limit 2 with auth";

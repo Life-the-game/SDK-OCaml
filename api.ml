@@ -51,6 +51,7 @@ let reconnect () =
 (* ************************************************************************** *)
 
 exception InvalidFileFormat
+exception FileNotFound
 
 (* Return a text from a url using Curl and HTTP Auth (if needed).
    Error handling with exceptions to catch                                    *)
@@ -63,9 +64,14 @@ let curl_perform ~path ~get ~post ~rtype () =
     if (String.length str) = 0 then str
     else Str.string_after str 1 (* remove last & *) in
 
-  let c = match !connection with
-    | None -> connect () (* may throw exceptions *)
-    | Some c -> c in
+  let c =
+    (match !connection with
+      | None -> connect () (* may throw exceptions *)
+      | Some c ->
+	let open Network in
+	(match post with
+	  | PostMultiPart _ -> reconnect ()
+	  | _ -> c)) in
 
   let url =
     let path = List.fold_left (fun f s -> f ^ "/" ^ s) "" path
@@ -83,19 +89,23 @@ let curl_perform ~path ~get ~post ~rtype () =
   and post_multipart (parameters, files, checker) =
     (* ApiDump.verbose " ## POST multi-part data:";*)
     let parameter (name, value) =
-      ApiDump.verbose (name ^ "=" ^ value);
+      (* ApiDump.verbose (name ^ "=" ^ value); *)
       Curl.CURLFORM_CONTENT (name, value, Curl.DEFAULT)
     and file (name, (path, contenttype)) =
       if checker contenttype
       then
         let path = path_to_string path in
-           (* ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
-              ^ "(" ^ contenttype ^ ")"); *)
-        Curl.CURLFORM_FILE
-          (name, path, Curl.CONTENTTYPE contenttype)
+        (* ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
+           ^ "(" ^ contenttype ^ ")"); *)
+	if Sys.file_exists path
+        then
+	  (Curl.CURLFORM_FILE
+             (name, path, Curl.CONTENTTYPE contenttype))
+	else raise FileNotFound
       else raise InvalidFileFormat in
     let l = (List.map parameter parameters)
-      @ (List.map file files) in
+      @ (List.map file files)
+      @ [parameter ("padding", "padding")] in
     Curl.set_httppost c l in
   let open Network in
   (match post with
@@ -199,6 +209,7 @@ let go
     | Failure msg -> Error (ApiError.network msg)
     | Invalid_argument s -> Error (ApiError.invalid_json s)
     | InvalidFileFormat -> Error ApiError.invalid_format
+    | FileNotFound -> Error ApiError.file_not_found
     | ParseError e -> Error (ApiError.invalid_json e)
     | _ -> Error ApiError.generic
 

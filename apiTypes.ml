@@ -570,11 +570,22 @@ let colors =
     ("lightlightpink", "#fffdfd");
     ("darkpink", "#e6173b");
     ("darkdarkpink", "#c41332");
-    ("main", "#26b671");
-    ("lightmain", "#4eda97");
-    ("lightlightmain", "#8ee7bc");
-    ("darkmain", "#14623d");
-    ("darkdarkmain", "#115334");
+    (* ("main", "#26b671"); *)
+    (* ("lightmain", "#4eda97"); *)
+    (* ("lightlightmain", "#8ee7bc"); *)
+    (* ("darkmain", "#14623d"); *)
+    (* ("darkdarkmain", "#115334"); *)
   ]
 
 let name_to_color color = List.assoc color colors
+
+let main_colors =
+  let is_main (name, _) =
+    try
+      if (String.sub name 0 10) = "lightlight"
+      then false
+      else if (String.sub name 0 8) = "darkdark"
+      then false
+      else true
+    with Invalid_argument _ -> true in
+  List.filter is_main colors

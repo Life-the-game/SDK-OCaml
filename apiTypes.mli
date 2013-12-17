@@ -289,4 +289,6 @@ module Privacy : PRIVACY
 (** {3 Colors}                                                                *)
 (* ************************************************************************** *)
 
+val colors : (string * string) list
+val main_colors : (string * string) list
 val name_to_color : string -> string
