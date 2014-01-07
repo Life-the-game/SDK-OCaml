@@ -51,8 +51,8 @@ let from_json c =
   and get_first (name, l) = try List.hd l
     with _ -> raise (Invalid_argument ("Empty list of " ^ name))
 
-  and get_nth n (name, l) = try List.nth l n
-    with _ -> raise (Invalid_argument ("Not enough element in list " ^ name))
+  (* and get_nth n (name, l) = try List.nth l n *)
+  (*   with _ -> raise (Invalid_argument ("Not enough element in list " ^ name)) *)
 
   in {
     info = Info.from_json c;
