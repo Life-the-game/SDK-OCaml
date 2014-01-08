@@ -24,6 +24,7 @@ type activity =
 			    * ApiMedia.t list
 			    * ApiNews.t list
 			    * string option)
+  | Failure             of (string * activity)
 
 type t = {
   info : Info.t;
@@ -35,6 +36,8 @@ type t = {
 (* ************************************************************************** *)
 (* Tools                                                                      *)
 (* ************************************************************************** *)
+
+exception InvalidList of string
 
 let from_json c =
   let open Yojson.Basic.Util in
@@ -49,17 +52,22 @@ let from_json c =
   and get_list (_, l) = l
 
   and get_first (name, l) = try List.hd l
-    with _ -> raise (Invalid_argument ("Empty list of " ^ name))
+    with _ -> raise (InvalidList ("Empty list of " ^ name))
 
   (* and get_nth n (name, l) = try List.nth l n *)
-  (*   with _ -> raise (Invalid_argument ("Not enough element in list " ^ name)) *)
+  (*   with _ -> raise (InvalidList ("Not enough element in list " ^ name)) *)
+  in
 
-  in {
+  let other stype =
+    let stype = if stype = "" then c |> member "type" |> to_string else stype in
+    Other (stype, get_list users, get_list achievement_statuses,
+	   get_list medias, get_list news,
+	   c |> member "metadata" |> to_string_option) in
+  {
     info = Info.from_json c;
     owner = ApiUser.from_json (c |> member "owner");
     template = c |> member "template" |> to_string;
-    activity =  match c |> member "type" |> to_string with
-
+    activity =  try (match c |> member "type" |> to_string with
       | "new_media" -> NewMedia (get_first achievement_statuses,
 				 get_list medias)
 
@@ -74,9 +82,8 @@ let from_json c =
 
       | "network_addition" -> NetworkAddition (get_first users)
 
-      | stype -> Other (stype, get_list users, get_list achievement_statuses,
-			get_list medias, get_list news,
-			c |> member "metadata" |> to_string_option)
+      | stype -> other stype
+    ) with InvalidList l -> Failure (l, other "failure")
   }
 
 (* ************************************************************************** *)

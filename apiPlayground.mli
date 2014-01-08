@@ -24,6 +24,7 @@ type activity =
 			    * ApiMedia.t list
 			    * ApiNews.t list
 			    * string option)
+  | Failure             of (string * activity)
 
 type t = {
   info : Info.t;
