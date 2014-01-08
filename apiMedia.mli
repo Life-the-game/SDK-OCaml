@@ -27,6 +27,7 @@ module type PICTURE =
 sig
   type t =
     {
+      info      : Info.t;
       url_small : ApiTypes.url;
       url_big   : ApiTypes.url;
     }
@@ -44,6 +45,7 @@ module type VIDEO =
 sig
   type t =
     {
+      info      : Info.t;
       url       : url;
       thumbnail : Picture.t;
     }
@@ -62,6 +64,7 @@ sig
     | Unknown
   type t =
     {
+      info      : Info.t;
       provider  : provider;
       video_url : url;
       thumbnail : Picture.t;
@@ -81,5 +84,6 @@ type t =
   | Video   of Video.t
   | ExternalVideo of ExternalVideo.t
   | Media   of (string * string)
+  | Id      of string
 
 val from_json : Yojson.Basic.json -> t

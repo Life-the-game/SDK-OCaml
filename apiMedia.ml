@@ -47,6 +47,7 @@ module type PICTURE =
 sig
   type t =
     {
+      info      : Info.t;
       url_small : url;
       url_big   : url;
     }
@@ -59,11 +60,13 @@ module Picture : PICTURE =
 struct
   type t =
     {
+      info      : Info.t;
       url_small : url;
       url_big   : url;
     }
   let from_json c =
     {
+      info      = Info.from_json c;
       url_small = c |> member "url_small" |> to_string;
       url_big   = c |> member "url_big"   |> to_string;
     }
@@ -83,6 +86,7 @@ module type VIDEO =
 sig
   type t =
     {
+      info      : Info.t;
       url       : url;
       thumbnail : Picture.t;
     }
@@ -95,11 +99,13 @@ module Video : VIDEO =
 struct
   type t =
     {
+      info      : Info.t;
       url       : url;
       thumbnail : Picture.t;
     }
   let from_json c =
     {
+      info      = Info.from_json c;
       url       = c |> member "url" |> to_string;
       thumbnail = Picture.from_json (c |> member "thumbnail");
     }
@@ -118,6 +124,7 @@ sig
     | Unknown
   type t =
     {
+      info      : Info.t;
       provider  : provider;
       video_url : url;
       thumbnail : Picture.t;
@@ -135,6 +142,7 @@ struct
     | Unknown
   type t =
     {
+      info      : Info.t;
       provider  : provider;
       video_url : url;
       thumbnail : Picture.t;
@@ -151,7 +159,8 @@ struct
     | _             -> Unknown
   let from_json c =
     {
-      provider = provider_of_string (c |> member "provider" |> to_string);
+      info      = Info.from_json c;
+      provider  = provider_of_string (c |> member "provider" |> to_string);
       video_url = c |> member "url" |> to_string;
       thumbnail = Picture.from_json (c |> member "thumbnail");
     }
@@ -166,12 +175,11 @@ type t =
   | Video   of Video.t
   | ExternalVideo of ExternalVideo.t
   | Media   of (string * string)
+  | Id      of string
 
-let from_json c =
-  match c |> member "type" |> to_string with
-    | "picture" -> Picture (Picture.from_json c)
-    | "video"   -> Video (Video.from_json c)
-    | "external_video" -> ExternalVideo (ExternalVideo.from_json c)
-    | other     -> Media (other, c |> to_string)
+let from_json c = (* todo match type with *)
+  try Picture (Picture.from_json c)
+  with
+    | Yojson.Basic.Util.Type_error (msg, tree) -> Id (c |> to_string)
 
 let checker = checker (Picture.contenttypes @ Video.contenttypes)
