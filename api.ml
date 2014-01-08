@@ -82,21 +82,21 @@ let curl_perform ~path ~get ~post ~rtype () =
 
   Curl.set_postfieldsize c 0;
   let post_string str =
-    (* ApiDump.verbose (" ## POST data: " ^ str); *)
+    ApiDump.verbose (" ## POST data: " ^ str);
     Curl.set_postfieldsize c (String.length str);
     Curl.set_postfields c str in
   let post_list l = post_string (parameters_to_string l)
   and post_multipart (parameters, files, checker) =
-    (* ApiDump.verbose " ## POST multi-part data:";*)
+    ApiDump.verbose " ## POST multi-part data:";
     let parameter (name, value) =
-      (* ApiDump.verbose (name ^ "=" ^ value); *)
+      ApiDump.verbose (name ^ "=" ^ value);
       Curl.CURLFORM_CONTENT (name, value, Curl.DEFAULT)
     and file (name, (path, contenttype)) =
       if checker contenttype
       then
         let path = path_to_string path in
-        (* ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
-           ^ "(" ^ contenttype ^ ")"); *)
+        ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
+           ^ "(" ^ contenttype ^ ")");
 	if Sys.file_exists path
         then
 	  (Curl.CURLFORM_FILE
