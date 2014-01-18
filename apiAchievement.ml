@@ -125,5 +125,28 @@ let create ~auth ~name ~description ?(color = "") ?(parents = [])
     ~post:post
     from_json
 
+(* ************************************************************************** *)
+(* Edit an Achievement                                                        *)
+(* ************************************************************************** *)
+
+let edit ~auth ?(name = "") ?(description = "") ?(color = "")
+    ?(badge = ([], "")) id =
+  let post_parameters =
+    Network.empty_filter
+      [("name", name);
+       ("description", description);
+       ("color", color);
+      ] in
+  let post =
+    Network.PostMultiPart
+      (post_parameters, Network.files_filter [("badge", badge)],
+       ApiMedia.Picture.checker) in
+  Api.go
+    ~rtype:PUT
+    ~path:["achievements"; id]
+    ~req:(Some (Auth auth))
+    ~post:post
+    from_json
+
 (* /PRIVATE *)
 

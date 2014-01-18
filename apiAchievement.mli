@@ -68,6 +68,15 @@ val create :
   -> ?keywords:string list
   -> unit -> t Api.t
 
+(** Edit an Achievement                                                       *)
+val edit :
+  auth:auth
+  -> ?name:string
+  -> ?description:string
+  -> ?color:color
+  -> ?badge:file
+  -> id -> t Api.t
+
 (* /PRIVATE *)
 
 (* ************************************************************************** *)
