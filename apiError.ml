@@ -129,3 +129,11 @@ let notfound =
     code    = 1011;
     details = [];
   }
+
+let redirect url =
+  {
+    message = url;
+    stype   = "Redirect";
+    code    = 300;
+    details = [];
+  }

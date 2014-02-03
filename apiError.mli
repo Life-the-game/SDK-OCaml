@@ -45,3 +45,4 @@ val file_not_found      : t
 val invalid_argument    : string -> t
 val auth_required       : t
 val notfound            : t
+val redirect            : string -> t
