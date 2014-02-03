@@ -14,7 +14,6 @@ open Network
 type activity =
   | NetworkAddition     of ApiUser.t
   | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
-  | News                of ApiNews.t
   | AchievementUnlocked of ApiAchievementStatus.t
   | NewObjective        of ApiAchievementStatus.t
   | LevelReached        of int
@@ -22,13 +21,13 @@ type activity =
 			    * ApiUser.t list
 			    * ApiAchievementStatus.t list
 			    * ApiMedia.t list
-			    * ApiNews.t list
 			    * string option)
   | Failure             of (string * activity)
 
 type t = {
   info : Info.t;
   owner : ApiUser.t;
+  stype : string;
   template : string;
   activity : activity;
 }
@@ -47,7 +46,6 @@ let from_json c =
     ("achievement_status",
      Api.convert_each c "achievement_statuses" ApiAchievementStatus.from_json)
   and medias = ("medias", Api.convert_each c "medias" ApiMedia.from_json)
-  and news = ("news", Api.convert_each c "news" ApiNews.from_json)
 
   and get_list (_, l) = l
 
@@ -58,20 +56,19 @@ let from_json c =
   (*   with _ -> raise (InvalidList ("Not enough element in list " ^ name)) *)
   in
 
+  let stype = c |> member "type" |> to_string in
   let other stype =
-    let stype = if stype = "" then c |> member "type" |> to_string else stype in
     Other (stype, get_list users, get_list achievement_statuses,
-	   get_list medias, get_list news,
+	   get_list medias,
 	   c |> member "metadata" |> to_string_option) in
   {
     info = Info.from_json c;
     owner = ApiUser.from_json (c |> member "owner");
     template = c |> member "template" |> to_string;
-    activity =  try (match c |> member "type" |> to_string with
+    stype = stype;
+    activity =  try (match stype with
       | "new_media" -> NewMedia (get_first achievement_statuses,
 				 get_list medias)
-
-      | "news" -> News (get_first news)
 
       | "achievement_unlocked" -> AchievementUnlocked
 	(get_first achievement_statuses)

@@ -14,7 +14,6 @@ open ApiTypes
 type activity =
   | NetworkAddition     of ApiUser.t
   | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
-  | News                of ApiNews.t
   | AchievementUnlocked of ApiAchievementStatus.t
   | NewObjective        of ApiAchievementStatus.t
   | LevelReached        of int
@@ -22,13 +21,13 @@ type activity =
 			    * ApiUser.t list
 			    * ApiAchievementStatus.t list
 			    * ApiMedia.t list
-			    * ApiNews.t list
 			    * string option)
   | Failure             of (string * activity)
 
 type t = {
   info : Info.t;
   owner : ApiUser.t;
+  stype : string;
   template : string;
   activity : activity;
 }
