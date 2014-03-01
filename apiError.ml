@@ -13,8 +13,8 @@ type detail =
       dcode : int;
       dtype : string;
       dmessage : string;
-      key : string;
-      value : string;
+      key : string option;
+      value : string option;
     }
 
 type t =
@@ -41,8 +41,8 @@ let detail_from_json c =
     dcode = c |> member "code" |> to_int;
     dtype = c |> member "type" |> to_string;
     dmessage = c |> member "message" |> to_string;
-    key = c |> member "key" |> to_string;
-    value = c |> member "value" |> to_string;
+    key = c |> member "key" |> to_string_option;
+    value = c |> member "value" |> to_string_option;
   }
 
 let from_json c =

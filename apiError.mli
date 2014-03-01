@@ -14,8 +14,8 @@ type detail =
       dcode : int;
       dtype : string;
       dmessage : string;
-      key : string;
-      value : string;
+      key : string option;
+      value : string option;
     }
 
 type t =
