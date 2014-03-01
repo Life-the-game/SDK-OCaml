@@ -55,18 +55,21 @@ val get :
 (** Get a user                                                               *)
 val get_one : ?auth:auth option -> id -> t Api.t
 
+type either =
+  | Password of password
+  | OAuth of (string (* site_name *) * string (* site_token *))
+
 (** Create a user                                                            *)
 val create :
   login:login
-  -> password:string
   -> email:email
   -> lang:Lang.t
   -> ?firstname:string
   -> ?lastname:string
   -> ?gender:Gender.t
   -> ?birthday:Date.t option
-  -> ?avatar:file
-  -> unit -> t Api.t
+  -> ?avatar:either_file
+  -> either -> t Api.t
 
 (** Edit a user                                                              *)
 val edit :
@@ -78,7 +81,7 @@ val edit :
   -> ?lastname:string
   -> ?gender:Gender.t
   -> ?birthday:Date.t option
-  -> ?avatar:file
+  -> ?avatar:either_file
   -> id -> t Api.t
 
 (* ************************************************************************** *)

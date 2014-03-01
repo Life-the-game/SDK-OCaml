@@ -61,7 +61,7 @@ val create :
   -> description:string
   -> ?color:color
   -> ?parents:id list
-  -> ?badge:file
+  -> ?badge:either_file
   -> ?category:bool
   -> ?secret:bool
   -> ?discoverable:bool
@@ -74,7 +74,7 @@ val edit :
   -> ?name:string
   -> ?description:string
   -> ?color:color
-  -> ?badge:file
+  -> ?badge:either_file
   -> id -> t Api.t
 
 (* /PRIVATE *)

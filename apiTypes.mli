@@ -53,10 +53,15 @@ type parameters = (string (* key *) * string (* value *)) list
 (** {3 Files}                                                                 *)
 (* ************************************************************************** *)
 
+type filename = string
 type contenttype = string
 type path = string list
 type file = (path * contenttype)
-type file_parameter = (string (* name *) * file)
+type either_file =
+  | FileUrl of url
+  | File of file
+  | NoFile
+type file_parameter = (filename * file)
 
 val path_to_string : path -> string
 
@@ -83,7 +88,7 @@ sig
     Note that the order of the list will be reversed. *)
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
-  val files_filter   : file_parameter list -> file_parameter list
+  val files_filter   : (filename * either_file) list -> file_parameter list
   val list_parameter : string list -> string
   val multiple_files : string -> file list -> file_parameter list
 end

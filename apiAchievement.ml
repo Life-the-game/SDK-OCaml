@@ -100,7 +100,7 @@ let get_one ~req id =
 (* ************************************************************************** *)
 
 let create ~auth ~name ~description ?(color = "") ?(parents = [])
-    ?(badge = ([], ""))
+    ?(badge = NoFile)
     ?(category = false) ?(secret = false) ?(discoverable = true)
     ?(keywords = []) () =
   let post_parameters =
@@ -130,7 +130,7 @@ let create ~auth ~name ~description ?(color = "") ?(parents = [])
 (* ************************************************************************** *)
 
 let edit ~auth ?(name = "") ?(description = "") ?(color = "")
-    ?(badge = ([], "")) id =
+    ?(badge = NoFile) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);

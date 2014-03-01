@@ -33,10 +33,15 @@ type parameters = (string (* key *) * string (* value *)) list
 (* Files                                                                      *)
 (* ************************************************************************** *)
 
+type filename = string
 type contenttype = string
 type path = string list
 type file = (path * contenttype)
-type file_parameter = (string (* name *) * file)
+type either_file =
+  | FileUrl of url
+  | File of file
+  | NoFile
+type file_parameter = (filename * file)
 
 let path_to_string = String.concat "/" (* todo dirsep unix *)
 
@@ -61,7 +66,7 @@ sig
   val of_string : string -> t
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
-  val files_filter   : file_parameter list -> file_parameter list
+  val files_filter   : (filename * either_file) list -> file_parameter list
   val list_parameter : string list -> string
   val multiple_files : string -> file list -> file_parameter list
 end
@@ -110,8 +115,9 @@ struct
   let files_filter l =
     let rec aux acc = function
       | []   -> acc
-      | (_, ([], _))::t -> aux acc t
-      | v::t -> aux (v::acc) t in
+      | (name, File f)::t -> aux ((name, f)::acc) t
+      | _::t -> aux acc t
+    in
     aux [] l
   let list_parameter = String.concat ","
   let multiple_files name =

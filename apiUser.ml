@@ -113,18 +113,27 @@ let get_one ?(auth = None) id =
 (* Create a user                                                              *)
 (* ************************************************************************** *)
 
-let create ~login ~password ~email ~lang ?(firstname = "") ?(lastname = "")
-    ?(gender = Gender.default) ?(birthday = None) ?(avatar = ([], "")) () =
-  let post_parameters =
-    Network.option_filter
-      [("login",     Some login);
-       ("email",     Some email);
-       ("password",  Some password);
-       ("firstname", Some firstname);
-       ("lastname",  Some lastname);
-       ("gender",    Some (Gender.to_string gender));
-       ("birthday",  Option.map Date.to_string birthday);
-      ] in
+type either =
+  | Password of password
+  | OAuth of (string (* site_name *) * string (* site_token *))
+
+let create ~login ~email ~lang ?(firstname = "") ?(lastname = "")
+    ?(gender = Gender.default) ?(birthday = None) ?(avatar = NoFile) either =
+  let either = match either with
+    | Password password -> [("password", password)]
+    | OAuth (site_name, site_token) ->
+      [("site_name", site_name); ("site_token", site_token)]
+  in
+  let post_parameters = either
+    @ (Network.option_filter
+	 ([("login",     Some login);
+	  ("email",     Some email);
+	  ("firstname", Some firstname);
+	  ("lastname",  Some lastname);
+	  ("gender",    Some (Gender.to_string gender));
+	  ("birthday",  Option.map Date.to_string birthday);
+	 ] @ (match avatar with FileUrl url -> [("avatar", Some url)] | _ -> []))
+    ) in
   let post =
     Network.PostMultiPart
       (post_parameters,
@@ -149,17 +158,18 @@ let edit ~auth
     ?(lastname = "")
     ?(gender = Gender.default)
     ?(birthday = None)
-    ?(avatar = ([], ""))
+    ?(avatar = NoFile)
     id =
    let post_parameters =
     Network.option_filter
-      [("email", Some email);
+      ([("email", Some email);
        ("password", Some password);
        ("firstname", Some firstname);
        ("lastname", Some lastname);
        ("gender", Some (Gender.to_string gender));
        ("birthday", Option.map Date.to_string birthday);
-      ] in
+      ] @ (match avatar with FileUrl url -> [("avatar", Some url)] | _ -> [])
+      ) in
   let post =
     Network.PostMultiPart
       (post_parameters,
