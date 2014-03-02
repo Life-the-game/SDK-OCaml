@@ -337,6 +337,8 @@ sig
     | Score
     | Nb_comments
   type direction = Asc | Desc
+  type index = int
+  type limit = int
   type 'a t =
       {
         server_size : int;
@@ -346,11 +348,7 @@ sig
         (* direction   : direction; *)
         items       : 'a list;
       }
-  type parameters =
-  (int option (* index*)
-   * int option (* limit*)
-   * order option
-   * direction option)
+  type parameters = (index * limit * (order * direction) option)
   val default_parameters : parameters
   (** Take a page and return the arguments to get the next one,
       or None if there's no next page *)
@@ -378,6 +376,8 @@ struct
     | Score
     | Nb_comments
   type direction = Asc | Desc
+  type index = int
+  type limit = int
   type 'a t =
       {
         server_size : int;
@@ -387,26 +387,18 @@ struct
         (* direction   : direction; *)
         items       : 'a list;
       }
-  type parameters =
-  (int option (* index*)
-   * int option (* limit*)
-   * order option
-   * direction option)
-  let just_limit n = (None, Some n, None, None)
-  let default_parameters = (None, None, None, None)
+  type parameters = (index * limit * (order * direction) option)
+  let just_limit n = (0, n, None)
+  let default_parameters = (0, 10, None)
   let next page =
     let nextpage = page.index + page.limit in
     if nextpage < page.server_size
-    then Some (Some nextpage, Some page.limit,
-               (* Some page.order, Some page.direction) *)
-	       None, None)
+    then Some (nextpage, page.limit, None) (* todo order direction params *)
     else None
   let previous page =
     let previouspage = page.index + page.limit in
     if previouspage >= 0
-    then Some (Some previouspage, Some page.limit,
-               (* Some page.order, Some page.direction) *)
-	       None, None)
+    then Some (previouspage, page.limit, None) (* todo order direction params *)
     else None
   let default_order = Smart
   let order_to_string = function

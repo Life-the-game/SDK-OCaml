@@ -216,6 +216,8 @@ sig
     | Score
     | Nb_comments
   type direction = Asc | Desc
+  type index = int
+  type limit = int
   type 'a t =
       {
         server_size : int;
@@ -225,11 +227,7 @@ sig
         (* direction   : direction; *)
         items       : 'a list;
       }
-  type parameters =
-  (int option (* index*)
-   * int option (* limit*)
-   * order option
-   * direction option)
+  type parameters = (index * limit * (order * direction) option)
   val default_parameters : parameters
   (** Take a page and return the arguments to get the next one,
       or None if there's no next page *)

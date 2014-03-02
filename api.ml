@@ -147,13 +147,12 @@ let req_parameters (parameters : parameters) (req : requirements option)
 let page_parameters (parameters : parameters) (page : Page.parameters option)
     : parameters =
   match page with
-  | Some (index, limit, order, direction) ->
+  | Some (index, limit, sort) ->
     (Network.option_filter
-       [("index", Option.map string_of_int index);
-        ("limit", Option.map string_of_int limit);
-        ("order", Option.map Page.order_to_string order);
-        ("direction", Option.map
-          Page.direction_to_string direction);
+       [("index", Some (string_of_int index));
+        ("limit", Some (string_of_int limit));
+        ("order", Option.map (fun (order, _) -> Page.order_to_string order) sort);
+        ("direction", Option.map (fun (_, direction) -> Page.direction_to_string direction) sort);
        ]) @ parameters
   | None -> parameters
 
