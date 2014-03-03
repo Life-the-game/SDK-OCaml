@@ -523,49 +523,49 @@ end
 
 let colors =
   [
-    ("green", "#26b671");
-    ("lightgreen", "#4eda97");
     ("lightlightgreen", "#8ee7bc");
+    ("lightgreen", "#4eda97");
+    ("green", "#26b671");
     ("darkgreen", "#14623d");
     ("darkdarkgreen", "#115334");
-    ("blue", "#3498db");
-    ("lightblue", "#75b9e7");
     ("lightlightblue", "#b6daf2");
+    ("lightblue", "#75b9e7");
+    ("blue", "#3498db");
     ("darkblue", "#196090");
     ("darkdarkblue", "#16527a");
-    ("purple", "#9b59b6");
-    ("lightpurple", "#bb8ecd");
     ("lightlightpurple", "#dbc3e5");
+    ("lightpurple", "#bb8ecd");
+    ("purple", "#9b59b6");
     ("darkpurple", "#623475");
     ("darkdarkpurple", "#542c64");
-    ("nightblue", "#34495e");
-    ("lightnightblue", "#4f6f8f");
     ("lightlightnightblue", "#7795b4");
+    ("lightnightblue", "#4f6f8f");
+    ("nightblue", "#34495e");
     ("darknightblue", "#10161c");
     ("darkdarknightblue", "#0d1318");
-    ("yellow", "#f1c40f");
-    ("lightyellow", "#f5d657");
     ("lightlightyellow", "#f9e8a0");
+    ("lightyellow", "#f5d657");
+    ("yellow", "#f1c40f");
     ("darkyellow", "#927608");
     ("darkdarkyellow", "#7c6407");
-    ("orange", "#ec5e00");
-    ("lightorange", "#ff883a");
     ("lightlightorange", "#ffb686");
+    ("lightorange", "#ff883a");
+    ("orange", "#ec5e00");
     ("darkorange", "#863500");
     ("darkdarkorange", "#722d00");
-    ("red", "#e74c3c");
-    ("lightred", "#ef8b80");
     ("lightlightred", "#f5b4ae");
+    ("lightred", "#ef8b80");
+    ("red", "#e74c3c");
     ("darkred", "#a82315");
     ("darkdarkred", "#8f1d12");
-    ("grey", "#bdc3c7");
-    ("lightgrey", "#e6e9ea");
     ("lightlightgrey", "#ffffff");
+    ("lightgrey", "#e6e9ea");
+    ("grey", "#bdc3c7");
     ("darkgrey", "#869198");
     ("darkdarkgrey", "#727b81");
-    ("pink", "#f17288");
-    ("lightpink", "#f8b8c3");
     ("lightlightpink", "#fffdfd");
+    ("lightpink", "#f8b8c3");
+    ("pink", "#f17288");
     ("darkpink", "#e6173b");
     ("darkdarkpink", "#c41332");
     (* ("main", "#26b671"); *)
@@ -580,10 +580,21 @@ let name_to_color color = List.assoc color colors
 let main_colors =
   let is_main (name, _) =
     try
-      if (String.sub name 0 10) = "lightlight"
+      if (String.sub name 0 8) = "darkdark"
+      then false
+      else if (String.sub name 0 10) = "lightlight"
+      then false
+      else true
+    with Invalid_argument _ -> true in
+  List.filter is_main colors
+
+let light_colors =
+  let is_light (name, _) =
+    try
+      if (String.sub name 0 4) = "dark"
       then false
       else if (String.sub name 0 8) = "darkdark"
       then false
       else true
     with Invalid_argument _ -> true in
-  List.filter is_main colors
+  List.filter is_light colors

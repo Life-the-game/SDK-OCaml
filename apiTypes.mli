@@ -294,4 +294,5 @@ module Privacy : PRIVACY
 
 val colors : (string * string) list
 val main_colors : (string * string) list
+val light_colors : (string * string) list
 val name_to_color : string -> string
