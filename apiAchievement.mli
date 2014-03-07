@@ -27,7 +27,7 @@ type t =
       category           : bool;
       secret             : bool;
       discoverable       : bool;
-      (* keywords           : string list; *)(*42*)
+      tags               : string list;
       achievement_status : achievement_status option;
       url                : url;
     }
@@ -45,11 +45,13 @@ val get :
   -> ?is_category: bool option
   -> ?is_secret: bool option
   -> ?is_discoverable: bool option
+  -> ?tags_api:url
   -> unit -> t Page.t Api.t
 
 (** Get one Achievement                                                       *)
 val get_one :
   req:requirements
+  -> ?tags_api:url
   -> id -> t Api.t
 
 (* PRIVATE *)
@@ -65,7 +67,8 @@ val create :
   -> ?category:bool
   -> ?secret:bool
   -> ?discoverable:bool
-  -> ?keywords:string list
+  -> ?tags:string list
+  -> ?tags_api:url
   -> unit -> t Api.t
 
 (** Edit an Achievement                                                       *)
@@ -75,6 +78,9 @@ val edit :
   -> ?description:string
   -> ?color:color
   -> ?badge:either_file
+  -> ?add_tags:string list
+  -> ?remove_tags:string list
+  -> ?tags_api:url
   -> id -> t Api.t
 
 (* /PRIVATE *)
@@ -83,4 +89,5 @@ val edit :
 (** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
 
-val from_json : Yojson.Basic.json -> t
+val from_json : ?tags_api:url -> Yojson.Basic.json -> t
+val get_tags : url -> id -> string list
