@@ -183,3 +183,9 @@ let from_json c = (* todo match type with *)
     | Yojson.Basic.Util.Type_error (msg, tree) -> Id (c |> to_string)
 
 let checker = checker (Picture.contenttypes @ Video.contenttypes)
+
+let thumbnail = function
+  | Picture p -> p.Picture.url_small
+  | Video v -> v.Video.thumbnail.Picture.url_small
+  | ExternalVideo v -> v.ExternalVideo.thumbnail.Picture.url_small
+  | _ -> ""

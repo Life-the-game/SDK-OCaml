@@ -87,3 +87,4 @@ type t =
   | Id      of string
 
 val from_json : Yojson.Basic.json -> t
+val thumbnail : t -> url
