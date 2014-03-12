@@ -17,7 +17,7 @@ SRC		=	\
 			apiMedia.ml \
 			apiUser.ml \
 			apiAuth.ml \
-			apiAchievement.ml \
+g			apiAchievement.ml \
 			apiAchievementStatus.ml \
 			apiComment.ml \
 			apiNews.ml \

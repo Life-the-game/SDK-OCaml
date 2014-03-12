@@ -33,7 +33,3 @@ val go :
     not return anything (unit)                                               *)
 val noop : Yojson.Basic.json -> unit
 
-val convert_each :
-  Yojson.Basic.json
-  -> (Yojson.Basic.json -> 'a)
-  -> 'a list

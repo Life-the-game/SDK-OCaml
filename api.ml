@@ -207,8 +207,3 @@ let go
 
 let noop _ = ()
 
-let convert_each c f =
-  let open Yojson.Basic.Util in
-  match c |> to_option (convert_each f) with
-    | Some l -> l
-    | None -> []

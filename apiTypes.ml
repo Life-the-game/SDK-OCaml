@@ -5,6 +5,18 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
+
+let convert_each_ (c : Yojson.Basic.json) (f : Yojson.Basic.json -> 'a) : 'a list =
+  let open Yojson.Basic.Util in
+  match c |> to_option (convert_each f) with
+    | Some l -> l
+    | None -> []
+
+let convert_each = convert_each_
+
+(* ************************************************************************** *)
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
 
@@ -420,15 +432,17 @@ struct
     | _      -> default_direction
   let from_json f c =
     let open Yojson.Basic.Util in
-        {
+	try {
           server_size = c |> member "server_size" |> to_int;
           index       = c |> member "index"       |> to_int;
           limit       = c |> member "limit"       |> to_int;
           (* order       = order_of_string (c |> member "order" |> to_string); *)
           (* direction   = direction_of_string *)
           (*   (c |> member "direction" |> to_string); *)
-          items       = convert_each f (c |> member "items");
-        }
+          items       = convert_each_ (c |> member "items") f;
+        } with Yojson.Json_error "Blank input data" -> {
+          server_size = 0; index = 0; limit = 0; items = [];
+	}
   let get_total page = page.server_size
 end
 
@@ -619,15 +633,15 @@ let error_from_json code c =
   let open Yojson.Basic.Util in
 
   let bad_request_from_json () =
-    let f c =
-      let message = c |> member "mesage" |> to_string in
-      try Invalid (message, Api.convert_each (c |> member "invalid") to_string)
-      with _ -> Requested (message, Api.convert_each (c |> member "requested") to_string) in
-    Api.convert_each c f in
+    let f ca =
+      let message = ca |> member "mesage" |> to_string in
+      try Invalid (message, convert_each_ (ca |> member "invalid") to_string)
+      with _ -> Requested (message, convert_each_ (ca |> member "requested") to_string) in
+    convert_each_ c f in
 
   let not_acceptable_from_json () =
-    (Api.convert_each (c |> member "accept-media") to_string,
-     Api.convert_each (c |> member "accept-language")
+    (convert_each_ (c |> member "accept-media") to_string,
+     convert_each_ (c |> member "accept-language")
        (fun s -> Lang.of_string (to_string s))) in
 
   match code with
