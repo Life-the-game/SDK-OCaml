@@ -37,8 +37,17 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
+let consumer_connection = ref []
+let get_connection tags_api =
+  try Consumer.Result (List.assoc tags_api !consumer_connection)
+  with _ -> match Consumer.connect tags_api with
+    | Consumer.Error e -> Consumer.Error e
+    | Consumer.Result c ->
+      (consumer_connection := ((tags_api, c)::!consumer_connection);
+       Consumer.Result c)
+
 let get_tags tags_api achievement_id =
-  match Consumer.connect tags_api with
+  match get_connection tags_api with
     | Consumer.Error e -> []
     | Consumer.Result _ ->
       	match Consumer.go
@@ -51,7 +60,7 @@ let get_tags tags_api achievement_id =
 	  | Consumer.Result categories -> categories
 
 let add_tags_ add_tags tags_api achievement_id =
-  match Consumer.connect tags_api with
+  match get_connection tags_api with
     | Consumer.Error e -> ()
     | Consumer.Result _ ->
       List.iter (fun tag ->
@@ -67,7 +76,7 @@ let add_tags_ add_tags tags_api achievement_id =
 	add_tags
 
 let remove_tags_ remove_tags tags_api achievement_id =
-  match Consumer.connect tags_api with
+  match get_connection tags_api with
     | Consumer.Error e -> ()
     | Consumer.Result _ ->
       List.iter (fun tag ->
