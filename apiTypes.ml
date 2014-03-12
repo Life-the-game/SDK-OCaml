@@ -366,6 +366,7 @@ sig
   val default_direction : direction
   val direction_to_string : direction -> string
   val direction_of_string : string -> direction
+  val get_total: 'a t -> int
 end
 module Page : PAGE =
 struct
@@ -433,6 +434,7 @@ struct
           (*   (c |> member "direction" |> to_string); *)
           items       = convert_each f (c |> member "items");
         }
+  let get_total page = page.server_size
 end
 
 (* ************************************************************************** *)

@@ -245,6 +245,7 @@ sig
   val default_direction : direction
   val direction_to_string : direction -> string
   val direction_of_string : string -> direction
+  val get_total : 'a t -> int
 end
 module Page : PAGE
 
