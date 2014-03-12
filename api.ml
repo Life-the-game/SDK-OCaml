@@ -76,6 +76,7 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       if (String.length str) = 0 then str else "?" ^ str in
     !ApiConf.base_url ^ path ^ get in
 
+  Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string !ApiConf.lang)];
   Curl.set_postfieldsize c 0;
   let post_string str =
     ApiDump.verbose (" ## POST data: " ^ str);

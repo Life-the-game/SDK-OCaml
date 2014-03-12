@@ -123,14 +123,6 @@ let test
     | Result r -> on_result r);
   result
 
-let auth_test
-    ?(f = ApiDump.print) ?(t = false)
-    (test_launcher : auth -> 'a Api.t) = function
-  | Error e -> impossible "it requires authentication that previously failed";
-    Error e
-  | Result auth ->
-    test ~f:f ~t:t (test_launcher (ApiAuth.auth_to_api auth))
-
 (* ************************************************************************** *)
 (* It's testing time \o/                                                      *)
 (* ************************************************************************** *)
@@ -198,7 +190,7 @@ let _ =
 (* /PRIVATE *)
 
   print_title "Get achievements";
-  let achievements = test ~f:pageprint (ApiAchievement.get ~req:(Lang lang) ()) in
+  let achievements = test ~f:pageprint (ApiAchievement.get ()) in
   (* Note: It is also possible to search through achievements using "term" *)
 
   print_title "Get next page of achievements";
@@ -208,8 +200,7 @@ let _ =
       match Page.next achievements with (* Check if there is a next page *)
         | None -> ApiDump.lprint_endline "It was the last page"
         | Some nextpage ->
-          ignore (test ~f:pageprint (ApiAchievement.get ~req:(Lang lang)
-                                       ~page:nextpage ())));
+          ignore (test ~f:pageprint (ApiAchievement.get ~page:nextpage ())));
 
   (* print_title "Get one achievement"; *)
   (* (match achievements with (\* Check if the list exists *\) *)
