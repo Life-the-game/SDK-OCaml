@@ -5,6 +5,8 @@
 (* ************************************************************************** *)
 (** Pretty print the values returned by the API library                       *)
 
+open ApiTypes
+
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
@@ -18,6 +20,6 @@ val verbose : string -> unit
 (* ************************************************************************** *)
 
 val available_languages : unit -> unit
-val error : ApiError.t -> unit
+val error : error -> unit
 val page  : 'a ApiTypes.Page.t -> ('a -> unit) -> unit
 val print : 'a -> unit

@@ -6,7 +6,7 @@
 (** Configuration of the library                                              *)
 
 (** The URL of the API Web service                                            *)
-let base_url = ref "http://api.life.tl/api/v1"
+let base_url = ref "http://apipy.life.tl/"
 
 (** Print log messages or not?                                                *)
 let verbose = ref false

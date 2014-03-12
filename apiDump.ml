@@ -4,6 +4,8 @@
 (* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
+open ApiTypes
+
 (* ************************************************************************** *)
 (* Tools                                                                      *)
 (* ************************************************************************** *)
@@ -21,27 +23,39 @@ let verbose str =
 
 let available_languages () =
   lprint_string "  Available languages: ";
-  lprint_endline (String.concat ", " ApiTypes.Lang.list)
+  lprint_endline (String.concat ", " Lang.list)
 
 let error e =
-  let open ApiError in
-      lprint_endline "[Error]";
-      lprint_endline ("  Message: " ^ e.message);
-      lprint_endline ("  Type: " ^ e.stype);
-      lprint_endline ("  Code: " ^ (string_of_int e.code))
+  lprint_endline "[Error]";
+  match e with
+    | BadRequest r -> lprint_endline "  BadRequest";
+      List.iter (function
+	| Invalid (message, list) -> lprint_endline ("    Invalid: " ^ message);
+	  lprint_endline ("      " ^ (String.concat ", " list))
+	| Requested (message, list) -> lprint_endline ("    Requested: " ^ message);
+	  lprint_endline ("      " ^ (String.concat ", " list))
+      ) r
+    | NotFound -> lprint_endline "  Not found"
+    | NotAllowed -> lprint_endline "  NotAllowed"
+    | NotAcceptable (mimetypes, languages) -> lprint_endline "  NotAcceptable";
+      lprint_endline ("    Accept-media: " ^ (String.concat ", " mimetypes));
+      lprint_endline ("    Accept-language: " ^ (String.concat ", " (List.map Lang.to_string languages)));
+    | NotImplemented -> lprint_endline "  NotImplemented"
+    | Client str -> lprint_endline ("  Client-side: " ^ str)
+    | Unknown code -> lprint_endline ("  Unknown Error " ^ (string_of_int code))
 
 let page l f =
   lprint_endline "[Page]";
   lprint_endline ("  Total items (server_size): " ^
-                    (string_of_int l.ApiTypes.Page.server_size));
+                    (string_of_int l.Page.server_size));
   lprint_endline ("  Index: " ^
-                    (string_of_int l.ApiTypes.Page.index));
+                    (string_of_int l.Page.index));
   lprint_endline ("  Limit: " ^
-                    (string_of_int l.ApiTypes.Page.limit));
+                    (string_of_int l.Page.limit));
   lprint_endline "  Items:";
-  if List.length l.ApiTypes.Page.items = 0
+  if List.length l.Page.items = 0
   then lprint_endline "    Empty page"
-  else List.iter f l.ApiTypes.Page.items
+  else List.iter f l.Page.items
 
 let print a =
   lprint_endline (ExtLib.dump a)

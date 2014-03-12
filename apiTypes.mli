@@ -8,7 +8,6 @@
 (* ************************************************************************** *)
 (** {3 Summary}                                                               *)
 (** {ol
-    {- API Response }
     {- Explicit types for parameters }
     {- Files }
     {- Network stuff (GET POST ...) }
@@ -21,16 +20,11 @@
     {- Status }
     {- Gender }
     {- Privacy }
+    {- Error }
+    {- Client-side errors }
+    {- API Response }
     }                                                                         *)
 (* ************************************************************************** *)
-
-(* ************************************************************************** *)
-(** {3 API Response}                                                          *)
-(* ************************************************************************** *)
-
-type 'a response =
-  | Result of 'a
-  | Error of ApiError.t
 
 (* ************************************************************************** *)
 (** {3 Explicit types for parameters}                                         *)
@@ -43,6 +37,7 @@ type email    = string
 type url      = string
 type token    = string
 type color    = string
+type mimetype = string
 (* PRIVATE *)
 type ip       = string
 (* /PRIVATE *)
@@ -81,6 +76,7 @@ sig
     | PostList of parameters
     | PostMultiPart of parameters * file_parameter list * (contenttype -> bool)
     | PostEmpty
+  type code = int
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
@@ -104,7 +100,7 @@ sig
   val list        : string list
   val default     : t
   val is_valid    : string -> bool
-  val from_string : string -> t
+  val of_string : string -> t
   val to_string   : t      -> string
 end
 module Lang : LANG
@@ -297,3 +293,46 @@ val colors : (string * string) list
 val main_colors : (string * string) list
 val light_colors : (string * string) list
 val name_to_color : string -> string
+
+(* ************************************************************************** *)
+(** {3 Error}                                                                 *)
+(* ************************************************************************** *)
+
+type bad_request =
+  | Invalid of string * string list
+  | Requested of string * string list
+
+type not_acceptable = mimetype list * Lang.t list
+
+type error =
+  | BadRequest of bad_request list
+  | NotFound
+  | NotAllowed
+  | NotAcceptable of not_acceptable
+  | NotImplemented
+  | Client of string
+  | Unknown of Network.code
+
+val error_from_json : Network.code -> Yojson.Basic.json -> error
+
+(* ************************************************************************** *)
+(** {3 Client-side errors}                                                    *)
+(* ************************************************************************** *)
+
+val generic             : error
+val network             : string -> error
+val invalid_json        : string -> error
+val requirement_missing : error
+val invalid_format      : error
+val file_not_found      : error
+val invalid_argument    : string -> error
+val auth_required       : error
+val notfound            : error
+
+(* ************************************************************************** *)
+(** {3 API Response}                                                          *)
+(* ************************************************************************** *)
+
+type 'a t =
+  | Result of 'a
+  | Error of error

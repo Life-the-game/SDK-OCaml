@@ -9,7 +9,6 @@
 NAME		=	api.cma
 
 SRC		=	\
-			apiError.ml \
 			apiTypes.ml \
 			apiConf.ml \
 			apiDump.ml \
@@ -29,7 +28,6 @@ SRC		=	\
 			\
 
 SRCI		=	\
-			apiError.mli \
 			apiTypes.mli \
 			apiDump.mli \
 			api.mli \
@@ -58,7 +56,7 @@ VERSION		=	1.0.0
 FLAGS		=	-linkpkg
 
 CMO		=	$(SRC:.ml=.cmo)
-CMI		=	$(SRC:.ml=.cmi)
+yCMI		=	$(SRC:.ml=.cmi)
 
 COMPILER	=	ocamlc
 DOCCOMPILER	=	ocamldoc

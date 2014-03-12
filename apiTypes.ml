@@ -5,14 +5,6 @@
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
-(* API Response                                                               *)
-(* ************************************************************************** *)
-
-type 'a response =
-  | Result of 'a
-  | Error of ApiError.t
-
-(* ************************************************************************** *)
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
 
@@ -23,6 +15,7 @@ type email    = string
 type url      = string
 type token    = string
 type color    = string
+type mimetype = string
 (* PRIVATE *)
 type ip       = string
 (* /PRIVATE *)
@@ -61,6 +54,7 @@ sig
     | PostList of parameters
     | PostMultiPart of parameters * file_parameter list * (contenttype -> bool)
     | PostEmpty
+  type code = int
   val default   : t
   val to_string : t -> string
   val of_string : string -> t
@@ -83,6 +77,7 @@ struct
     | PostList of parameters
     | PostMultiPart of parameters * file_parameter list * (contenttype -> bool)
     | PostEmpty
+  type code = int
   let default = GET
   let to_string = function
     | GET    -> "GET"
@@ -135,7 +130,7 @@ sig
   val list        : string list
   val default     : t
   val is_valid    : string -> bool
-  val from_string : string -> t
+  val of_string : string -> t
   val to_string   : t      -> string
 end
 module Lang : LANG =
@@ -144,7 +139,7 @@ struct
   let list = ["en"; "fr"]
   let default = List.hd list
   let is_valid l = List.exists ((=) l) list
-  let from_string s =
+  let of_string s =
     match is_valid s with
       | true  -> s
       | false -> default
@@ -600,3 +595,67 @@ let light_colors =
       else true
     with Invalid_argument _ -> true in
   List.filter is_light colors
+
+(* ************************************************************************** *)
+(* Error                                                                      *)
+(* ************************************************************************** *)
+
+type bad_request =
+  | Invalid of string * string list
+  | Requested of string * string list
+
+type not_acceptable = mimetype list * Lang.t list
+
+type error =
+  | BadRequest of bad_request list
+  | NotFound
+  | NotAllowed
+  | NotAcceptable of not_acceptable
+  | NotImplemented
+  | Client of string
+  | Unknown of Network.code
+
+let error_from_json code c =
+  let open Yojson.Basic.Util in
+
+  let bad_request_from_json () =
+    let f c =
+      let message = c |> member "mesage" |> to_string in
+      try Invalid (message, Api.convert_each (c |> member "invalid") to_string)
+      with _ -> Requested (message, Api.convert_each (c |> member "requested") to_string) in
+    Api.convert_each c f in
+
+  let not_acceptable_from_json () =
+    (Api.convert_each (c |> member "accept-media") to_string,
+     Api.convert_each (c |> member "accept-language")
+       (fun s -> Lang.of_string (to_string s))) in
+
+  match code with
+    | 400 -> BadRequest (bad_request_from_json ())
+    | 404 -> NotFound
+    | 405 -> NotAllowed
+    | 406 -> NotAcceptable (not_acceptable_from_json ())
+    | 501 -> NotImplemented
+    | code -> Unknown code
+
+(* ************************************************************************** *)
+(* Client-side errors                                                         *)
+(* ************************************************************************** *)
+
+let generic = Client "Something went wrong"
+let network msg = Client ("Network error: " ^ msg)
+let invalid_json msg = Client ("The JSON tree response is not formatted as expected: " ^ msg)
+let requirement_missing = Client "One requirement is missing"
+let invalid_format = Client "Invalid file format"
+let invalid_argument msg = Client ("Invalid Argument: " ^ msg)
+let auth_required = Client "Authentication required"
+let file_not_found = Client "File not found"
+let notfound = Client "Not found"
+
+(* ************************************************************************** *)
+(* API Response                                                               *)
+(* ************************************************************************** *)
+
+type 'a t =
+  | Result of 'a
+  | Error of error

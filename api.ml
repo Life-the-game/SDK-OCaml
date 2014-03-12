@@ -4,13 +4,7 @@
 (* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
-open ApiTypes
-
-(* ************************************************************************** *)
-(* Type                                                                       *)
-(* ************************************************************************** *)
-
-type 'a t = 'a response
+include ApiTypes
 
 (* ************************************************************************** *)
 (* Curl Connection                                                            *)
@@ -50,12 +44,14 @@ let reconnect () =
 (* Curl Method handling                                                       *)
 (* ************************************************************************** *)
 
+type code = int
+
 exception InvalidFileFormat
 exception FileNotFound
 
 (* Return a text from a url using Curl and HTTP Auth (if needed).
    Error handling with exceptions to catch                                    *)
-let curl_perform ~path ~get ~post ~rtype () =
+let curl_perform ~path ~get ~post ~rtype () : (code * string) =
 
   let parameters_to_string parameters =
     let str =
@@ -121,9 +117,7 @@ let curl_perform ~path ~get ~post ~rtype () =
     Curl.perform c;
 
     let text = Buffer.contents result in
-    (* ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url); *)
-    (* ApiDump.verbose (" ## Content received:\n" ^ text); *)
-    text
+    (Curl.get_responsecode c, text)
 
 (* ************************************************************************** *)
 (* Internal tools for extra parameters                                        *)
@@ -184,33 +178,28 @@ let go
     | p -> p in
 
   try
-    (let result =
-       curl_perform ~path:path
-         ~get:get ~post:post ~rtype:rtype () in
-     let json = Yojson.Basic.from_string result in
-     let open Yojson.Basic.Util in
-     let error_json = json |> member "error"
-        |> to_option ApiError.from_json in
-     match error_json with
-       | Some error -> Error error
-       | None ->
-         let content = json |> member "element" in
-         Result (from_json content))
+    let (code, result) =
+      curl_perform ~path:path
+        ~get:get ~post:post ~rtype:rtype () in
+    let json = Yojson.Basic.from_string result in
+    if code >= 200 && code <= 200
+    then Result (from_json json)
+    else Error (error_from_json code json)
 
   with
     | Yojson.Basic.Util.Type_error (msg, tree) ->
-      Error (ApiError.invalid_json
-                        (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
+      Error (ApiTypes.invalid_json
+               (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
     | Yojson.Json_error msg ->
-      Error (ApiError.invalid_json msg)
+      Error (ApiTypes.invalid_json msg)
     | Curl.CurlException (_, _, _) -> Error
-      (ApiError.network !error_buffer)
-    | Failure msg -> Error (ApiError.network msg)
-    | Invalid_argument s -> Error (ApiError.invalid_json s)
-    | InvalidFileFormat -> Error ApiError.invalid_format
-    | FileNotFound -> Error ApiError.file_not_found
-    | ParseError e -> Error (ApiError.invalid_json e)
-    | _ -> Error ApiError.generic
+      (ApiTypes.network !error_buffer)
+    | Failure msg -> Error (ApiTypes.network msg)
+    | Invalid_argument s -> Error (ApiTypes.invalid_json s)
+    | InvalidFileFormat -> Error ApiTypes.invalid_format
+    | FileNotFound -> Error ApiTypes.file_not_found
+    | ParseError e -> Error (ApiTypes.invalid_json e)
+    | _ -> Error ApiTypes.generic
 
 (* ************************************************************************** *)
 (* Various Developers tools                                                   *)
@@ -218,8 +207,8 @@ let go
 
 let noop _ = ()
 
-let convert_each c name f =
+let convert_each c f =
   let open Yojson.Basic.Util in
-  match c |> member name |> to_option (convert_each f) with
+  match c |> to_option (convert_each f) with
     | Some l -> l
     | None -> []

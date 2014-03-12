@@ -37,59 +37,7 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-let consumer_connection = ref []
-let get_connection tags_api =
-  try Consumer.Result (List.assoc tags_api !consumer_connection)
-  with _ -> match Consumer.connect tags_api with
-    | Consumer.Error e -> Consumer.Error e
-    | Consumer.Result c ->
-      (consumer_connection := ((tags_api, c)::!consumer_connection);
-       Consumer.Result c)
-
-let get_tags tags_api achievement_id =
-  match get_connection tags_api with
-    | Consumer.Error e -> []
-    | Consumer.Result _ ->
-      	match Consumer.go
-	  ~resource:"categories"
-	  ~id:achievement_id
-	  ~get:[("api_url", !ApiConf.base_url)]
-	  (Consumer.format_json_list (Yojson.Basic.Util.to_string))
-	with
-	  | Consumer.Error _ -> []
-	  | Consumer.Result categories -> categories
-
-let add_tags_ add_tags tags_api achievement_id =
-  match get_connection tags_api with
-    | Consumer.Error e -> ()
-    | Consumer.Result _ ->
-      List.iter (fun tag ->
-	let tag = Str.global_replace (Str.regexp " ") "" tag in
-	let tag = String.lowercase tag in
-	let _ = Consumer.go
-	  ~rtype:Consumer.POST
-	  ~resource:"staffpicks"
-	  ~id:tag
-	  ~get:[("achievement_id", achievement_id);
-		("api_url", !ApiConf.base_url)]
-	  (Consumer.format_json_list (Yojson.Basic.Util.to_string)) in ())
-	add_tags
-
-let remove_tags_ remove_tags tags_api achievement_id =
-  match get_connection tags_api with
-    | Consumer.Error e -> ()
-    | Consumer.Result _ ->
-      List.iter (fun tag ->
-	let _ = Consumer.go
-	  ~rtype:Consumer.DELETE
-	  ~resource:"staffpicks"
-	  ~id:tag
-	  ~get:[("achievement_id", achievement_id);
-		("api_url", !ApiConf.base_url)]
-	  (Consumer.format_json_list (Yojson.Basic.Util.to_string)) in ())
-	remove_tags
-
-let rec from_json ?(tags_api = "") c =
+let rec from_json c =
   let open Yojson.Basic.Util in
       {
         info               = Info.from_json c;
@@ -101,8 +49,7 @@ let rec from_json ?(tags_api = "") c =
         category           = c |> member "category" |> to_bool;
         secret             = c |> member "secret" |> to_bool;
         discoverable       = c |> member "discoverable" |> to_bool;
-	tags               = if tags_api = "" then []
-	  else get_tags tags_api (c |> member "id" |> to_string);
+	tags               = [];
 	achievement_status = c |> member "achievement_status" |> to_option
 	    (fun c -> {
 	      id     = c |> member "id" |> to_string;
@@ -122,7 +69,7 @@ let rec from_json ?(tags_api = "") c =
 
 let get ~req ?(page = Page.default_parameters)
     ?(term = []) ?(with_badge = None) ?(is_category = None)
-    ?(is_secret = None) ?(is_discoverable = None) ?(tags_api = "") () =
+    ?(is_secret = None) ?(is_discoverable = None) () =
   Api.go
     ~path:["achievements"]
     ~req:(Some req)
@@ -134,17 +81,17 @@ let get ~req ?(page = Page.default_parameters)
              ("is_secret", Option.map string_of_bool is_secret);
              ("is_discoverable", Option.map string_of_bool is_discoverable);
             ])
-    (Page.from_json (from_json ~tags_api:tags_api))
+    (Page.from_json from_json)
 
 (* ************************************************************************** *)
 (* Get one Achievement                                                        *)
 (* ************************************************************************** *)
 
-let get_one ~req ?(tags_api = "") id =
+let get_one ~req id =
   Api.go
     ~path:["achievements"; id]
     ~req:(Some req)
-    (from_json ~tags_api:tags_api)
+    from_json
 
 (* PRIVATE *)
 
@@ -155,7 +102,7 @@ let get_one ~req ?(tags_api = "") id =
 let create ~auth ~name ~description ?(color = "") ?(parents = [])
     ?(badge = NoFile)
     ?(category = false) ?(secret = false) ?(discoverable = true)
-    ?(tags = []) ?(tags_api = "") () =
+    ?(tags = []) () =
   let post_parameters =
     Network.empty_filter
       [("name", name);
@@ -170,30 +117,19 @@ let create ~auth ~name ~description ?(color = "") ?(parents = [])
     Network.PostMultiPart
       (post_parameters, Network.files_filter [("badge", badge)],
       ApiMedia.Picture.checker) in
-  let r =
   Api.go
     ~rtype:POST
     ~path:["achievements"]
     ~req:(Some (Auth auth))
     ~post:post
     from_json
-  in let _ = match r with
-    | Error e -> ()
-    | Result r ->
-      let _ = if tags_api = "" then ()
-	else add_tags_ tags tags_api r.info.Info.id in () in
-     r
-
 
 (* ************************************************************************** *)
 (* Edit an Achievement                                                        *)
 (* ************************************************************************** *)
 
 let edit ~auth ?(name = "") ?(description = "") ?(color = "")
-    ?(badge = NoFile) ?(add_tags = []) ?(remove_tags = []) ?(tags_api = "") id =
-  let _ = if tags_api = "" then () else
-      let _ = add_tags_ add_tags tags_api id in
-      let _ = remove_tags_ remove_tags tags_api id in () in
+    ?(badge = NoFile) ?(add_tags = []) ?(remove_tags = []) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);

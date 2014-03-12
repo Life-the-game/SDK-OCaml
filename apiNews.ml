@@ -30,7 +30,7 @@ let from_json c =
         info     = Info.from_json c;
         author   = ApiUser.from_json (c |> member "author");
         content  = c |> member "content" |> to_string;
-        lang     = Lang.from_string (c |> member "lang" |> to_string);
+        lang     = Lang.of_string (c |> member "lang" |> to_string);
         keywords = convert_each to_string (c |> member "keywords");
         medias   = convert_each ApiMedia.from_json (c |> member "medias");
       }

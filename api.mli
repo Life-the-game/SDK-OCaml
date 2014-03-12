@@ -7,7 +7,7 @@
 
 open ApiTypes
 
-type 'a t = 'a response
+type 'a t = 'a ApiTypes.t
 
 (** When you're done using the library, it's nice to disconnect it            *)
 val disconnect : unit -> unit
@@ -35,6 +35,5 @@ val noop : Yojson.Basic.json -> unit
 
 val convert_each :
   Yojson.Basic.json
-  -> string
   -> (Yojson.Basic.json -> 'a)
   -> 'a list

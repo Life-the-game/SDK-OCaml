@@ -14,7 +14,6 @@ open ApiTypes
 let _ =
   let open ApiConf in
       verbose := true;
-      base_url := "http://localhost:8080/api/v1";
       (Arg.parse
          [("-u", Arg.String (fun url -> base_url := url),
 	   "the URL of the web service")]
@@ -97,13 +96,12 @@ and comment_description = random_string 30
 
 let test
     ?(f = ApiDump.print) (* function to display the result of the test        *)
-    ?(t = "") (* not empty if the test should fail (so it's a success)        *)
+    ?(t = false) (* true if the test should fail (so it's a success)          *)
     (result : 'a Api.t) : 'a Api.t =
   let _failure () = total.failure <- total.failure + 1
   and _success () = total.success <- total.success + 1 in
-  let failure e = if t = "" || t != e.ApiError.stype
-    then _failure () else _success ()
-  and success r = if t != "" then _failure () else _success () in
+  let failure e = if t then _failure () else _success ()
+  and success r = if t != true then _failure () else _success () in
   let on_error e =
     begin
       failure e;
@@ -126,7 +124,7 @@ let test
   result
 
 let auth_test
-    ?(f = ApiDump.print) ?(t = "")
+    ?(f = ApiDump.print) ?(t = false)
     (test_launcher : auth -> 'a Api.t) = function
   | Error e -> impossible "it requires authentication that previously failed";
     Error e
@@ -148,14 +146,13 @@ let _ =
     test (ApiUser.create
               ~login:login
               ~email:email
-              ~password:password
               ~lang:lang
               ~firstname:firstname
               ~lastname:lastname
               ~gender:gender
               ~birthday:(Some birthday)
-              ~avatar:picture
-              ()) in
+              ~avatar:(File picture)
+              (ApiUser.Password password)) in
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -196,8 +193,8 @@ let _ =
   print_title "Create an achievement";
   ignore (auth_test (fun auth ->
     ApiAchievement.create ~auth:auth ~name:achievement_name
-      ~description:achievement_description ~badge:picture
-      ~keywords:["hello"; "world"] ()) auth);
+      ~description:achievement_description ~badge:(File picture)
+      ~tags:["hello"; "world"] ()) auth);
 (* /PRIVATE *)
 
   print_title "Get achievements";
@@ -327,7 +324,7 @@ let _ =
     auth_test ~f:pageprint (fun auth ->
       ApiAchievementStatus.get
         ~req:(Auth auth)
-        ~page:(None, Some 2, Some Page.Alphabetic, None)
+        ~page:(0, 2, Some (Page.Alphabetic, Page.Desc))
         ~status:(Some Status.Objective)
         login) auth in
 
@@ -509,7 +506,7 @@ auth));
       else
         let achievement_status_id =
           (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in
-        ignore (auth_test ~t:"CLIENT_InvalidFileFormat" (fun auth ->
+        ignore (auth_test ~t:true (fun auth ->
           ApiAchievementStatus.edit ~auth:auth
             ~add_medias:[(["hack.sh"], "beurp")] achievement_status_id) auth));
 

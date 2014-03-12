@@ -41,11 +41,11 @@ exception InvalidList of string
 let from_json c =
   let open Yojson.Basic.Util in
 
-  let users = ("users", Api.convert_each c "users" ApiUser.from_json)
+  let users = ("users", Api.convert_each (c |> member "users") ApiUser.from_json)
   and achievement_statuses : (string * ApiAchievementStatus.t list) =
     ("achievement_status",
-     Api.convert_each c "achievement_statuses" ApiAchievementStatus.from_json)
-  and medias = ("medias", Api.convert_each c "medias" ApiMedia.from_json)
+     Api.convert_each (c |> member "achievement_statuses") ApiAchievementStatus.from_json)
+  and medias = ("medias", Api.convert_each (c |> member "medias") ApiMedia.from_json)
 
   and get_list (_, l) = l
 
