@@ -5,16 +5,16 @@
 (* ************************************************************************** *)
 (** Feed API methods                                                          *)
 
-open ApiTypes
+(* open ApiTypes *)
 
-(* ************************************************************************** *)
-(** {3 API Methods}                                                           *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\** {3 API Methods}                                                           *\) *)
+(* (\* ************************************************************************** *\) *)
 
-(** Get feed                                                                  *)
-val get :
-  auth:auth
-  -> ?page:Page.parameters
-  -> ?activity_type: string list
-  -> ?user:id option
-  -> unit -> ApiPlayground.t Page.t Api.t
+(* (\** Get feed                                                                  *\) *)
+(* val get : *)
+(*   auth:auth *)
+(*   -> ?page:Page.parameters *)
+(*   -> ?activity_type: string list *)
+(*   -> ?user:id option *)
+(*   -> unit -> ApiPlayground.t Page.t Api.t *)

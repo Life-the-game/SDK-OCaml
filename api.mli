@@ -20,9 +20,9 @@ val disconnect : unit -> unit
     {{: https://github.com/Life-the-game/SDK-OCaml #readme} the repository
     documentation} *)
 val go :
-  ?rtype:Network.t                (** GET, POST, ... *)
+  ?auth_required:bool             (** Will check the presence of a token *)
+  -> ?rtype:Network.t                (** GET, POST, ... *)
   -> ?path:string list            (** URL/path/ *)
-  -> ?req:requirements option     (** auth or lang? *)
   -> ?page:Page.parameters option (** index, limit, ... *)
   -> ?get:parameters              (** GET parameters (URL?a=b&c=d) *)
   -> ?post:Network.post           (** POST parameters *)

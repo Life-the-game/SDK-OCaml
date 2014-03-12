@@ -67,12 +67,11 @@ let rec from_json c =
 (* Get Achievements                                                           *)
 (* ************************************************************************** *)
 
-let get ~req ?(page = Page.default_parameters)
+let get ?(page = Page.default_parameters)
     ?(term = []) ?(with_badge = None) ?(is_category = None)
     ?(is_secret = None) ?(is_discoverable = None) () =
   Api.go
     ~path:["achievements"]
-    ~req:(Some req)
     ~page:(Some page)
     ~get:(Network.option_filter
             [("term", Some (Network.list_parameter term));
@@ -87,10 +86,9 @@ let get ~req ?(page = Page.default_parameters)
 (* Get one Achievement                                                        *)
 (* ************************************************************************** *)
 
-let get_one ~req id =
+let get_one id =
   Api.go
     ~path:["achievements"; id]
-    ~req:(Some req)
     from_json
 
 (* PRIVATE *)
@@ -99,7 +97,7 @@ let get_one ~req id =
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~auth ~name ~description ?(color = "") ?(parents = [])
+let create ~name ~description ?(color = "") ?(parents = [])
     ?(badge = NoFile)
     ?(category = false) ?(secret = false) ?(discoverable = true)
     ?(tags = []) () =
@@ -118,9 +116,9 @@ let create ~auth ~name ~description ?(color = "") ?(parents = [])
       (post_parameters, Network.files_filter [("badge", badge)],
       ApiMedia.Picture.checker) in
   Api.go
+    ~auth_required:true
     ~rtype:POST
     ~path:["achievements"]
-    ~req:(Some (Auth auth))
     ~post:post
     from_json
 
@@ -128,7 +126,7 @@ let create ~auth ~name ~description ?(color = "") ?(parents = [])
 (* Edit an Achievement                                                        *)
 (* ************************************************************************** *)
 
-let edit ~auth ?(name = "") ?(description = "") ?(color = "")
+let edit ?(name = "") ?(description = "") ?(color = "")
     ?(badge = NoFile) ?(add_tags = []) ?(remove_tags = []) id =
   let post_parameters =
     Network.empty_filter
@@ -141,9 +139,9 @@ let edit ~auth ?(name = "") ?(description = "") ?(color = "")
       (post_parameters, Network.files_filter [("badge", badge)],
        ApiMedia.Picture.checker) in
   Api.go
+    ~auth_required:true
     ~rtype:PUT
     ~path:["achievements"; id]
-    ~req:(Some (Auth auth))
     ~post:post
     from_json
 

@@ -38,8 +38,7 @@ type t =
 
 (** Get Achievements                                                          *)
 val get :
-  req:requirements
-  -> ?page:Page.parameters
+  ?page:Page.parameters
   -> ?term:string list
   -> ?with_badge: bool option
   -> ?is_category: bool option
@@ -48,16 +47,13 @@ val get :
   -> unit -> t Page.t Api.t
 
 (** Get one Achievement                                                       *)
-val get_one :
-  req:requirements
-  -> id -> t Api.t
+val get_one : id -> t Api.t
 
 (* PRIVATE *)
 
 (** Create a new Achievement                                                  *)
 val create :
-  auth:auth
-  -> name:string
+  name:string
   -> description:string
   -> ?color:color
   -> ?parents:id list
@@ -70,8 +66,7 @@ val create :
 
 (** Edit an Achievement                                                       *)
 val edit :
-  auth:auth
-  -> ?name:string
+  ?name:string
   -> ?description:string
   -> ?color:color
   -> ?badge:either_file

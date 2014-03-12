@@ -111,25 +111,6 @@ end
 module Lang : LANG
 
 (* ************************************************************************** *)
-(** {3 Requirements (Auth, Lang, ...)}                                        *)
-(* ************************************************************************** *)
-
-type auth =
-  | Token       of token (* todo: should be ApiAuth.t *)
-  | OAuthHTTP   of token  (* todo *)
-  | OAuthToken  of token  (* todo *)
-  | OAuthSecret of (login * token) (* todo *)
-
-type requirements =
-  | Auth of auth
-  | Lang of Lang.t
-  | Auto of (auth option * Lang.t)
-  | Both of (auth * Lang.t)
-
-(** Transform an optional auth into a requirement                             *)
-val opt_auth : auth option -> requirements option
-
-(* ************************************************************************** *)
 (** {3 Date & Time}                                                           *)
 (* ************************************************************************** *)
 

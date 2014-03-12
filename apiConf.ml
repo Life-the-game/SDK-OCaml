@@ -11,6 +11,13 @@ let base_url = ref "http://apipy.life.tl/"
 (** Print log messages or not?                                                *)
 let verbose = ref false
 
+(** Set the authentication token
+    Note: It's automatically set on call to the ApiAuth.login function        *)
+let auth_token = ref ""
+
+(** Set the language in the header                                            *)
+let lang = ref ApiTypes.Lang.default
+
 (** User-Agent used in the HTTP requests headers                              *)
 (** Note: it's only changeable BEFORE the first call to an API method         *)
 let user_agent = ref "OCaml-library-v2"

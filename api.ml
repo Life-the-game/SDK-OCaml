@@ -65,16 +65,16 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       | None -> connect () (* may throw exceptions *)
       | Some c ->
 	let open Network in
-	(match post with
-	  | PostMultiPart _ -> reconnect ()
-	  | _ -> c)) in
+	    (match post with
+	      | PostMultiPart _ -> reconnect ()
+	      | _ -> c)) in
 
   let url =
     let path = List.fold_left (fun f s -> f ^ "/" ^ s) "" path
     and get =
       let str = parameters_to_string get in
       if (String.length str) = 0 then str else "?" ^ str in
-     !ApiConf.base_url ^ path ^ get in
+    !ApiConf.base_url ^ path ^ get in
 
   Curl.set_postfieldsize c 0;
   let post_string str =
@@ -92,7 +92,7 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       then
         let path = path_to_string path in
         ApiDump.verbose ("FILE " ^ name ^ "=" ^ path
-           ^ "(" ^ contenttype ^ ")");
+			 ^ "(" ^ contenttype ^ ")");
 	if Sys.file_exists path
         then
 	  (Curl.CURLFORM_FILE
@@ -104,58 +104,46 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       @ [parameter ("padding", "padding")] in
     Curl.set_httppost c l in
   let open Network in
-  (match post with
-    | PostEmpty  -> ()
-    | PostText s -> post_string s
-    | PostList l -> post_list l
-    | PostMultiPart (p, f, c) -> if List.length f = 0
-      then post_list p else post_multipart (p, f, c));
+      (match post with
+	| PostEmpty  -> ()
+	| PostText s -> post_string s
+	| PostList l -> post_list l
+	| PostMultiPart (p, f, c) -> if List.length f = 0
+	  then post_list p else post_multipart (p, f, c));
 
-    Buffer.reset result;
-    Curl.set_customrequest c (Network.to_string rtype);
-    Curl.set_url c url;
-    Curl.perform c;
+      Buffer.reset result;
+      Curl.set_customrequest c (Network.to_string rtype);
+      Curl.set_url c url;
+      Curl.perform c;
 
-    let text = Buffer.contents result in
-    (Curl.get_responsecode c, text)
+      let text = Buffer.contents result in
+      (Curl.get_responsecode c, text)
 
 (* ************************************************************************** *)
 (* Internal tools for extra parameters                                        *)
 (* ************************************************************************** *)
 
-let req_parameters (parameters : parameters) (req : requirements option)
+let req_parameters (parameters : parameters)
     : parameters =
-  let auth_parameters = function
-    | Token t -> ("token", t)
-    | _       -> ("todo", "oauth")
-  and lang_parameters lang = ("lang", Lang.to_string lang) in
-  match req with
-    | None                    -> parameters
-    | Some (Auth a)           -> (auth_parameters a)::parameters
-    | Some (Lang l)           -> (lang_parameters l)::parameters
-    | Some (Auto (Some a, _)) -> (auth_parameters a)::parameters
-    | Some (Auto (None, l))   -> (lang_parameters l)::parameters
-    | Some (Both (a, l))      ->
-      (auth_parameters a)::(lang_parameters l)::parameters
+  let parameters = ("lang", Lang.to_string !ApiConf.lang)::parameters in
+  match !ApiConf.auth_token with
+    | "" -> parameters | token -> (("token", token)::parameters)
 
 let page_parameters (parameters : parameters) (page : Page.parameters option)
     : parameters =
   match page with
-  | Some (index, limit, sort) ->
-    (Network.option_filter
-       [("index", Some (string_of_int index));
-        ("limit", Some (string_of_int limit));
-        ("order", Option.map (fun (order, _) -> Page.order_to_string order) sort);
-        ("direction", Option.map (fun (_, direction) -> Page.direction_to_string direction) sort);
-       ]) @ parameters
-  | None -> parameters
+    | Some (index, limit, sort) ->
+      (Network.option_filter
+	 [("index", Some (string_of_int index));
+          ("limit", Some (string_of_int limit));
+          ("order", Option.map (fun (order, _) -> Page.order_to_string order) sort);
+          ("direction", Option.map (fun (_, direction) -> Page.direction_to_string direction) sort);
+	 ]) @ parameters
+    | None -> parameters
 
-let extra_parameters
-    (parameters : parameters)
-    (req : requirements option)
-    (page : Page.parameters option)
-    : parameters =
-  page_parameters (req_parameters parameters req) page
+let extra_parameters (parameters : parameters)
+    (page : Page.parameters option) : parameters =
+  page_parameters (req_parameters parameters) page
 
 (* ************************************************************************** *)
 (* Make a call to the API                                                     *)
@@ -164,42 +152,46 @@ let extra_parameters
 exception ParseError of string
 
 let go
+    ?(auth_required = false)
     ?(rtype = Network.default)
     ?(path = [])
-    ?(req = None)
     ?(page = None)
     ?(get = [])
     ?(post = Network.PostEmpty)
     from_json =
 
-  let get = extra_parameters get req page
-  and post = match post with
-    | Network.PostList l -> Network.PostList (extra_parameters l req page)
-    | p -> p in
+  match auth_required, !ApiConf.auth_token with
+    | false, token | true, token when token != "" ->
 
-  try
-    let (code, result) =
-      curl_perform ~path:path
-        ~get:get ~post:post ~rtype:rtype () in
-    let json = Yojson.Basic.from_string result in
-    if code >= 200 && code <= 200
-    then Result (from_json json)
-    else Error (error_from_json code json)
+      let get = extra_parameters get page
+      and post = match post with
+	| Network.PostList l -> Network.PostList (extra_parameters l page)
+	| p -> p in
 
-  with
-    | Yojson.Basic.Util.Type_error (msg, tree) ->
-      Error (ApiTypes.invalid_json
-               (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
-    | Yojson.Json_error msg ->
-      Error (ApiTypes.invalid_json msg)
-    | Curl.CurlException (_, _, _) -> Error
-      (ApiTypes.network !error_buffer)
-    | Failure msg -> Error (ApiTypes.network msg)
-    | Invalid_argument s -> Error (ApiTypes.invalid_json s)
-    | InvalidFileFormat -> Error ApiTypes.invalid_format
-    | FileNotFound -> Error ApiTypes.file_not_found
-    | ParseError e -> Error (ApiTypes.invalid_json e)
-    | _ -> Error ApiTypes.generic
+      (try
+	 let (code, result) =
+	   curl_perform ~path:path
+             ~get:get ~post:post ~rtype:rtype () in
+	 let json = Yojson.Basic.from_string result in
+	 if code >= 200 && code <= 200
+	 then Result (from_json json)
+	 else Error (error_from_json code json)
+
+       with
+	 | Yojson.Basic.Util.Type_error (msg, tree) ->
+	   Error (ApiTypes.invalid_json
+		    (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
+	 | Yojson.Json_error msg ->
+	   Error (ApiTypes.invalid_json msg)
+	 | Curl.CurlException (_, _, _) -> Error
+	   (ApiTypes.network !error_buffer)
+	 | Failure msg -> Error (ApiTypes.network msg)
+	 | Invalid_argument s -> Error (ApiTypes.invalid_json s)
+	 | InvalidFileFormat -> Error ApiTypes.invalid_format
+	 | FileNotFound -> Error ApiTypes.file_not_found
+	 | ParseError e -> Error (ApiTypes.invalid_json e)
+	 | _ -> Error ApiTypes.generic)
+    | _ -> Error ApiTypes.auth_required
 
 (* ************************************************************************** *)
 (* Various Developers tools                                                   *)

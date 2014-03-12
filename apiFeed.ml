@@ -4,31 +4,31 @@
 (* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
-open ApiTypes
+(* open ApiTypes *)
 
-(* ************************************************************************** *)
-(* API Methods                                                                *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\* API Methods                                                                *\) *)
+(* (\* ************************************************************************** *\) *)
 
-(* ************************************************************************** *)
-(* Get feed                                                                   *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\* Get feed                                                                   *\) *)
+(* (\* ************************************************************************** *\) *)
 
-let get ~auth ?(page = Page.default_parameters) ?(activity_type = [])
-(* PRIVATE *)
-    ?(user = None)
-(* /PRIVATE *)
-    () =
-  Api.go
-    ~path:(
-(* PRIVATE *)
-    (match user with
-      | Some user_id -> ["users"; user_id]
-      | None         -> ["users"; "self"]) @
-(* /PRIVATE *)
-      ["feed"])
-    ~req:(Some (Auth auth))
-    ~page:(Some page)
-    ~get:(Network.empty_filter
-	    [("type", Network.list_parameter activity_type)])
-    (Page.from_json ApiPlayground.from_json)
+(* let get ~auth ?(page = Page.default_parameters) ?(activity_type = []) *)
+(* (\* PRIVATE *\) *)
+(*     ?(user = None) *)
+(* (\* /PRIVATE *\) *)
+(*     () = *)
+(*   Api.go *)
+(*     ~path:( *)
+(* (\* PRIVATE *\) *)
+(*     (match user with *)
+(*       | Some user_id -> ["users"; user_id] *)
+(*       | None         -> ["users"; "self"]) @ *)
+(* (\* /PRIVATE *\) *)
+(*       ["feed"]) *)
+(*     ~req:(Some (Auth auth)) *)
+(*     ~page:(Some page) *)
+(*     ~get:(Network.empty_filter *)
+(* 	    [("type", Network.list_parameter activity_type)]) *)
+(*     (Page.from_json ApiPlayground.from_json) *)

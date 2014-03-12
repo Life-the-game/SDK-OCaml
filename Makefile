@@ -17,11 +17,10 @@ SRC		=	\
 			apiMedia.ml \
 			apiUser.ml \
 			apiAuth.ml \
-g			apiAchievement.ml \
+			apiAchievement.ml \
 			apiAchievementStatus.ml \
 			apiComment.ml \
-			apiNews.ml \
-			apiPlayground.ml \
+			apiActivity.ml \
 			apiFeed.ml \
 			apiGameNetwork.ml \
 			apiRoles.ml \
@@ -38,8 +37,7 @@ SRCI		=	\
 			apiAchievement.mli \
 			apiAchievementStatus.mli \
 			apiComment.mli \
-			apiNews.mli \
-			apiPlayground.mli \
+			apiActivity.mli \
 			apiFeed.mli \
 			apiGameNetwork.mli \
 			apiRoles.mli \

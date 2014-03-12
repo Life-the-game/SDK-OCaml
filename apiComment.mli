@@ -5,67 +5,67 @@
 (* ************************************************************************** *)
 (** User's commenting API methods                                             *)
 
-open ApiTypes
+(* open ApiTypes *)
 
-(* ************************************************************************** *)
-(** {Type}                                                                    *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\** {Type}                                                                    *\) *)
+(* (\* ************************************************************************** *\) *)
 
-type t =
-    {
-      info          : Info.t;
-      approvement   : Approvable.t;
-      author        : ApiUser.t;
-      content       : string;
-      medias        : ApiMedia.t list;
-    }
+(* type t = *)
+(*     { *)
+(*       info          : Info.t; *)
+(*       approvement   : Approvable.t; *)
+(*       author        : ApiUser.t; *)
+(*       content       : string; *)
+(*       medias        : ApiMedia.t list; *)
+(*     } *)
 
-(* ************************************************************************** *)
-(** {API Methods}                                                             *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\** {API Methods}                                                             *\) *)
+(* (\* ************************************************************************** *\) *)
 
-(* Get comments on an achievement status                                      *)
-val get :
-  ?page:Page.parameters
-  -> ?with_medias:bool option 
-  -> id -> t ApiTypes.Page.t Api.t 
+(* (\* Get comments on an achievement status                                      *\) *)
+(* val get : *)
+(*   ?page:Page.parameters *)
+(*   -> ?with_medias:bool option  *)
+(*   -> id -> t ApiTypes.Page.t Api.t  *)
 
-(* Get one specific comment on an achievement status                          *)
-val get_one :
-  id (** achievement status id *)
-  -> id (** comment id *)
-  -> t Api.t 
+(* (\* Get one specific comment on an achievement status                          *\) *)
+(* val get_one : *)
+(*   id (\** achievement status id *\) *)
+(*   -> id (\** comment id *\) *)
+(*   -> t Api.t  *)
 
-(* Create a comment on an achievement status                                  *)
-val create :
-  auth:auth
-(* PRIVATE *)
-  -> ?author:string option
-(* /PRIVATE *)
-  -> ?medias:file list
-  -> content:string
-  -> id -> t Api.t 
+(* (\* Create a comment on an achievement status                                  *\) *)
+(* val create : *)
+(*   auth:auth *)
+(* (\* PRIVATE *\) *)
+(*   -> ?author:string option *)
+(* (\* /PRIVATE *\) *)
+(*   -> ?medias:file list *)
+(*   -> content:string *)
+(*   -> id -> t Api.t  *)
 
-(* Approve a comment on an achievement status                                 *)
-val approve :
-    auth:auth
-(* PRIVATE *)
-    -> approver:string
-(* /PRIVATE *)
-    -> id -> id -> unit Api.t
+(* (\* Approve a comment on an achievement status                                 *\) *)
+(* val approve : *)
+(*     auth:auth *)
+(* (\* PRIVATE *\) *)
+(*     -> approver:string *)
+(* (\* /PRIVATE *\) *)
+(*     -> id -> id -> unit Api.t *)
 
-(* Disapprove a comment on an achievement status                              *)
-val disapprove :
-    auth:auth
-(* PRIVATE *)
-    -> disapprover:id
-(* /PRIVATE *)
-    -> id -> id -> unit Api.t
+(* (\* Disapprove a comment on an achievement status                              *\) *)
+(* val disapprove : *)
+(*     auth:auth *)
+(* (\* PRIVATE *\) *)
+(*     -> disapprover:id *)
+(* (\* /PRIVATE *\) *)
+(*     -> id -> id -> unit Api.t *)
 
 
 
-(* ************************************************************************** *)
-(** {Tools}                                                                   *)
-(* ************************************************************************** *)
+(* (\* ************************************************************************** *\) *)
+(* (\** {Tools}                                                                   *\) *)
+(* (\* ************************************************************************** *\) *)
 
-val from_json : Yojson.Basic.json -> t
+(* val from_json : Yojson.Basic.json -> t *)
