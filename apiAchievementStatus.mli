@@ -27,6 +27,15 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
+(** Search achievement statuses                                               *)
+val search :
+  req:requirements
+  -> ?page:Page.parameters
+  -> ?owner:string
+  -> ?achievement:string
+  -> ?status:Status.t option
+  -> unit -> t ApiTypes.Page.t Api.t
+
 (** Get achievement statuses                                                  *)
 val get :
   req:requirements

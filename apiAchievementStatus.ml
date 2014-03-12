@@ -45,6 +45,23 @@ let from_json c =
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Search achievement statuses                                                *)
+(* ************************************************************************** *)
+
+let search ~req ?(page = Page.default_parameters) ?(owner = "")
+    ?(achievement = "") ?(status = (None : ApiTypes.Status.t option)) () =
+  Api.go
+    ~path:["achievement_statuses"]
+    ~req:(Some req)
+    ~page:(Some page)
+    ~get:(Network.option_filter [
+      ("owner", Some owner);
+      ("achievement", Some achievement);
+      ("status", Option.map Status.to_string status);
+    ])
+    (Page.from_json from_json)
+
+(* ************************************************************************** *)
 (* Get achievement statuses                                                   *)
 (* ************************************************************************** *)
 
