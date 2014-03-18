@@ -106,14 +106,14 @@ let test
     (result : 'a Api.t) : 'a Api.t =
   let _failure () = total.failure <- total.failure + 1
   and _success () = total.success <- total.success + 1 in
-  let failure e = if t then _failure () else _success ()
-  and success r = if t != true then _failure () else _success () in
+  let failure e = if t then _success () else _failure ()
+  and success r = if t then _failure () else _success () in
   let on_error e =
     begin
       failure e;
       ApiDump.error e;
       ApiDump.lprint_endline "\n  ----> FAILURE\n";
-      (* if stop_on_error then print_total (); exit 1 *)
+      if stop_on_error then print_total (); exit 1
     ()
     end
   and on_result r =
