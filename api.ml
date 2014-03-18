@@ -75,6 +75,7 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       let str = parameters_to_string get in
       if (String.length str) = 0 then str else "?" ^ str in
     !ApiConf.base_url ^ path ^ get in
+  let _ = ApiDump.verbose (" ## URL: " ^ url) in
 
   Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string !ApiConf.lang)];
   Curl.set_postfieldsize c 0;
@@ -117,8 +118,11 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       Curl.set_url c url;
       Curl.perform c;
 
-      let text = Buffer.contents result in
-      (Curl.get_responsecode c, text)
+      let text = Buffer.contents result
+      and code = Curl.get_responsecode c in
+      let _ = ApiDump.verbose (" ## Response Code: " ^ (string_of_int code)) in
+      let _ = ApiDump.verbose (" ## Response Body: " ^ text) in
+      (code, text)
 
 (* ************************************************************************** *)
 (* Internal tools for extra parameters                                        *)
@@ -173,10 +177,9 @@ let go
 	 let (code, result) =
 	   curl_perform ~path:path
              ~get:get ~post:post ~rtype:rtype () in
-	 let json = Yojson.Basic.from_string result in
-	 if code >= 200 && code <= 200
-	 then Result (from_json json)
-	 else Error (error_from_json code json)
+	 if code >= 200 && code < 300
+	 then Result (from_json (Yojson.Basic.from_string result))
+	 else Error (error_from_json code result)
 
        with
 	 | Yojson.Basic.Util.Type_error (msg, tree) ->

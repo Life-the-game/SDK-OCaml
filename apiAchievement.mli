@@ -20,17 +20,15 @@ type achievement_status =
 type t =
     {
       info               : Info.t;
+      vote               : Vote.t;
       name               : string;
       description        : string option;
       badge              : ApiMedia.Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
-      downvotes          : int;
-      upvotes            : int;
       location           : Location.t option;
       secret             : bool option;
-      score              : int;
       visibility         : Visibility.t;
       url                : url;
     }

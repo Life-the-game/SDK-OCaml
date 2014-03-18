@@ -24,7 +24,7 @@ let _ =
 (* ************************************************************************** *)
 
 let print_success = false
-let stop_on_error = true
+let stop_on_error = false
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -113,7 +113,7 @@ let test
       failure e;
       ApiDump.error e;
       ApiDump.lprint_endline "\n  ----> FAILURE\n";
-      if stop_on_error then print_total (); exit 1
+      if stop_on_error then (print_total (); exit 1)
     ()
     end
   and on_result r =
@@ -190,21 +190,21 @@ let _ =
 (* PRIVATE *)
   print_title "Create an achievement with just a name and a description";
   ignore (test (ApiAchievement.create ~name:achievement_name
-		  ~description:achievement_description ()));
+  		  ~description:achievement_description ()));
 
   print_title "Create an achievement with all the requirements";
   ignore (ApiAchievement.create ~name:achievement_name2
-	    ~description:achievement_description2 ~badge:(File picture)
-	    ~color:color ~secret:false ~tags:["usa"; "travel"]
-	    ~location:(Some paris_location) ~radius:5 ());
+  	    ~description:achievement_description2 ~badge:(File picture)
+  	    ~color:color ~secret:false ~tags:["usa"; "travel"]
+  	    ~location:(Some paris_location) ~radius:5 ());
 (* /PRIVATE *)
 
   print_title "Get achievements";
-  let achievements = test ~f:pageprint (ApiAchievement.get ()) in
+  let achievements = test ~f:pageprint (ApiAchievement.get ~page:(Page.just_limit 2) ()) in
 
   print_title "Get next page of achievements";
   (match achievements with (* Check the previous page*)
-    | Error e -> impossible "the previous page failed"
+      | Error e -> impossible "the previous page failed"
     | Result achievements ->
       match Page.next achievements with (* Check if there is a next page *)
         | None -> ApiDump.lprint_endline "It was the last page"

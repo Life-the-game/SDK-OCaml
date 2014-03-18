@@ -32,11 +32,15 @@ val convert_each :
   -> (Yojson.Basic.json -> 'a)
   -> 'a list
 
+val to_int_option : Yojson.Basic.json -> int
+
 (* ************************************************************************** *)
 (** {3 Explicit types for parameters}                                         *)
 (* ************************************************************************** *)
 
-type id       = string
+type id       = int
+val id_to_string : id -> string
+val id_of_string : string -> id
 type login    = string
 type password = string
 type email    = string
@@ -155,7 +159,7 @@ module type INFO =
 sig
   type t =
       {
-        id           : string;
+        id           : id;
         creation     : DateTime.t option;
         modification : DateTime.t option;
       }
@@ -164,27 +168,25 @@ end
 module Info : INFO
 
 (* ************************************************************************** *)
-(** {3 Approvable elements}                                                   *)
-(**   Approvable elements contain this object AND MUST contain Info as well   *)
+(** {3 Vote elements}                                                         *)
+(**   Vote elements contain this object AND MUST contain Info as well         *)
 (* ************************************************************************** *)
 
-module type APPROVABLE =
+module type VOTE =
 sig
   type vote = Approved | Disapproved
   type t =
       {
-        approvers_total    : int;
-        disapprovers_total : int;
-        approved           : bool option;
-        disapproved        : bool option;
-        (* score              : int; *)
-	vote               : vote option;
+	downvotes : int;
+	upvotes   : int;
+	score     : int;
+	vote      : vote option;
       }
   val from_json : Yojson.Basic.json -> t
   val to_string : vote -> string
   val of_string : string -> vote
 end
-module Approvable : APPROVABLE
+module Vote : VOTE
 
 (* ************************************************************************** *)
 (** {3 List Pagination}                                                       *)
@@ -323,7 +325,7 @@ type error =
   | Client of string
   | Unknown of Network.code
 
-val error_from_json : Network.code -> Yojson.Basic.json -> error
+val error_from_json : Network.code -> string -> error
 
 (* ************************************************************************** *)
 (** {3 Client-side errors}                                                    *)

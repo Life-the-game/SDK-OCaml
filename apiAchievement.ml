@@ -21,17 +21,15 @@ type achievement_status =
 type t =
     {
       info               : Info.t;
+      vote               : Vote.t;
       name               : string;
       description        : string option;
       badge              : ApiMedia.Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
-      downvotes          : int;
-      upvotes            : int;
       location           : Location.t option;
       secret             : bool option;
-      score              : int;
       visibility         : Visibility.t;
       url                : url;
     }
@@ -44,23 +42,21 @@ let rec from_json c =
   let open Yojson.Basic.Util in
       {
         info               = Info.from_json c;
+	vote               = Vote.from_json c;
         name               = c |> member "name" |> to_string;
         description        = c |> member "description" |> to_string_option;
         badge              = (c |> member "badge"
                                 |> to_option ApiMedia.Picture.from_json);
         color              = c |> member "color" |> to_string_option;
         tags               = ApiTypes.convert_each (c |> member "tags") to_string;
-        achievement_status = c |> member "achievement_status" |> to_option
-            (fun c -> {
-              id     = c |> member "id" |> to_string;
-              status = Status.of_string (c |> member "status" |> to_string);
-             }
-            );
-        downvotes          = (match c |> member "downvotes" |> to_int_option with Some i -> i | None -> 0);
-        upvotes            = (match c |> member "upvotes"   |> to_int_option with Some i -> i | None -> 0);
+        achievement_status = None;(* c |> member "achievement_status" |> to_option *)
+            (* (fun c -> { *)
+            (*   id     = c |> member "id" |> to_int; *)
+            (*   status = Status.of_string (c |> member "status" |> to_string); *)
+            (*  } *)
+            (* ); *)
         location           = (try (Some (Location.from_json c)) with _ -> None);
         secret             = c |> member "secret" |> to_bool_option;
-        score              = (match c |> member "score" |> to_int_option with Some i -> i | None -> 0);
         visibility         = Visibility.of_string
           (match c |> member "visibility" |> to_string_option with Some s -> s | None -> "");
         url                = c |> member "url" |> to_string;
@@ -92,7 +88,7 @@ let get ?(page = Page.default_parameters)
 
 let get_one id =
   Api.go
-    ~path:["achievements"; id]
+    ~path:["achievements"; id_to_string id]
     from_json
 
 (* PRIVATE *)
@@ -112,7 +108,7 @@ let create ~name ~description ?(badge = NoFile) ?(color = "")
        ("description", description);
        ("badge", match badge with FileUrl url -> url | _ -> "");
        ("color", color);
-       ("secret", string_of_bool secret);
+       ("secret", if secret then "1" else "0");
        ("tags", Network.list_parameter tags);
        ("location", location);
        ("radius", radius);
@@ -151,7 +147,7 @@ let edit ?(name = "") ?(description = "") ?(badge = NoFile) ?(color = "")
   Api.go
     ~auth_required:true
     ~rtype:PUT
-    ~path:["achievements"; id]
+    ~path:["achievements"; id_to_string id]
     ~post:post
     from_json
 
@@ -163,7 +159,7 @@ let delete id =
   Api.go
     ~auth_required:true
     ~rtype:DELETE
-    ~path:["achievements"; id]
+    ~path:["achievements"; id_to_string id]
     Api.noop
 
 (* /PRIVATE *)

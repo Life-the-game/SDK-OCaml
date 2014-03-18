@@ -13,14 +13,22 @@ let convert_each_ (c : Yojson.Basic.json) (f : Yojson.Basic.json -> 'a) : 'a lis
   match c |> to_option (convert_each f) with
     | Some l -> l
     | None -> []
-
 let convert_each = convert_each_
+
+let to_int_option_ c =
+  let open Yojson.Basic.Util in
+      match (to_int_option c) with
+  	| Some i -> i
+  	| None -> 0
+let to_int_option = to_int_option_
 
 (* ************************************************************************** *)
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
 
-type id       = string
+type id       = int
+let id_to_string = string_of_int
+let id_of_string = int_of_string
 type login    = string
 type password = string
 type email    = string
@@ -253,7 +261,7 @@ module type INFO =
 sig
   type t =
       {
-        id           : string;
+        id           : id;
         creation     : DateTime.t option;
         modification : DateTime.t option;
       }
@@ -263,68 +271,62 @@ module Info : INFO =
 struct
   type t =
       {
-        id           : string;
+        id           : id;
         creation     : DateTime.t option;
         modification : DateTime.t option;
       }
   let from_json c =
     let open Yojson.Basic.Util in
         {
-          id           = c |> member "id" |> to_string;
+          id           = c |> member "id" |> to_int;
           creation     = Option.map DateTime.of_string (c |> member "creation" |> to_string_option);
           modification = Option.map DateTime.of_string (c |> member "modification" |> to_string_option);
         }
 end
 
 (* ************************************************************************** *)
-(* Approvable elements                                                        *)
-(*   Approvable elements contain this object AND MUST contain Info as well    *)
+(* Vote elements                                                              *)
+(*   Vote elements contain this object AND MUST contain Info as well          *)
 (* ************************************************************************** *)
 
-module type APPROVABLE =
+module type VOTE =
 sig
   type vote = Approved | Disapproved
   type t =
       {
-        approvers_total    : int;
-        disapprovers_total : int;
-        approved           : bool option;
-        disapproved        : bool option;
-        (* score              : int; *)
-	vote               : vote option;
+	downvotes : int;
+	upvotes   : int;
+	score     : int;
+	vote      : vote option;
       }
   val from_json : Yojson.Basic.json -> t
   val to_string : vote -> string
   val of_string : string -> vote
 end
-module Approvable : APPROVABLE =
+module Vote : VOTE =
 struct
   type vote = Approved | Disapproved
   type t =
       {
-        approvers_total    : int;
-        disapprovers_total : int;
-        approved           : bool option;
-        disapproved        : bool option;
-        (* score              : int; *)
-	vote               : vote option;
+	downvotes : int;
+	upvotes   : int;
+	score     : int;
+	vote      : vote option;
       }
   let to_string = function
-    | Approved     -> "approved"
-    | Disapproved  -> "disapproved"
+    | Approved     -> "upvoted"
+    | Disapproved  -> "downvoted"
   let of_string = function
-    | "approved"     -> Approved
-    | "disapproved"  -> Disapproved
-    | _              -> Approved
+    | "upvoted"     -> Approved
+    | "downvoted"   -> Disapproved
+    | _             -> Approved
   let from_json c =
     let open Yojson.Basic.Util in
         {
-          approvers_total    = c |> member "approvers_total" |> to_int;
-          disapprovers_total = c |> member "disapprovers_total" |> to_int;
-          approved           = c |> member "approved" |> to_bool_option;
-          disapproved        = c |> member "disapproved" |> to_bool_option;
-          (* score              = c |> member "score" |> to_int; *)
-	  vote               = c |> member "vote" |> to_option
+          upvotes   = c |> member "upvotes"   |> to_int_option_;
+          downvotes = c |> member "downvotes" |> to_int_option_;
+          score     = c |> member "score"     |> to_int_option_;
+	  vote      = c |> member "vote"      |> to_option
 	      (fun vote -> of_string (vote |> to_string));
         }
 end
@@ -433,14 +435,14 @@ struct
   let from_json f c =
     let open Yojson.Basic.Util in
 	try {
-          server_size = c |> member "server_size" |> to_int;
-          index       = c |> member "index"       |> to_int;
-          count       = c |> member "count"       |> to_int;
-          limit       = c |> member "limit"       |> to_int;
+          server_size = c |> member "server_size" |> to_int_option_;
+          index       = c |> member "index"       |> to_int_option_;
+          count       = c |> member "count"       |> to_int_option_;
+          limit       = c |> member "limit"       |> to_int_option_;
           order       = order_of_string (c |> member "order" |> to_string);
           direction   = direction_of_string
             (c |> member "direction" |> to_string);
-          items       = convert_each_ (c |> member "items") f;
+          items       = convert_each_ (c |> member "content") f;
         } with Yojson.Json_error "Blank input data" -> {
           server_size = 0; index = 0; count = 0; limit = 0;
 	  order = default_order; direction = default_direction; items = [];
@@ -706,14 +708,18 @@ type error =
 let error_from_json code c =
   let open Yojson.Basic.Util in
 
+  let get_json c = Yojson.Basic.from_string c in
+
   let bad_request_from_json () =
+    let c = get_json c in
     let f ca =
-      let message = ca |> member "mesage" |> to_string in
+      let message = ca |> member "message" |> to_string in
       try Invalid (message, convert_each_ (ca |> member "invalid") to_string)
       with _ -> Requested (message, convert_each_ (ca |> member "requested") to_string) in
     convert_each_ c f in
 
   let not_acceptable_from_json () =
+    let c = get_json c in
     (convert_each_ (c |> member "accept-media") to_string,
      convert_each_ (c |> member "accept-language")
        (fun s -> Lang.of_string (to_string s))) in
