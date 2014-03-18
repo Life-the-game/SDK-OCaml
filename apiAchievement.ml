@@ -37,57 +37,42 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-let consumer_connection = ref []
-let get_connection tags_api =
-  try Consumer.Result (List.assoc tags_api !consumer_connection)
-  with _ -> match Consumer.connect tags_api with
-    | Consumer.Error e -> Consumer.Error e
-    | Consumer.Result c ->
-      (consumer_connection := ((tags_api, c)::!consumer_connection);
-       Consumer.Result c)
-
 let get_tags tags_api achievement_id =
-  match get_connection tags_api with
-    | Consumer.Error e -> []
-    | Consumer.Result _ ->
-      	match Consumer.go
-	  ~resource:"categories"
-	  ~id:achievement_id
-	  ~get:[("api_url", !ApiConf.base_url)]
-	  (Consumer.format_json_list (Yojson.Basic.Util.to_string))
-	with
-	  | Consumer.Error _ -> []
-	  | Consumer.Result categories -> categories
+  match Consumer.go
+    ~resource:"categories"
+    ~id:achievement_id
+    ~get:[("api_url", !ApiConf.base_url)]
+    tags_api
+    (Consumer.format_json_list (Yojson.Basic.Util.to_string))
+  with
+    | Consumer.Error _ -> []
+    | Consumer.Result categories -> categories
 
 let add_tags_ add_tags tags_api achievement_id =
-  match get_connection tags_api with
-    | Consumer.Error e -> ()
-    | Consumer.Result _ ->
-      List.iter (fun tag ->
-	let tag = Str.global_replace (Str.regexp " ") "" tag in
-	let tag = String.lowercase tag in
-	let _ = Consumer.go
-	  ~rtype:Consumer.POST
-	  ~resource:"staffpicks"
-	  ~id:tag
-	  ~get:[("achievement_id", achievement_id);
-		("api_url", !ApiConf.base_url)]
-	  (Consumer.format_json_list (Yojson.Basic.Util.to_string)) in ())
-	add_tags
+  List.iter (fun tag ->
+    let tag = Str.global_replace (Str.regexp " ") "" tag in
+    let tag = String.lowercase tag in
+    let _ = Consumer.go
+      ~rtype:Consumer.POST
+      ~resource:"staffpicks"
+      ~id:tag
+      ~get:[("achievement_id", achievement_id);
+	    ("api_url", !ApiConf.base_url)]
+      tags_api
+      (Consumer.format_json_list (Yojson.Basic.Util.to_string)) in ())
+    add_tags
 
 let remove_tags_ remove_tags tags_api achievement_id =
-  match get_connection tags_api with
-    | Consumer.Error e -> ()
-    | Consumer.Result _ ->
-      List.iter (fun tag ->
-	let _ = Consumer.go
-	  ~rtype:Consumer.DELETE
-	  ~resource:"staffpicks"
-	  ~id:tag
-	  ~get:[("achievement_id", achievement_id);
-		("api_url", !ApiConf.base_url)]
-	  (Consumer.format_json_list (Yojson.Basic.Util.to_string)) in ())
-	remove_tags
+  List.iter (fun tag ->
+    let _ = Consumer.go
+      ~rtype:Consumer.DELETE
+      ~resource:"staffpicks"
+      ~id:tag
+      ~get:[("achievement_id", achievement_id);
+	    ("api_url", !ApiConf.base_url)]
+      tags_api
+      (Consumer.format_json_list (Yojson.Basic.Util.to_string)) in ())
+    remove_tags
 
 let rec from_json ?(tags_api = "") c =
   let open Yojson.Basic.Util in
