@@ -254,8 +254,8 @@ sig
   type t =
       {
         id           : string;
-        creation     : DateTime.t;
-        modification : DateTime.t;
+        creation     : DateTime.t option;
+        modification : DateTime.t option;
       }
   val from_json : Yojson.Basic.json -> t
 end
@@ -264,17 +264,15 @@ struct
   type t =
       {
         id           : string;
-        creation     : DateTime.t;
-        modification : DateTime.t;
+        creation     : DateTime.t option;
+        modification : DateTime.t option;
       }
   let from_json c =
     let open Yojson.Basic.Util in
         {
           id           = c |> member "id" |> to_string;
-          creation     = DateTime.of_string
-            (c |> member "creation" |> to_string);
-          modification = DateTime.of_string
-            (c |> member "creation" |> to_string);
+          creation     = Option.map DateTime.of_string (c |> member "creation" |> to_string_option);
+          modification = Option.map DateTime.of_string (c |> member "modification" |> to_string_option);
         }
 end
 
@@ -350,9 +348,10 @@ sig
       {
         server_size : int;
         index       : int;
+	count       : int;
         limit       : int;
-        (* order       : order; *)
-        (* direction   : direction; *)
+        order       : order;
+        direction   : direction;
         items       : 'a list;
       }
   type parameters = (index * limit * (order * direction) option)
@@ -390,9 +389,10 @@ struct
       {
         server_size : int;
         index       : int;
+	count       : int;
         limit       : int;
-        (* order       : order; *)
-        (* direction   : direction; *)
+        order       : order;
+        direction   : direction;
         items       : 'a list;
       }
   type parameters = (index * limit * (order * direction) option)
@@ -435,13 +435,15 @@ struct
 	try {
           server_size = c |> member "server_size" |> to_int;
           index       = c |> member "index"       |> to_int;
+          count       = c |> member "count"       |> to_int;
           limit       = c |> member "limit"       |> to_int;
-          (* order       = order_of_string (c |> member "order" |> to_string); *)
-          (* direction   = direction_of_string *)
-          (*   (c |> member "direction" |> to_string); *)
+          order       = order_of_string (c |> member "order" |> to_string);
+          direction   = direction_of_string
+            (c |> member "direction" |> to_string);
           items       = convert_each_ (c |> member "items") f;
         } with Yojson.Json_error "Blank input data" -> {
-          server_size = 0; index = 0; limit = 0; items = [];
+          server_size = 0; index = 0; count = 0; limit = 0;
+	  order = default_order; direction = default_direction; items = [];
 	}
   let get_total page = page.server_size
 end
@@ -609,6 +611,78 @@ let light_colors =
       else true
     with Invalid_argument _ -> true in
   List.filter is_light colors
+
+(* ************************************************************************** *)
+(* Location                                                                   *)
+(* ************************************************************************** *)
+
+module type LOCATION =
+sig
+  type t = {
+    latitude: float;
+    longitude: float;
+    radius: int;
+  }
+  type parameters = (float * float)
+  val to_string : parameters -> string
+  val of_string : ?radius : int -> string -> t
+  val from_json : Yojson.Basic.json -> t
+end
+module Location : LOCATION =
+struct
+  type t = {
+    latitude: float;
+    longitude: float;
+    radius: int;
+  }
+  type parameters = (float * float)
+  let of_string ?(radius = 0) s = {
+    latitude = 0.; (* todo *)
+    longitude = 0.; (* todo *)
+    radius = radius;
+  }
+  let to_string (latitude, longitude) =
+    "lat" ^ (string_of_float latitude) ^ "long" ^ (string_of_float longitude)
+  let from_json c =
+    let open Yojson.Basic.Util in
+    of_string ~radius:(c |> member "radius" |> to_int)
+      (c |> member "location" |> to_string)
+end
+
+(* ************************************************************************** *)
+(* Visibility                                                                 *)
+(* ************************************************************************** *)
+
+module type VISIBILITY =
+sig
+  type t =
+    | Official
+    | Community
+    | Sponsored
+    | Unknown
+  val default : t
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Visibility : VISIBILITY =
+struct
+  type t =
+    | Official
+    | Community
+    | Sponsored
+    | Unknown
+  let default = Unknown
+  let of_string = function
+    | "official" -> Official
+    | "community" -> Community
+    | "sponsored" -> Sponsored
+    | _ -> default
+  let to_string = function
+    | Official -> "official"
+    | Community -> "community"
+    | Sponsored -> "sponsored"
+    | Unknown -> "unknown"
+end
 
 (* ************************************************************************** *)
 (* Error                                                                      *)

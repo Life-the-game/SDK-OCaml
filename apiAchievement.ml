@@ -25,11 +25,14 @@ type t =
       description        : string option;
       badge              : ApiMedia.Picture.t option;
       color              : color option;
-      category           : bool;
-      secret             : bool;
-      discoverable       : bool;
       tags               : string list;
       achievement_status : achievement_status option;
+      downvotes          : int;
+      upvotes            : int;
+      location           : Location.t option;
+      secret             : bool option;
+      score              : int;
+      visibility         : Visibility.t;
       url                : url;
     }
 
@@ -45,17 +48,21 @@ let rec from_json c =
         description        = c |> member "description" |> to_string_option;
         badge              = (c |> member "badge"
                                 |> to_option ApiMedia.Picture.from_json);
-	color              = c |> member "color" |> to_string_option;
-        category           = c |> member "category" |> to_bool;
-        secret             = c |> member "secret" |> to_bool;
-        discoverable       = c |> member "discoverable" |> to_bool;
-	tags               = [];
-	achievement_status = c |> member "achievement_status" |> to_option
-	    (fun c -> {
-	      id     = c |> member "id" |> to_string;
-	      status = Status.of_string (c |> member "status" |> to_string);
-	     }
-	    );
+        color              = c |> member "color" |> to_string_option;
+        tags               = ApiTypes.convert_each (c |> member "tags") to_string;
+        achievement_status = c |> member "achievement_status" |> to_option
+            (fun c -> {
+              id     = c |> member "id" |> to_string;
+              status = Status.of_string (c |> member "status" |> to_string);
+             }
+            );
+        downvotes          = (match c |> member "downvotes" |> to_int_option with Some i -> i | None -> 0);
+        upvotes            = (match c |> member "upvotes"   |> to_int_option with Some i -> i | None -> 0);
+        location           = (try (Some (Location.from_json c)) with _ -> None);
+        secret             = c |> member "secret" |> to_bool_option;
+        score              = (match c |> member "score" |> to_int_option with Some i -> i | None -> 0);
+        visibility         = Visibility.of_string
+          (match c |> member "visibility" |> to_string_option with Some s -> s | None -> "");
         url                = c |> member "url" |> to_string;
       }
 
@@ -68,17 +75,14 @@ let rec from_json c =
 (* ************************************************************************** *)
 
 let get ?(page = Page.default_parameters)
-    ?(term = []) ?(with_badge = None) ?(is_category = None)
-    ?(is_secret = None) ?(is_discoverable = None) () =
+    ?(terms = []) ?(tags = []) ?(location = None) () =
   Api.go
     ~path:["achievements"]
     ~page:(Some page)
     ~get:(Network.option_filter
-            [("term", Some (Network.list_parameter term));
-             ("with_badge", Option.map string_of_bool with_badge);
-             ("is_category", Option.map string_of_bool is_category);
-             ("is_secret", Option.map string_of_bool is_secret);
-             ("is_discoverable", Option.map string_of_bool is_discoverable);
+            [("terms", Some (Network.list_parameter terms));
+             ("tags", Some (Network.list_parameter tags));
+             ("location", Option.map Location.to_string location);
             ])
     (Page.from_json from_json)
 
@@ -97,19 +101,21 @@ let get_one id =
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~name ~description ?(color = "") ?(parents = [])
-    ?(badge = NoFile)
-    ?(category = false) ?(secret = false) ?(discoverable = true)
-    ?(tags = []) () =
+let create ~name ~description ?(badge = NoFile) ?(color = "")
+    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) () =
+  let radius = if radius > 0 then string_of_int radius else ""
+  and location = match location with
+    | Some l -> Location.to_string l | None -> "" in
   let post_parameters =
     Network.empty_filter
       [("name", name);
        ("description", description);
-       ("parents", Network.list_parameter parents);
-       ("category", string_of_bool category);
-       ("secret", string_of_bool secret);
-       ("discoverable", string_of_bool discoverable);
+       ("badge", match badge with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("secret", string_of_bool secret);
+       ("tags", Network.list_parameter tags);
+       ("location", location);
+       ("radius", radius);
       ] in
   let post =
     Network.PostMultiPart
@@ -126,13 +132,17 @@ let create ~name ~description ?(color = "") ?(parents = [])
 (* Edit an Achievement                                                        *)
 (* ************************************************************************** *)
 
-let edit ?(name = "") ?(description = "") ?(color = "")
-    ?(badge = NoFile) ?(add_tags = []) ?(remove_tags = []) id =
+let edit ?(name = "") ?(description = "") ?(badge = NoFile) ?(color = "")
+    ?(secret = None) ?(add_tags = []) ?(del_tags = []) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);
        ("description", description);
+       ("badge", match badge with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("secret", match secret with Some b -> string_of_bool b | None -> "");
+       ("add_tags", Network.list_parameter add_tags);
+       ("del_tags", Network.list_parameter del_tags);
       ] in
   let post =
     Network.PostMultiPart
@@ -145,5 +155,15 @@ let edit ?(name = "") ?(description = "") ?(color = "")
     ~post:post
     from_json
 
-(* /PRIVATE *)
+(* ************************************************************************** *)
+(* Delete an Achievement                                                      *)
+(* ************************************************************************** *)
 
+let delete id =
+  Api.go
+    ~auth_required:true
+    ~rtype:DELETE
+    ~path:["achievements"; id]
+    Api.noop
+
+(* /PRIVATE *)

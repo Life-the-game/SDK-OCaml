@@ -83,12 +83,18 @@ and gender = Gender.Female
 and birthday = Date.of_string "1991-05-30"
 and password = "helloworld"
 and email = random_string 2 ^ "@gmail.com"
+and color = "#26b671"
+and color2 = "#0f0f0f"
 and message = random_string 30
 and picture = (["example.png"], "image/png")
 and picture2 = (["example2.jpg"], "image/jpeg")
 and achievement_name = random_string 15
+and achievement_name2 = random_string 15
 and achievement_description = random_string 30
+and achievement_description2 = random_string 30
+and achievement_description3 = random_string 30
 and comment_description = random_string 30
+and paris_location = (48.8566, 2.3533)
 
 (* ************************************************************************** *)
 (* Test generic function                                                      *)
@@ -182,16 +188,19 @@ let _ =
   ApiDump.lprint_endline "#################################################";
 
 (* PRIVATE *)
-  (* print_title "Create an achievement"; *)
-  (* ignore (auth_test (fun auth -> *)
-  (*   ApiAchievement.create ~auth:auth ~name:achievement_name *)
-  (*     ~description:achievement_description ~badge:(File picture) *)
-  (*     ~tags:["hello"; "world"] ()) auth); *)
+  print_title "Create an achievement with just a name and a description";
+  ignore (test (ApiAchievement.create ~name:achievement_name
+		  ~description:achievement_description ()));
+
+  print_title "Create an achievement with all the requirements";
+  ignore (ApiAchievement.create ~name:achievement_name2
+	    ~description:achievement_description2 ~badge:(File picture)
+	    ~color:color ~secret:false ~tags:["usa"; "travel"]
+	    ~location:(Some paris_location) ~radius:5 ());
 (* /PRIVATE *)
 
   print_title "Get achievements";
   let achievements = test ~f:pageprint (ApiAchievement.get ()) in
-  (* Note: It is also possible to search through achievements using "term" *)
 
   print_title "Get next page of achievements";
   (match achievements with (* Check the previous page*)
@@ -202,17 +211,34 @@ let _ =
         | Some nextpage ->
           ignore (test ~f:pageprint (ApiAchievement.get ~page:nextpage ())));
 
-  (* print_title "Get one achievement"; *)
-  (* (match achievements with (\* Check if the list exists *\) *)
-  (*   | Error e -> impossible "the previous tests failed" *)
-  (*   | Result page -> *)
-  (*     if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-  (*     then ApiDump.lprint_endline "No elements available" *)
-  (*     else *)
-  (*       let achievement_id = *)
-  (*         (List.hd page.Page.items).ApiAchievement.info.Info.id in *)
-  (*       ignore (test (ApiAchievement.get_one *)
-  (*                       ~req:(Lang lang) achievement_id))); *)
+  print_title "Get achievements with terms";
+  ignore (test ~f:pageprint (ApiAchievement.get ~terms:["chick"] ()));
+
+  print_title "Get achievements with tags";
+  ignore (test ~f:pageprint (ApiAchievement.get ~tags:["usa"] ()));
+
+  print_title "Get achievements with a location";
+  ignore (test ~f:pageprint (ApiAchievement.get ~location:(Some paris_location) ()));
+
+  print_title "Get one achievement";
+  (match achievements with (* Check if the list exists *)
+    | Error e -> impossible "the previous test (get achievements) failed"
+    | Result page ->
+      if page.Page.server_size == 0 (* Check if there are elements to get *)
+      then ApiDump.lprint_endline "No elements available"
+      else
+        let achievement_id =
+          (List.hd page.Page.items).ApiAchievement.info.Info.id in
+
+        ignore (test (ApiAchievement.get_one achievement_id));
+
+        ignore (test (ApiAchievement.edit ~description:achievement_description3
+			~badge:(File picture2) ~color:color2 ~add_tags:["play"] ~del_tags:["usa"]
+			achievement_id));
+
+	print_title "Delete this achievement";
+        ignore (test (ApiAchievement.delete achievement_id));
+  );
 
 (*   ApiDump.lprint_endline "\n"; *)
 (*   ApiDump.lprint_endline "#################################################"; *)

@@ -24,11 +24,14 @@ type t =
       description        : string option;
       badge              : ApiMedia.Picture.t option;
       color              : color option;
-      category           : bool;
-      secret             : bool;
-      discoverable       : bool;
       tags               : string list;
       achievement_status : achievement_status option;
+      downvotes          : int;
+      upvotes            : int;
+      location           : Location.t option;
+      secret             : bool option;
+      score              : int;
+      visibility         : Visibility.t;
       url                : url;
     }
 
@@ -39,11 +42,9 @@ type t =
 (** Get Achievements                                                          *)
 val get :
   ?page:Page.parameters
-  -> ?term:string list
-  -> ?with_badge: bool option
-  -> ?is_category: bool option
-  -> ?is_secret: bool option
-  -> ?is_discoverable: bool option
+  -> ?terms:string list
+  -> ?tags:string list
+  -> ?location:Location.parameters option
   -> unit -> t Page.t Api.t
 
 (** Get one Achievement                                                       *)
@@ -55,24 +56,26 @@ val get_one : id -> t Api.t
 val create :
   name:string
   -> description:string
-  -> ?color:color
-  -> ?parents:id list
   -> ?badge:either_file
-  -> ?category:bool
+  -> ?color:color
   -> ?secret:bool
-  -> ?discoverable:bool
   -> ?tags:string list
+  -> ?location:Location.parameters option
+  -> ?radius:int
   -> unit -> t Api.t
 
 (** Edit an Achievement                                                       *)
 val edit :
   ?name:string
   -> ?description:string
-  -> ?color:color
   -> ?badge:either_file
+  -> ?color:color
+  -> ?secret:bool option
   -> ?add_tags:string list
-  -> ?remove_tags:string list
+  -> ?del_tags:string list
   -> id -> t Api.t
+
+val delete : id -> unit Api.t
 
 (* /PRIVATE *)
 

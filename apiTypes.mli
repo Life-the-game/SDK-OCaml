@@ -19,7 +19,8 @@
     {- List Pagination }
     {- Status }
     {- Gender }
-    {- Privacy }
+    {- Location }
+    {- Visibility }
     {- Error }
     {- Client-side errors }
     {- API Response }
@@ -155,8 +156,8 @@ sig
   type t =
       {
         id           : string;
-        creation     : DateTime.t;
-        modification : DateTime.t;
+        creation     : DateTime.t option;
+        modification : DateTime.t option;
       }
   val from_json : Yojson.Basic.json -> t
 end
@@ -204,9 +205,10 @@ sig
       {
         server_size : int;
         index       : int;
+	count       : int;
         limit       : int;
-        (* order       : order; *)
-        (* direction   : direction; *)
+        order       : order;
+        direction   : direction;
         items       : 'a list;
       }
   type parameters = (index * limit * (order * direction) option)
@@ -259,19 +261,6 @@ end
 module Status : STATUS
 
 (* ************************************************************************** *)
-(** {3 Privacy}                                                               *)
-(* ************************************************************************** *)
-
-module type PRIVACY =
-sig
-  type t = Enemy | Pure | Hardcore | Discutable
-  val default   : t
-  val to_string : t -> string
-  val of_string : string -> t
-end
-module Privacy : PRIVACY
-
-(* ************************************************************************** *)
 (** {3 Colors}                                                                *)
 (* ************************************************************************** *)
 
@@ -279,6 +268,41 @@ val colors : (string * string) list
 val main_colors : (string * string) list
 val light_colors : (string * string) list
 val name_to_color : string -> string
+
+(* ************************************************************************** *)
+(** {3 Location}                                                              *)
+(* ************************************************************************** *)
+
+module type LOCATION =
+sig
+  type t = {
+    latitude: float;
+    longitude: float;
+    radius: int;
+  }
+  type parameters = (float * float)
+  val to_string : parameters -> string
+  val of_string : ?radius : int -> string -> t
+  val from_json : Yojson.Basic.json -> t
+end
+module Location : LOCATION
+
+(* ************************************************************************** *)
+(** {3 Visibility}                                                            *)
+(* ************************************************************************** *)
+
+module type VISIBILITY =
+sig
+  type t =
+    | Official
+    | Community
+    | Sponsored
+    | Unknown
+  val default : t
+  val to_string : t -> string
+  val of_string : string -> t
+end
+module Visibility : VISIBILITY
 
 (* ************************************************************************** *)
 (** {3 Error}                                                                 *)
