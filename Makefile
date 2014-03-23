@@ -19,8 +19,8 @@ SRC		=	\
 			apiUser.ml \
 			apiAuth.ml \
 			apiAchievement.ml \
-			apiAchievementStatus.ml \
 			apiComment.ml \
+			apiAchievementStatus.ml \
 			apiNews.ml \
 			apiPlayground.ml \
 			apiFeed.ml \
@@ -38,8 +38,8 @@ SRCI		=	\
 			apiUser.mli \
 			apiAuth.mli \
 			apiAchievement.mli \
-			apiAchievementStatus.mli \
 			apiComment.mli \
+			apiAchievementStatus.mli \
 			apiNews.mli \
 			apiPlayground.mli \
 			apiFeed.mli \

@@ -20,6 +20,7 @@ type t =
       status           : Status.t;
       message          : string option;
       medias           : ApiMedia.t list;
+      nb_comments      : int;
       url              : url;
     }
 
@@ -32,6 +33,7 @@ val search :
   req:requirements
   -> ?page:Page.parameters
   -> ?owner:string
+  -> ?nb_comments:bool
   -> ?achievement:string
   -> ?status:Status.t option
   -> unit -> t ApiTypes.Page.t Api.t
@@ -41,6 +43,7 @@ val get :
   req:requirements
   -> ?page:Page.parameters
   -> ?term: string list
+  -> ?nb_comments:bool
   -> ?achievements: id list
   -> ?with_medias: bool option
   -> ?status:Status.t option
@@ -49,6 +52,7 @@ val get :
 (** Get one achievement status                                                *)
 val get_one :
   req:requirements
+  -> ?nb_comments:bool
   -> id -> t Api.t
 
 (** Create an achievement status                                              *)
@@ -93,4 +97,4 @@ val disapprove :
 (** {3 Tools}                                                                 *)
 (* ************************************************************************** *)
 
-val from_json : Yojson.Basic.json -> t
+val from_json : ?nb_comments:bool -> Yojson.Basic.json -> t

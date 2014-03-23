@@ -20,6 +20,7 @@ type t =
       status           : Status.t;
       message          : string option;
       medias           : ApiMedia.t list;
+      nb_comments      : int;
       url              : url;
     }
 
@@ -27,7 +28,7 @@ type t =
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-let from_json c =
+let from_json ?(nb_comments = false) c =
   let open Yojson.Basic.Util in
   {
     info        = Info.from_json c;
@@ -37,6 +38,11 @@ let from_json c =
     status           = Status.of_string (c |> member "status" |> to_string);
     message          = c |> member "message" |> to_string_option;
     medias           = Api.convert_each c "medias" ApiMedia.from_json;
+    nb_comments      = if nb_comments
+      then match ApiComment.get ~page:(0, 0, None) (c |> member "id" |> to_string) with
+	| Error e -> 0
+	| Result p -> p.Page.server_size
+      else 0;
     url              = c |> member "url" |> to_string;
   }
 
@@ -48,7 +54,7 @@ let from_json c =
 (* Search achievement statuses                                                *)
 (* ************************************************************************** *)
 
-let search ~req ?(page = Page.default_parameters) ?(owner = "")
+let search ~req ?(page = Page.default_parameters) ?(owner = "") ?(nb_comments = false)
     ?(achievement = "") ?(status = (None : ApiTypes.Status.t option)) () =
   Api.go
     ~path:["achievement_statuses"]
@@ -59,13 +65,13 @@ let search ~req ?(page = Page.default_parameters) ?(owner = "")
       ("achievement", Some achievement);
       ("status", Option.map Status.to_string status);
     ])
-    (Page.from_json from_json)
+    (Page.from_json (from_json ~nb_comments:nb_comments))
 
 (* ************************************************************************** *)
 (* Get achievement statuses                                                   *)
 (* ************************************************************************** *)
 
-let get ~req ?(page = Page.default_parameters) ?(term = [])
+let get ~req ?(page = Page.default_parameters) ?(term = []) ?(nb_comments = false)
     ?(achievements = []) ?(with_medias = None)
     ?(status = None) id =
   Api.go
@@ -78,17 +84,17 @@ let get ~req ?(page = Page.default_parameters) ?(term = [])
              ("with_medias", Option.map string_of_bool with_medias);
              ("status", Option.map Status.to_string status);
             ])
-    (Page.from_json from_json)
+    (Page.from_json (from_json ~nb_comments:nb_comments))
 
 (* ************************************************************************** *)
 (* Get one achievement status                                                 *)
 (* ************************************************************************** *)
 
-let get_one ~req achievement_id =
+let get_one ~req ?(nb_comments = false) achievement_id =
   Api.go
     ~path:["achievement_statuses"; achievement_id]
     ~req:(Some req)
-    from_json
+    (from_json ~nb_comments:nb_comments)
 
 (* ************************************************************************** *)
 (* Create an achievement status                                               *)
