@@ -44,7 +44,11 @@ let from_json c =
   let users = ("users", Api.convert_each c "users" ApiUser.from_json)
   and achievement_statuses : (string * ApiAchievementStatus.t list) =
     ("achievement_status",
-     Api.convert_each c "achievement_statuses" ApiAchievementStatus.from_json)
+     Api.convert_each c "achievement_statuses"
+       (fun c -> match ApiAchievementStatus.get_one ~nb_comments:true ~req:(Lang Lang.default)
+	   (c |> member "id" |> to_string) with
+	     | Error e -> ApiAchievementStatus.from_json c
+	     | Result r -> r))
   and medias = ("medias", Api.convert_each c "medias" ApiMedia.from_json)
 
   and get_list (_, l) = l
