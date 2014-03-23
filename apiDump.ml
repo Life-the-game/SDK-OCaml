@@ -8,7 +8,7 @@
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
-let lprint_string str = output_string !ApiConf.dump_output str
+let lprint_string str = output_string !ApiConf.dump_output str; flush_all ()
 let lprint_endline str = lprint_string (str ^ "\n"); flush_all ()
 
 let verbose str =
