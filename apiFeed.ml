@@ -31,4 +31,4 @@ let get ~auth ?(page = Page.default_parameters) ?(activity_type = [])
     ~page:(Some page)
     ~get:(Network.empty_filter
 	    [("type", Network.list_parameter activity_type)])
-    (Page.from_json ApiPlayground.from_json)
+    (Page.from_json (ApiPlayground.from_json ~req:(Auth auth)))

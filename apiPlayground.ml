@@ -38,14 +38,14 @@ type t = {
 
 exception InvalidList of string
 
-let from_json c =
+let from_json ~req c =
   let open Yojson.Basic.Util in
 
   let users = ("users", Api.convert_each c "users" ApiUser.from_json)
   and achievement_statuses : (string * ApiAchievementStatus.t list) =
     ("achievement_status",
      Api.convert_each c "achievement_statuses"
-       (fun c -> match ApiAchievementStatus.get_one ~nb_comments:true ~req:(Lang Lang.default)
+       (fun c -> match ApiAchievementStatus.get_one ~nb_comments:true ~req:req
 	   (c |> member "id" |> to_string) with
 	     | Error e -> ApiAchievementStatus.from_json c
 	     | Result r -> r))
@@ -97,10 +97,12 @@ let from_json c =
 
 let get ?(auth = None) ?(page = Page.default_parameters)
     ?(activity_type = []) id =
-    Api.go
+  let req = Auto (auth, Lang.default) in
+  Api.go
     ~path:(["users"; id; "activities"])
     ~page:(Some page)
+    ~req:(Some req)
     ~get:(Network.option_filter
         [("type", Some (Network.list_parameter activity_type));]
     )
-    (Page.from_json from_json)
+    (Page.from_json (from_json ~req:req))
