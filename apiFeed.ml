@@ -32,3 +32,11 @@ let get ~auth ?(page = Page.default_parameters) ?(activity_type = [])
     ~get:(Network.empty_filter
 	    [("type", Network.list_parameter activity_type)])
     (Page.from_json (ApiPlayground.from_json ~req:(Auth auth)))
+
+let global ?(auth = None) ?(page = Page.default_parameters) () =
+  let req = Auto (auth, Lang.default) in
+  Api.go
+    ~path:["feed"]
+    ~req:(Some req)
+    ~page:(Some page)
+    (Page.from_json (ApiPlayground.from_json ~req:req))

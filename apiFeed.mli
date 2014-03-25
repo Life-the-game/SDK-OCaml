@@ -18,3 +18,9 @@ val get :
   -> ?activity_type: string list
   -> ?user:id option
   -> unit -> ApiPlayground.t Page.t Api.t
+
+val global :
+  ?auth:auth option
+  -> ?page:Page.parameters
+  -> unit -> ApiPlayground.t Page.t Api.t
+
