@@ -22,6 +22,13 @@ let to_int_option_ c =
   	| None -> 0
 let to_int_option = to_int_option_
 
+let to_string_option_ c =
+  let open Yojson.Basic.Util in
+      match (to_string_option c) with
+  	| Some i -> i
+  	| None -> ""
+let to_string_option = to_string_option_
+
 (* ************************************************************************** *)
 (* Explicit types for parameters                                              *)
 (* ************************************************************************** *)
@@ -29,6 +36,7 @@ let to_int_option = to_int_option_
 type id       = int
 let id_to_string = string_of_int
 let id_of_string = int_of_string
+
 type login    = string
 type password = string
 type email    = string
@@ -36,9 +44,13 @@ type url      = string
 type token    = string
 type color    = string
 type mimetype = string
-(* PRIVATE *)
-type ip       = string
-(* /PRIVATE *)
+
+type oauth_provider = string
+type oauth_token    = token
+
+type either =
+  | Password of password
+  | OAuth of (oauth_provider * oauth_token)
 
 type parameters = (string (* key *) * string (* value *)) list
 

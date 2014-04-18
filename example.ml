@@ -13,7 +13,7 @@ open ApiTypes
 
 let _ =
   let open ApiConf in
-      verbose := true;
+      verbose := false;
       (Arg.parse
          [("-u", Arg.String (fun url -> base_url := url),
 	   "the URL of the web service")]
@@ -30,9 +30,10 @@ let stop_on_error = false
 (* Tools                                                                      *)
 (* ************************************************************************** *)
 
+let _ = Random.self_init ()
+
 (* Generate a random string with the given lenght                             *)
 let random_string (length : int) : string =
-  let _ = Random.self_init () in
   let gen () =
     match Random.int (26 + 26 + 10) with
       | n when n < 26      -> int_of_char 'a' + n
@@ -76,12 +77,15 @@ let print_total () =
 (* ************************************************************************** *)
 
 let login = random_string 5
+and friend = random_string 10
 and lang = Lang.default
 and firstname = "Barbara"
 and lastname = "Lepage"
 and gender = Gender.Female
 and birthday = Date.of_string "1991-05-30"
+and birthday2 = Date.of_string "2000-06-02"
 and password = "helloworld"
+and old_password = "124%{^#"
 and email = random_string 2 ^ "@gmail.com"
 and color = "#26b671"
 and color2 = "#0f0f0f"
@@ -113,7 +117,7 @@ let test
       failure e;
       ApiDump.error e;
       ApiDump.lprint_endline "\n  ----> FAILURE\n";
-      if stop_on_error then (print_total (); exit 1)
+      if stop_on_error then (print_total (); exit 1);
     ()
     end
   and on_result r =
@@ -135,75 +139,119 @@ let test
 
 let _ =
 
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Users tests (without auth)                    #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Users tests                                   #";
+  ApiDump.lprint_endline "#################################################";
 
-  (* print_title "Create a new user"; *)
-  (* let user = *)
-  (*   test (ApiUser.create *)
-  (*             ~login:login *)
-  (*             ~email:email *)
-  (*             ~lang:lang *)
-  (*             ~firstname:firstname *)
-  (*             ~lastname:lastname *)
-  (*             ~gender:gender *)
-  (*             ~birthday:(Some birthday) *)
-  (*             ~avatar:(File picture) *)
-  (*             (ApiUser.Password password)) in *)
+  print_title "Create a new user with all infos";
+  let user = ref
+    (test (ApiUser.create
+              ~login:login
+	      ~email:("prefix" ^ email)
+              ~lang:lang
+	      ~firstname:(random_string 10)
+	      ~lastname:(random_string 10)
+	      ~gender:Gender.Male
+	      ~birthday:(Some birthday2)
+	      ~avatar:(File picture2)
+              (Password old_password))) in
 
-  (* ApiDump.lprint_endline "\n"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Authentication tests                          #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
+  print_title "Create a user with just the minimum";
+  ignore (test (ApiUser.create ~login:friend ~email:(friend ^ "@email.com")
+		  (Password password)));
 
-  (* Unix.sleep 1; *)
+  print_title "/!\\ Warning! OAuth user creation not tested!";
 
-  (* print_title "Authenticate using a login and a password"; *)
-  (* let auth = test (ApiAuth.login login password) in *)
+  for i = 0 to Random.int 20 do
+    (* Create a bunch of users that will follow the main user *)
+    let tmpuser = (random_string 5) in
+    ignore (ApiUser.create ~login:tmpuser
+	      ~email:(tmpuser ^ "@email.com")
+	      (Password password));
+    ignore (ApiAuth.login tmpuser password);
+    ignore (ApiUser.follow login);
+    ignore (ApiAuth.logout ());
+  done;
 
-  (* print_title "Get one user..."; *)
-  (* print_title "with auth"; *)
-  (*       ignore (auth_test (fun auth -> *)
-  (*         (ApiUser.get_one ~auth:(Some auth) login)) auth); *)
+  print_title "Edit a user";
+  user := test (ApiUser.edit
+		  ~email:email
+		  ~firstname:firstname
+		  ~lastname:lastname
+		  ~gender:gender
+		  ~birthday:(Some birthday)
+		  ~avatar:(File picture)
+		  ~password:(Some (old_password, password))
+		  login
+  );
 
-  (* print_title "Logout (remove token)"; *)
-  (* ignore (match auth with *)
-  (*   | Error e -> impossible "it requires authentication that previously failed"; *)
-  (*     Error e *)
-  (*   | Result auth -> test (ApiAuth.logout auth)); *)
+  print_title "Get one user";
+  ignore (test (ApiUser.get_one login));
 
-  (* let auth = test (ApiAuth.login login password) in *)
+  print_title "Get users";
+  let users = test (ApiUser.get ()) in
 
-  (* print_title "Get one user..."; *)
-  (* print_title "with auth"; *)
-  (* ignore (auth_test (fun auth -> *)
-  (*   (ApiUser.get_one ~auth:(Some auth) login)) auth); *)
-  
-  (* exit 1; *)
-	
+  print_title "Get next page of users";
+  (match users with (* Check the previous page *)
+    | Error e -> impossible "the previous page failed"
+    | Result users ->
+      match Page.next users with (* Check if there is a next page *)
+        | None -> ApiDump.lprint_endline "It was the last page"
+        | Some nextpage ->
+          ignore (test ~f:pageprint (ApiUser.get ~page:nextpage ())));
+
+  print_title "Authenticate using a login and a password";
+  ignore (test (ApiAuth.login login password));
+
+  print_title "/!\\ Warning! OAuth authentication not tested!";
+
+  print_title "Get users after being authentified (info about following)";
+  ignore (test (ApiUser.get ()));
+
+  print_title "Get followers";
+  ignore (test (ApiUser.get_followers login));
+
+  print_title "Follow someone";
+  ignore (test (ApiUser.follow friend));
+
+  print_title "Get following";
+  ignore (test (ApiUser.get_followers login));
+
+  print_title "Unfollow someone";
+  ignore (test (ApiUser.unfollow friend));
+
+  print_title "Get following again to check previous unfollow";
+  ignore (test (ApiUser.get_followers login));
+
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Achievements tests                            #";
   ApiDump.lprint_endline "#################################################";
 
-(* PRIVATE *)
   print_title "Create an achievement with just a name and a description";
-  ignore (test (ApiAchievement.create ~name:achievement_name
+  ignore (test (ApiAchievement.create
+		  ~name:achievement_name
   		  ~description:achievement_description ()));
 
-  print_title "Create an achievement with all the requirements";
-  ignore (ApiAchievement.create ~name:achievement_name2
-  	    ~description:achievement_description2 ~badge:(File picture)
-  	    ~color:color ~secret:false ~tags:["usa"; "travel"]
-  	    ~location:(Some paris_location) ~radius:5 ());
-(* /PRIVATE *)
+  print_title "Create an achievement with all the fields";
+  let achievement = test
+    (ApiAchievement.create
+       ~name:achievement_name2
+       ~description:achievement_description2
+       ~icon:(File picture)
+       ~color:color
+       ~secret:false
+       ~tags:["usa"; "travel"]
+       ~location:(Some paris_location)
+       ~radius:5
+       ()) in
 
   print_title "Get achievements";
-  let achievements = test ~f:pageprint (ApiAchievement.get ~page:(Page.just_limit 2) ()) in
+  let achievements = test ~f:pageprint
+    (ApiAchievement.get ~page:(Page.just_limit 2) ()) in
 
   print_title "Get next page of achievements";
-  (match achievements with (* Check the previous page*)
+  (match achievements with (* Check the previous page *)
       | Error e -> impossible "the previous page failed"
     | Result achievements ->
       match Page.next achievements with (* Check if there is a next page *)
@@ -221,320 +269,95 @@ let _ =
   ignore (test ~f:pageprint (ApiAchievement.get ~location:(Some paris_location) ()));
 
   print_title "Get one achievement";
-  (match achievements with (* Check if the list exists *)
+  (match achievement with (* Check if the list exists *)
     | Error e -> impossible "the previous test (get achievements) failed"
-    | Result page ->
-      if page.Page.server_size == 0 (* Check if there are elements to get *)
-      then ApiDump.lprint_endline "No elements available"
-      else
-        let achievement_id =
-          (List.hd page.Page.items).ApiAchievement.info.Info.id in
+    | Result achievement ->
+      let achievement_id = achievement.ApiAchievement.info.Info.id in
+      ignore (test (ApiAchievement.get_one achievement_id));
 
-        ignore (test (ApiAchievement.get_one achievement_id));
+      print_title "Edit one achievement";
+      ignore (test
+		(ApiAchievement.edit
+		   ~description:achievement_description3
+		   ~icon:(File picture2)
+		   ~color:color2
+		   ~add_tags:["play"]
+		   ~del_tags:["usa"]
+		   achievement_id));
 
-        ignore (test (ApiAchievement.edit ~description:achievement_description3
-			~badge:(File picture2) ~color:color2 ~add_tags:["play"] ~del_tags:["usa"]
-			achievement_id));
+      print_title "Vote (approve)";
+      ignore (test (ApiAchievement.vote Vote.Approved achievement_id));
 
-	print_title "Delete this achievement";
-        ignore (test (ApiAchievement.delete achievement_id));
+      print_title "Change Vote (disapprove)";
+      ignore (test (ApiAchievement.vote Vote.Disapproved achievement_id));      
+
+      print_title "Cancel vote";
+      ignore (test (ApiAchievement.cancel_vote achievement_id));
+
+      print_title "Add a comment";
+      let comment = test
+	(ApiAchievement.add_comment ~content:(random_string 25) achievement_id) in
+
+      for i = 0 to Random.int 20 do
+	ignore (ApiAchievement.add_comment ~content:(random_string (Random.int 25)) achievement_id);
+      done;
+
+      (match comment with
+	| Error e -> impossible "the previous comment could not be added"
+	| Result comment ->
+	  let comment_id = comment.ApiComment.info.Info.id in
+	  print_title "Edit comment";
+	  ignore (test (ApiAchievement.edit_comment
+			  ~content:(comment.ApiComment.content ^ (random_string 10))
+			  comment_id));
+
+	  print_title "Vote Comment (approve)";
+	  ignore (test (ApiAchievement.vote_comment Vote.Approved comment_id));      
+
+	  print_title "Change Vote Comment (disapprove)";
+	  ignore (test (ApiAchievement.vote_comment Vote.Disapproved comment_id));      
+
+	  print_title "Cancel vote comment";
+	  ignore (test (ApiAchievement.cancel_vote_comment comment_id));
+
+	  print_title "Delete comment";
+	  ignore (test (ApiAchievement.delete_comment comment_id));
+      );
+
+      print_title "Get comments";
+      ignore (test (ApiAchievement.comments achievement_id));
+
+      print_title "Delete this achievement";
+      ignore (test (ApiAchievement.delete achievement_id));
   );
 
-(*   ApiDump.lprint_endline "\n"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-(*   ApiDump.lprint_endline "# Users tests (with auth)                       #"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Achievements statuses tests                   #";
+  ApiDump.lprint_endline "#################################################";
 
-(*   print_title "Get users"; *)
-(*   let users = auth_test (fun auth -> *)
-(*     ApiUser.get ~auth:auth ~term:["th"] ()) auth in *)
+  ApiDump.lprint_endline "No test";
 
-(*   print_title "Get one user..."; *)
-(*   (match users with (\* Check if the list exists *\) *)
-(*     | Error e -> impossible "the previous tests failed" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-(*       then ApiDump.lprint_endline "No elements available" *)
-(*       else *)
-(*         let user_id = (List.hd page.Page.items).ApiUser.login in *)
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# User Activities tests                         #";
+  ApiDump.lprint_endline "#################################################";
 
-(*   print_title "with auth"; *)
-(*         ignore (auth_test (fun auth -> *)
-(*           (ApiUser.get_one ~auth:(Some auth) user_id)) auth); *)
+  ApiDump.lprint_endline "No test";
 
-(*   print_title "without auth"; *)
-(*         ignore (test (ApiUser.get_one user_id)); ()); *)
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Notifications tests                           #";
+  ApiDump.lprint_endline "#################################################";
 
-(* (\* PRIVATE *\) *)
-(*   ApiDump.lprint_endline "\n"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-(*   ApiDump.lprint_endline "# Roles tests                                   #"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
+  ApiDump.lprint_endline "No test";
 
-(*   ApiDump.lprint_endline "No test"; *)
-(* (\* /PRIVATE *\) *)
+  ApiDump.lprint_endline "\n";
+  ApiDump.lprint_endline "#################################################";
+  ApiDump.lprint_endline "# Logout                                        #";
+  ApiDump.lprint_endline "#################################################";
 
-(*   ApiDump.lprint_endline "\n"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-(*   ApiDump.lprint_endline "# Game Network tests                            #"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-
-(*   print_title "Add a user to my Game Network"; *)
-
-(*   (match users with (\* Check if the list exists *\) *)
-(*     | Error e -> impossible "the previous tests failed" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size < 2 (\* Check if there are elements to get *\) *)
-(*       then ApiDump.lprint_endline "No user to add" *)
-(*       else *)
-(*           let user_id = (List.nth page.Page.items 2).ApiUser.login in *)
-
-(*    ignore (auth_test (fun auth -> *)
-(*      ApiGameNetwork.add *)
-(*        ~auth:auth *)
-(*        user_id) auth); *)
-
-(*   print_title "Get following"; *)
-
-(*   print_title "with auth"; *)
-(*   ignore (auth_test (fun auth -> ApiGameNetwork.get_mine *)
-(*     ~auth:auth ()) auth); *)
-
-(*   print_title "without auth (and of someone else)"; *)
-(*   ignore (test (ApiGameNetwork.get user_id)); *)
-
-
-(*   print_title "Get followers..."; *)
-
-(*   print_title "with auth"; *)
-(*   ignore (auth_test (fun auth -> ApiGameNetwork.get_my_followers *)
-(*     ~auth:auth ()) auth); *)
-
-(*   print_title "without auth (and of someone else)"; *)
-(*   ignore (test (ApiGameNetwork.get_followers user_id)); *)
-
-(*   ); *)
-
-
-(*   ApiDump.lprint_endline "\n"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-(*   ApiDump.lprint_endline "# Achievements statuses tests                   #"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-
-(*   print_title "Create an achievement status"; *)
-(*   (match achievements with (\* Check if some achievements exists *\) *)
-(*     | Error e -> impossible "previously failed to get achievements" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-(*       then ApiDump.lprint_endline "there's no achievement available" *)
-(*       else *)
-(*         let achievement_id = *)
-(*           (List.hd page.Page.items).ApiAchievement.info.Info.id in *)
-(*         ignore (auth_test (fun auth -> *)
-(*           ApiAchievementStatus.create ~auth:auth *)
-(*             ~achievement:achievement_id *)
-(*             ~status:Status.Objective *)
-(*             ~message:message ()) auth)); *)
-
-(*   print_title "Get my objectives ordered by name limit 2 with auth"; *)
-(*   let achievements_statuses = *)
-(*     auth_test ~f:pageprint (fun auth -> *)
-(*       ApiAchievementStatus.get *)
-(*         ~req:(Auth auth) *)
-(*         ~page:(0, 2, Some (Page.Alphabetic, Page.Desc)) *)
-(*         ~status:(Some Status.Objective) *)
-(*         login) auth in *)
-
-(*   print_title "Get one achievement status..."; *)
-(*   (match achievements_statuses with (\* Check if the list exists *\) *)
-(*     | Error e -> impossible "the previous tests failed" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-(*       then ApiDump.lprint_endline "there's no elements available" *)
-(*       else *)
-(*         (match user with *)
-(*           | Error e -> impossible "the user has not been created" *)
-(*           | Result user -> *)
-(*             let achievement_status_id = *)
-(*               (List.hd page.Page.items).ApiAchievementStatus.info.Info.id *)
-(*             (\* and user_id = user.ApiUser.login *\) in *)
-
-(*   print_title "with auth"; *)
-(*             ignore (auth_test (fun auth -> *)
-(*               ApiAchievementStatus.get_one ~req:(Auth auth) *)
-(*                 achievement_status_id) auth); *)
-
-(* (\*  print_title "with lang"; *)
-(*             ignore (test (ApiAchievementStatus.get_one ~req:(Lang lang) *)
-(*                             user_id achievement_status_id)); *\) *)
-(*         )); *)
-
-(*   (\* print_title "Unlock this ojective + add pictures + remove message"; *\) *)
-(*   (\*           ignore (auth_test (fun auth -> *\) *)
-(*   (\*             ApiAchievementStatus.edit ~auth:auth *\) *)
-(*   (\*               ~status:(Some ApiAchievementStatus.Status.Achieved) *\) *)
-(*   (\*               ~message:(Some "") *\) *)
-(*   (\*               (\\* ~add_medias:[picture; picture2] *\\) *\) *)
-(*   (\*               achievement_status_id) auth); *\) *)
-(*   (\*       )); *\) *)
-
-(*    print_title "Approve an achievement status"; *)
-(*   (match achievements_statuses with (\* Check if the list exists *\) *)
-(*     | Error e -> impossible "the previous tests failed" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-(*       then ApiDump.lprint_endline "there's no elements available" *)
-(*       else *)
-(*         (match user with *)
-(*           | Error e -> impossible "the user has not been created" *)
-(*           | Result user -> *)
-(*             let achievement_status_id = *)
-(*               (List.hd page.Page.items).ApiAchievementStatus.info.Info.id *)
-(*             and user_id = user.ApiUser.login in *)
-
-(*             ignore (auth_test (fun auth -> *)
-(*               ApiAchievementStatus.approve ~auth:auth *)
-(* (\* PRIVATE *\) *)
-(*             ~approver:user_id *)
-(* (\* /PRIVATE *\) *)
-(*          achievement_status_id) auth) *)
-(*             )); *)
-
-(*  ApiDump.lprint_endline "\n"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-(*   ApiDump.lprint_endline "# Achievement statuses comments tests           #"; *)
-(*   ApiDump.lprint_endline "#################################################"; *)
-
-(*   print_title "Create an achievement status comment"; *)
-(*   (match achievements_statuses with (\* Check if some achievements statuses exist *\) *)
-(*     | Error e -> impossible "previously failed to get achievements statuses" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-(*       then ApiDump.lprint_endline "there's no achievement status available" *)
-(*       else *)
-(*         let achievement_status_id = *)
-(*           (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in *)
-(*         ignore (auth_test (fun auth -> *)
-(*           ApiComment.create ~auth:auth *)
-(*             ~content:comment_description *)
-(*             ~medias:[picture; picture2] *)
-(* 	    achievement_status_id) auth)); *)
-
-(*   print_title "Get my comments ordered by name limit 2 with auth"; *)
-(*   let _ = *)
-(*       (match achievements_statuses with *)
-(*     | Error e -> impossible "previously failed to get achievements statuses" *)
-(*     | Result page -> *)
-(*       if page.Page.server_size == 0 *)
-(*       then ApiDump.lprint_endline "there's no achievement status available" *)
-(*       else *)
-(*           let achievement_status_id = *)
-(*               (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in *)
-(*         ignore (test ~f:pageprint (ApiComment.get achievement_status_id))) in *)
-
-(*  print_title "Get one achievement status comment";
-  (match achievements_statuses_comments with (* Check if the list exists *)
-    | Error e -> impossible "the previous tests failed"
-    | Result page ->
-            if page.Page.server_size == 0 (* Check if there are elements to get *)
-      then ApiDump.lprint_endline "there are no elements available"
-      else
-          (match user with
-          | Error e -> impossible "the user has not been created"
-          | Result user ->
-                  let achievement_status_comment_id =
-                      (List.hd page.Page.items).ApiComment.info.Info.id in
-
-        print_title "with auth";
-        ignore (auth_test (fun auth ->
-            ApiComment.get_comment ~req:(Auth auth)
-            user_id achievement_status_id) auth);
-
-        print_title "with lang";
-            ignore (test (ApiComment.get_comment ~req:(Lang lang)
-            achievement_status_comment_id user_id));
-
-            ));
-
-
-print_title "approve an achievement status";
-(match achievements_statuses_comments with
-    | Error e -> impossible "previously failed to get achievements statuses"
-    | Result page ->
-            if page.Page.server_size == 0
-      then ApiDump.lprint_endline "there's no achievement status comment available"
-      else
-          let achievement_status_comment_id =
-              (List.hd page.Page.items).ApiComment.info.Info.id in
-          ignore (auth_test (fun auth ->
-              ApiComment.approve
-    ~auth:auth
-(* PRIVATE *)
-    ~approver:login
-(* /PRIVATE *)
-    achievement_status_comment_id login)
-auth));
-*)
-
-  (* ApiDump.lprint_endline "\n"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Playground tests                              #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-
-  (* print_title "Get Playground"; *)
-  (* print_title "with auth"; *)
-  (* auth_test (fun auth -> *)
-  (*   ApiPlayground.get ~auth:(Some auth) login) auth; *)
-  (* print_title "without auth"; *)
-  (* test (ApiPlayground.get login); *)
-
-  (* ApiDump.lprint_endline "\n"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Feed tests                                    #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-
-  (* ApiDump.lprint_endline "No test"; *)
-
-  (* ApiDump.lprint_endline "\n"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Notifications tests                           #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-
-  (* ApiDump.lprint_endline "No test"; *)
-
-  (* ApiDump.lprint_endline "\n"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# News tests                                    #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-
-  (* ApiDump.lprint_endline "No test"; *)
-
-  (* ApiDump.lprint_endline "\n"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Client Errors tests                           #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-
-  (* print_title "Invalid file format"; *)
-  (* (match achievements_statuses with (\* Check if the list exists *\) *)
-  (*   | Error e -> impossible "the previous achievement_status tests failed" *)
-  (*   | Result page -> *)
-  (*     if page.Page.server_size == 0 (\* Check if there are elements to get *\) *)
-  (*     then ApiDump.lprint_endline "there's no elements available" *)
-  (*     else *)
-  (*       let achievement_status_id = *)
-  (*         (List.hd page.Page.items).ApiAchievementStatus.info.Info.id in *)
-  (*       ignore (auth_test ~t:true (fun auth -> *)
-  (*         ApiAchievementStatus.edit ~auth:auth *)
-  (*           ~add_medias:[(["hack.sh"], "beurp")] achievement_status_id) auth)); *)
-
-  (* ApiDump.lprint_endline "#################################################"; *)
-  (* ApiDump.lprint_endline "# Logout                                        #"; *)
-  (* ApiDump.lprint_endline "#################################################"; *)
-
-  (* print_title "Logout (remove token)"; *)
-  (* ignore (match auth with *)
-  (*   | Error e -> impossible "it requires authentication that previously failed"; *)
-  (*     Error e *)
-  (*   | Result auth -> test (ApiAuth.logout auth)); *)
+  print_title "Logout (remove token)";
+  ignore (test (ApiAuth.logout ()));
 
   print_total ()

@@ -4,104 +4,78 @@
 (* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
 
-(* open ApiTypes *)
-(* open Network *)
+open ApiTypes
+open Network
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Type                                                                       *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Type                                                                       *)
+(* ************************************************************************** *)
 
-(* type t = *)
-(*     { *)
-(*       info           : Info.t; *)
-(*       mutable user   : ApiUser.t; *)
-(* (\* PRIVATE *\) *)
-(*       (\* ip             : ip; *\) *)
-(*       (\* user_agent     : string; *\) *)
-(* (\* /PRIVATE *\) *)
-(*       token          : token; *)
-(*       expiration     : DateTime.t; *)
-(*       (\* facebook_token : string option; *\) *)
-(*     } *)
+type t =
+    {
+      info           : Info.t;
+      mutable owner  : ApiUser.t;
+      token          : token;
+      expiration     : DateTime.t;
+    }
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Tools                                                                      *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(* Tools                                                                      *)
+(* ************************************************************************** *)
 
-(* let from_json content = *)
-(*   let open Yojson.Basic.Util in *)
-(*       { *)
-(*         info       = Info.from_json content; *)
-(*         user       = ApiUser.from_json (content |> member "user"); *)
-(* (\* PRIVATE *\) *)
-(*         (\* ip         = content |> member "ip" |> to_string; *\) *)
-(*         (\* user_agent = content |> member "user_agent" |> to_string; *\) *)
-(* (\* /PRIVATE *\) *)
-(*         token      = content |> member "token" |> to_string; *)
-(*         expiration = DateTime.of_string *)
-(*           (content |> member "expiration" |> to_string); *)
-(*         (\* facebook_token = content |> member "facebook_token" *\) *)
-(*         (\*   |> to_string_option; *\) *)
-(*       } *)
+let from_json content =
+  let open Yojson.Basic.Util in
+      {
+        info       = Info.from_json content;
+        owner       = ApiUser.from_json (content |> member "owner");
+        token      = content |> member "token" |> to_string;
+        expiration = DateTime.of_string
+          (content |> member "expiration" |> to_string);
+      }
 
-(* (\* Transform an API object returned by the login function into an api type *)
-(*    required by most of the API methods                                        *\) *)
-(* let auth_to_api auth = *)
-(*   Token auth.token *)
+(* ************************************************************************** *)
+(* API Methods                                                                *)
+(* ************************************************************************** *)
 
-(* let opt_auth_to_api = function *)
-(*   | Some auth -> Some (auth_to_api auth) *)
-(*   | None      -> None *)
+(* ************************************************************************** *)
+(* Login (create token)                                                       *)
+(* ************************************************************************** *)
 
-(* (\* ************************************************************************** *\) *)
-(* (\* API Methods                                                                *\) *)
-(* (\* ************************************************************************** *\) *)
+let login_ params =
+  let r = Api.go
+    ~rtype:POST
+    ~path:["tokens"]
+    ~post:(Network.PostList params)
+    from_json in
+  match r with
+    | Result auth -> ApiConf.auth_token := auth.token; r
+    | _ -> r
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Login (create token)                                                       *\) *)
-(* (\* ************************************************************************** *\) *)
+let login login password =
+  login_ [
+    ("login", login);
+    ("password", password);
+  ]
 
-(* todo auto set token in conf *)
-(* let login *)
-(* (\* PRIVATE *\) *)
-(*     ?(ip = "") *)
-(* (\* /PRIVATE *\) *)
-(*     login password = *)
-(*   Api.go *)
-(*     ~rtype:POST *)
-(*     ~path:["users"; login; "tokens"] *)
-(*     ~post:(Network.PostList *)
-(*              (Network.option_filter *)
-(*                 [("password", Some password); *)
-(* (\* PRIVATE *\) *)
-(*                  ("ip", Some ip) *)
-(* (\* /PRIVATE *\) *)
-(*                 ])) *)
-(*     from_json *)
+(* ************************************************************************** *)
+(* OAuth Login                                                                *)
+(* ************************************************************************** *)
 
-(* (\* ************************************************************************** *\) *)
-(* (\* OAuth                                                                      *\) *)
-(* (\* ************************************************************************** *\) *)
+let oauth oauth_provider oauth_token =
+  login_ [
+    ("oauth_provider", oauth_provider);
+    ("oauth_token", oauth_token)
+  ]
 
-(* let oauth provider token = *)
-(*   Api.go *)
-(*     ~rtype:POST *)
-(*     ~path:["oauth"; "external"] *)
-(*     ~post:(PostList [("site_name", "facebook"); *)
-(* 		     ("site_token", token)]) *)
-(*     from_json *)
+let facebook = oauth "facebook"
 
-(* let facebook = *)
-(*   oauth "facebook" *)
+(* ************************************************************************** *)
+(* Logout (delete token)                                                      *)
+(* ************************************************************************** *)
 
-(* (\* ************************************************************************** *\) *)
-(* (\* Logout (delete token)                                                      *\) *)
-(* (\* ************************************************************************** *\) *)
-
-(* let logout auth = *)
-(*   Api.go *)
-(*     ~rtype:DELETE *)
-(*     ~path:["users"; auth.user.ApiUser.info.Info.id; *)
-(*            "tokens"; auth.token] *)
-(*     Api.noop *)
+let logout ?(token = !ApiConf.auth_token) () =
+  Api.go
+    ~rtype:DELETE
+    ~path:["tokens"; token]
+    Api.noop
 

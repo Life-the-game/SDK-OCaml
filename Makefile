@@ -16,13 +16,12 @@ SRC		=	\
 			\
 			apiMedia.ml \
 			apiUser.ml \
+			apiComment.ml \
 			apiAuth.ml \
 			apiAchievement.ml \
 			apiAchievementStatus.ml \
-			apiComment.ml \
 			apiActivity.ml \
 			apiFeed.ml \
-			apiGameNetwork.ml \
 			apiRoles.ml \
 			\
 
@@ -33,13 +32,12 @@ SRCI		=	\
 			\
 			apiMedia.mli \
 			apiUser.mli \
+			apiComment.mli \
 			apiAuth.mli \
 			apiAchievement.mli \
 			apiAchievementStatus.mli \
-			apiComment.mli \
 			apiActivity.mli \
 			apiFeed.mli \
-			apiGameNetwork.mli \
 			apiRoles.mli \
 			\
 
@@ -54,7 +52,7 @@ VERSION		=	1.0.0
 FLAGS		=	-linkpkg
 
 CMO		=	$(SRC:.ml=.cmo)
-yCMI		=	$(SRC:.ml=.cmi)
+CMI		=	$(SRC:.ml=.cmi)
 
 COMPILER	=	ocamlc
 DOCCOMPILER	=	ocamldoc

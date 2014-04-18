@@ -21,9 +21,10 @@ type t =
     {
       info               : Info.t;
       vote               : Vote.t;
+      comments           : int;
       name               : string;
       description        : string option;
-      badge              : ApiMedia.Picture.t option;
+      icon               : ApiMedia.Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
@@ -37,7 +38,6 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
-(** Get Achievements                                                          *)
 val get :
   ?page:Page.parameters
   -> ?terms:string list
@@ -45,16 +45,12 @@ val get :
   -> ?location:Location.parameters option
   -> unit -> t Page.t Api.t
 
-(** Get one Achievement                                                       *)
 val get_one : id -> t Api.t
 
-(* PRIVATE *)
-
-(** Create a new Achievement                                                  *)
 val create :
   name:string
   -> description:string
-  -> ?badge:either_file
+  -> ?icon:either_file
   -> ?color:color
   -> ?secret:bool
   -> ?tags:string list
@@ -62,20 +58,35 @@ val create :
   -> ?radius:int
   -> unit -> t Api.t
 
-(** Edit an Achievement                                                       *)
 val edit :
   ?name:string
   -> ?description:string
-  -> ?badge:either_file
+  -> ?icon:either_file
   -> ?color:color
   -> ?secret:bool option
   -> ?add_tags:string list
   -> ?del_tags:string list
   -> id -> t Api.t
 
+(* PRIVATE *)
+
 val delete : id -> unit Api.t
 
 (* /PRIVATE *)
+
+(** {6 Vote}                                                                  *)
+
+val vote : Vote.vote -> id -> t Api.t
+val cancel_vote : id -> t Api.t
+
+(** {6 Comments}                                                              *)
+
+val comments       : ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
+val add_comment    : content:string -> id -> ApiComment.t Api.t
+val edit_comment   : content:string -> id -> ApiComment.t Api.t
+val delete_comment : id -> unit Api.t
+val vote_comment   : Vote.vote -> id -> ApiComment.t Api.t
+val cancel_vote_comment : id -> ApiComment.t Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

@@ -22,9 +22,10 @@ type t =
     {
       info               : Info.t;
       vote               : Vote.t;
+      comments           : int;
       name               : string;
       description        : string option;
-      badge              : ApiMedia.Picture.t option;
+      icon               : ApiMedia.Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
@@ -43,9 +44,10 @@ let rec from_json c =
       {
         info               = Info.from_json c;
 	vote               = Vote.from_json c;
+	comments           = c |> member "comments" |> ApiTypes.to_int_option;
         name               = c |> member "name" |> to_string;
         description        = c |> member "description" |> to_string_option;
-        badge              = (c |> member "badge"
+        icon              = (c |> member "icon"
                                 |> to_option ApiMedia.Picture.from_json);
         color              = c |> member "color" |> to_string_option;
         tags               = ApiTypes.convert_each (c |> member "tags") to_string;
@@ -91,13 +93,11 @@ let get_one id =
     ~path:["achievements"; id_to_string id]
     from_json
 
-(* PRIVATE *)
-
 (* ************************************************************************** *)
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~name ~description ?(badge = NoFile) ?(color = "")
+let create ~name ~description ?(icon = NoFile) ?(color = "")
     ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) () =
   let radius = if radius > 0 then string_of_int radius else ""
   and location = match location with
@@ -106,7 +106,7 @@ let create ~name ~description ?(badge = NoFile) ?(color = "")
     Network.empty_filter
       [("name", name);
        ("description", description);
-       ("badge", match badge with FileUrl url -> url | _ -> "");
+       ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
        ("secret", if secret then "1" else "0");
        ("tags", Network.list_parameter tags);
@@ -115,7 +115,7 @@ let create ~name ~description ?(badge = NoFile) ?(color = "")
       ] in
   let post =
     Network.PostMultiPart
-      (post_parameters, Network.files_filter [("badge", badge)],
+      (post_parameters, Network.files_filter [("icon", icon)],
       ApiMedia.Picture.checker) in
   Api.go
     ~auth_required:true
@@ -128,13 +128,13 @@ let create ~name ~description ?(badge = NoFile) ?(color = "")
 (* Edit an Achievement                                                        *)
 (* ************************************************************************** *)
 
-let edit ?(name = "") ?(description = "") ?(badge = NoFile) ?(color = "")
+let edit ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
     ?(secret = None) ?(add_tags = []) ?(del_tags = []) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);
        ("description", description);
-       ("badge", match badge with FileUrl url -> url | _ -> "");
+       ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
        ("secret", match secret with Some b -> string_of_bool b | None -> "");
        ("add_tags", Network.list_parameter add_tags);
@@ -142,7 +142,7 @@ let edit ?(name = "") ?(description = "") ?(badge = NoFile) ?(color = "")
       ] in
   let post =
     Network.PostMultiPart
-      (post_parameters, Network.files_filter [("badge", badge)],
+      (post_parameters, Network.files_filter [("icon", icon)],
        ApiMedia.Picture.checker) in
   Api.go
     ~auth_required:true
@@ -150,6 +150,8 @@ let edit ?(name = "") ?(description = "") ?(badge = NoFile) ?(color = "")
     ~path:["achievements"; id_to_string id]
     ~post:post
     from_json
+
+(* PRIVATE *)
 
 (* ************************************************************************** *)
 (* Delete an Achievement                                                      *)
@@ -163,3 +165,45 @@ let delete id =
     Api.noop
 
 (* /PRIVATE *)
+
+(* ************************************************************************** *)
+(* Vote                                                                       *)
+(* ************************************************************************** *)
+
+let vote vote id =
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:["achievements"; id_to_string id; "vote"]
+    ~post:(PostList [("vote", Vote.to_string vote)])
+    from_json
+
+let cancel_vote id =
+  Api.go
+    ~auth_required:true
+    ~rtype:DELETE
+    ~path:["achievements"; id_to_string id; "vote"]
+    from_json
+
+(* ************************************************************************** *)
+(* Comments                                                                   *)
+(* ************************************************************************** *)
+
+let comments ?(page = Page.default_parameters) id =
+  Api.go
+    ~path:["achievements"; id_to_string id; "comments"]
+    ~page:(Some page)
+    (Page.from_json ApiComment.from_json)
+
+let add_comment ~content id =
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:["achievements"; id_to_string id; "comments"]
+    ~post:(PostList [("content", content)])
+    ApiComment.from_json
+
+let edit_comment = ApiComment.edit
+let delete_comment = ApiComment.delete
+let vote_comment = ApiComment.vote
+let cancel_vote_comment = ApiComment.cancel_vote

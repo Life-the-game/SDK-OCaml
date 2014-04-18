@@ -33,6 +33,7 @@ val convert_each :
   -> 'a list
 
 val to_int_option : Yojson.Basic.json -> int
+val to_string_option : Yojson.Basic.json -> string
 
 (* ************************************************************************** *)
 (** {3 Explicit types for parameters}                                         *)
@@ -41,6 +42,7 @@ val to_int_option : Yojson.Basic.json -> int
 type id       = int
 val id_to_string : id -> string
 val id_of_string : string -> id
+
 type login    = string
 type password = string
 type email    = string
@@ -48,9 +50,13 @@ type url      = string
 type token    = string
 type color    = string
 type mimetype = string
-(* PRIVATE *)
-type ip       = string
-(* /PRIVATE *)
+
+type oauth_provider = string
+type oauth_token    = token
+
+type either =
+  | Password of password
+  | OAuth of (oauth_provider * oauth_token)
 
 type parameters = (string (* key *) * string (* value *)) list
 
