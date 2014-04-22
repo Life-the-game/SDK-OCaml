@@ -33,3 +33,7 @@ val go :
     not return anything (unit)                                               *)
 val noop : Yojson.Basic.json -> unit
 
+(** For resources that can be voted                                          *)
+val vote : string -> (Yojson.Basic.json -> 'a) -> id -> Vote.vote -> 'a t
+val cancel_vote : string -> (Yojson.Basic.json -> 'a) -> id -> 'a t
+

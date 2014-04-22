@@ -170,39 +170,15 @@ let delete id =
 (* Vote                                                                       *)
 (* ************************************************************************** *)
 
-let vote vote id =
-  Api.go
-    ~auth_required:true
-    ~rtype:POST
-    ~path:["achievements"; id_to_string id; "vote"]
-    ~post:(PostList [("vote", Vote.to_string vote)])
-    from_json
-
-let cancel_vote id =
-  Api.go
-    ~auth_required:true
-    ~rtype:DELETE
-    ~path:["achievements"; id_to_string id; "vote"]
-    from_json
+let vote = Api.vote "achievements" from_json
+let cancel_vote = Api.cancel_vote "achievements" from_json
 
 (* ************************************************************************** *)
 (* Comments                                                                   *)
 (* ************************************************************************** *)
 
-let comments ?(page = Page.default_parameters) id =
-  Api.go
-    ~path:["achievements"; id_to_string id; "comments"]
-    ~page:(Some page)
-    (Page.from_json ApiComment.from_json)
-
-let add_comment ~content id =
-  Api.go
-    ~auth_required:true
-    ~rtype:POST
-    ~path:["achievements"; id_to_string id; "comments"]
-    ~post:(PostList [("content", content)])
-    ApiComment.from_json
-
+let comments = ApiComment.get "achievements"
+let add_comment = ApiComment.create "achievements"
 let edit_comment = ApiComment.edit
 let delete_comment = ApiComment.delete
 let vote_comment = ApiComment.vote

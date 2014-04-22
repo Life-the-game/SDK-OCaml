@@ -5,6 +5,7 @@
 (* ************************************************************************** *)
 
 include ApiTypes
+open Network
 
 (* ************************************************************************** *)
 (* Curl Connection                                                            *)
@@ -55,7 +56,9 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
 
   let parameters_to_string parameters =
     let str =
-      let f = (fun f (s, v) -> f ^ "&" ^ s ^ "=" ^ v) in
+      let f = (fun f (s, v) ->
+	if s = "" || v = "" then f
+	else f ^ "&" ^ s ^ "=" ^ v) in
       List.fold_left  f "" parameters in
     if (String.length str) = 0 then str
     else Str.string_after str 1 (* remove last & *) in
@@ -203,3 +206,17 @@ let go
 
 let noop _ = ()
 
+let vote resource from_json id vote =
+  go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:[resource; id_to_string id; "vote"]
+    ~post:(PostList [("vote", Vote.to_string vote)])
+    from_json
+
+let cancel_vote resource from_json id =
+  go
+    ~auth_required:true
+    ~rtype:DELETE
+    ~path:[resource; id_to_string id; "vote"]
+    from_json

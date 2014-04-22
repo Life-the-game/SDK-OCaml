@@ -37,6 +37,28 @@ let from_json c =
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Get comments                                                               *)
+(* ************************************************************************** *)
+
+let get resource ?(page = Page.default_parameters) id =
+  Api.go
+    ~path:[resource; id_to_string id; "comments"]
+    ~page:(Some page)
+    (Page.from_json from_json)
+
+(* ************************************************************************** *)
+(* Add a comment                                                              *)
+(* ************************************************************************** *)
+
+let create resource ~content id =
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:[resource; id_to_string id; "comments"]
+    ~post:(PostList [("content", content)])
+    from_json
+
+(* ************************************************************************** *)
 (* Edit a comment                                                             *)
 (* ************************************************************************** *)
 
@@ -63,17 +85,5 @@ let delete id =
 (* Vote                                                                       *)
 (* ************************************************************************** *)
 
-let vote vote id =
-  Api.go
-    ~auth_required:true
-    ~rtype:POST
-    ~path:["comments"; id_to_string id; "vote"]
-    ~post:(PostList [("vote", Vote.to_string vote)])
-    from_json
-
-let cancel_vote id =
-  Api.go
-    ~auth_required:true
-    ~rtype:DELETE
-    ~path:["comments"; id_to_string id; "vote"]
-    from_json
+let vote = Api.vote "comments" from_json
+let cancel_vote = Api.cancel_vote "comments" from_json

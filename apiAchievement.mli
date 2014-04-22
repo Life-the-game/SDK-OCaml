@@ -68,15 +68,11 @@ val edit :
   -> ?del_tags:string list
   -> id -> t Api.t
 
-(* PRIVATE *)
-
 val delete : id -> unit Api.t
-
-(* /PRIVATE *)
 
 (** {6 Vote}                                                                  *)
 
-val vote : Vote.vote -> id -> t Api.t
+val vote : id -> Vote.vote -> t Api.t
 val cancel_vote : id -> t Api.t
 
 (** {6 Comments}                                                              *)
@@ -85,7 +81,7 @@ val comments       : ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
 val add_comment    : content:string -> id -> ApiComment.t Api.t
 val edit_comment   : content:string -> id -> ApiComment.t Api.t
 val delete_comment : id -> unit Api.t
-val vote_comment   : Vote.vote -> id -> ApiComment.t Api.t
+val vote_comment   : id -> Vote.vote -> ApiComment.t Api.t
 val cancel_vote_comment : id -> ApiComment.t Api.t
 
 (* ************************************************************************** *)

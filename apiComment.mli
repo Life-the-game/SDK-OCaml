@@ -3,7 +3,7 @@
 (* Author: nox                                                                *)
 (* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
-(** User's commenting API methods                                             *)
+(** {e For developers only. Use comments methods in corresponding objects!}   *)
 
 open ApiTypes
 
@@ -23,14 +23,14 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
-(** Edit a comment *)
+val get : string -> ?page:Page.parameters -> id -> t Page.t Api.t
+val create : string -> content:string -> id -> t Api.t
 val edit : content:string -> id -> t Api.t
-
-(** Delete a comment *)
 val delete : id -> unit Api.t
 
-(** Vote *)
-val vote : Vote.vote -> id -> t Api.t
+(** {6 Vote}                                                                  *)
+
+val vote : id -> Vote.vote -> t Api.t
 val cancel_vote : id -> t Api.t
 
 (* ************************************************************************** *)
