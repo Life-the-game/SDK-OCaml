@@ -189,3 +189,15 @@ let thumbnail = function
   | Video v -> v.Video.thumbnail.Picture.url_small
   | ExternalVideo v -> v.ExternalVideo.thumbnail.Picture.url_small
   | _ -> ""
+
+let url = function
+  | Picture p -> p.Picture.url_big
+  | Video v -> v.Video.thumbnail.Picture.url_big
+  | ExternalVideo v -> v.ExternalVideo.thumbnail.Picture.url_big
+  | _ -> ""
+
+let id = function
+  | Picture p -> p.Picture.info.Info.id
+  | Video v -> v.Video.info.Info.id
+  | ExternalVideo v -> v.ExternalVideo.info.Info.id
+  | _ -> 0

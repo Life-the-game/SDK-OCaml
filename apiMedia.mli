@@ -88,3 +88,5 @@ type t =
 
 val from_json : Yojson.Basic.json -> t
 val thumbnail : t -> url
+val url       : t -> url
+val id        : t -> id
