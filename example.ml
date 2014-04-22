@@ -190,7 +190,7 @@ let _ =
   ignore (test (ApiUser.get_one login));
 
   print_title "Get users";
-  let users = test (ApiUser.get ()) in
+  let users = test ~f:pageprint (ApiUser.get ()) in
 
   print_title "Get next page of users";
   (match users with (* Check the previous page *)
@@ -207,22 +207,22 @@ let _ =
   print_title "/!\\ Warning! OAuth authentication not tested!";
 
   print_title "Get users after being authentified (info about following)";
-  ignore (test (ApiUser.get ()));
+  ignore (test ~f:pageprint (ApiUser.get ()));
 
   print_title "Get followers";
-  ignore (test (ApiUser.get_followers login));
+  ignore (test ~f:pageprint (ApiUser.get_followers login));
 
   print_title "Follow someone";
   ignore (test (ApiUser.follow friend));
 
   print_title "Get following";
-  ignore (test (ApiUser.get_followers login));
+  ignore (test ~f:pageprint (ApiUser.get_followers login));
 
   print_title "Unfollow someone";
   ignore (test (ApiUser.unfollow friend));
 
   print_title "Get following again to check previous unfollow";
-  ignore (test (ApiUser.get_followers login));
+  ignore (test ~f:pageprint (ApiUser.get_followers login));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -326,7 +326,7 @@ let _ =
       );
 
       print_title "Get comments";
-      ignore (test (ApiAchievement.comments achievement_id));
+      ignore (test ~f:pageprint (ApiAchievement.comments achievement_id));
 
       print_title "Delete this achievement";
       ignore (test (ApiAchievement.delete achievement_id));
@@ -406,14 +406,14 @@ let _ =
 	  );
 
 	  print_title "Get comments";
-	  ignore (test (ApiAchievementStatus.comments achievement_status_id));
+	  ignore (test ~f:pageprint (ApiAchievementStatus.comments achievement_status_id));
 
 	  print_title "Delete this achievement status";
 	  ignore (test (ApiAchievementStatus.delete achievement_status_id));
       );
 
       print_title "Get achievement statuses with achievements";
-      ignore (test (ApiAchievementStatus.get ~achievements:[achievement_id] ()));
+      ignore (test ~f:pageprint (ApiAchievementStatus.get ~achievements:[achievement_id] ()));
 
   );
 
@@ -430,7 +430,7 @@ let _ =
   );
 
   print_title "Get achievement statuses";
-  let achievement_statuses = test (ApiAchievementStatus.get ()) in
+  let achievement_statuses = test ~f:pageprint (ApiAchievementStatus.get ()) in
 
   print_title "Get next page of achievement statuses";
   (match achievement_statuses with (* Check the previous page *)
@@ -442,20 +442,39 @@ let _ =
           ignore (test ~f:pageprint (ApiAchievementStatus.get ~page:nextpage ())));
 
   print_title "Get achievement statuses with owners";
-  ignore (test (ApiAchievementStatus.get ~owners:[login] ()));
+  ignore (test ~f:pageprint (ApiAchievementStatus.get ~owners:[login] ()));
 
   print_title "Get all objectives";
-  ignore (test (ApiAchievementStatus.get ~statuses:[Status.Objective] ()));
+  ignore (test ~f:pageprint (ApiAchievementStatus.get ~statuses:[Status.Objective] ()));
 
   print_title "Get achievement statuses with terms (a)";
-  ignore (test (ApiAchievementStatus.get ~terms:["a"] ()));
+  ignore (test ~f:pageprint (ApiAchievementStatus.get ~terms:["a"] ()));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# User Activities tests                         #";
   ApiDump.lprint_endline "#################################################";
 
-  ApiDump.lprint_endline "No test";
+  print_title "Get all user activities (hot feed)";
+  let activities = test ~f:pageprint (ApiActivity.user ()) in
+
+  print_title "Get next page of activities";
+  (match activities with (* Check the previous page *)
+    | Error e -> impossible "the previous page failed"
+    | Result activities ->
+      match Page.next activities with (* Check if there is a next page *)
+        | None -> ApiDump.lprint_endline "It was the last page"
+        | Some nextpage ->
+          ignore (test ~f:pageprint (ApiActivity.user ~page:nextpage ())));
+
+  print_title "Get user activities of a user";
+  ignore (test ~f:pageprint (ApiActivity.user ~owners:[friend] ()));
+
+  print_title "Get user activities of a user";
+  ignore (test ~f:pageprint (ApiActivity.user ~owners:[login] ()));
+
+  print_title "Get feed";
+  ignore (test ~f:pageprint (ApiActivity.feed ()));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";

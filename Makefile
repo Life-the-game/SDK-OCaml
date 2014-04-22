@@ -21,7 +21,6 @@ SRC		=	\
 			apiAchievement.ml \
 			apiAchievementStatus.ml \
 			apiActivity.ml \
-			apiFeed.ml \
 			apiRoles.ml \
 			\
 
@@ -37,7 +36,6 @@ SRCI		=	\
 			apiAchievement.mli \
 			apiAchievementStatus.mli \
 			apiActivity.mli \
-			apiFeed.mli \
 			apiRoles.mli \
 			\
 

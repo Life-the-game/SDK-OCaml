@@ -3,49 +3,55 @@
 (* Author: db0 (db0company@gmail.com, http://db0.fr/)                         *)
 (* Latest Version is on GitHub: https://github.com/Life-the-game/SDK-OCaml    *)
 (* ************************************************************************** *)
-(** Playground API methods                                                    *)
+(** Activities API methods                                                    *)
 
-(* open ApiTypes *)
+open ApiTypes
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 Type}                                                                  *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(** {3 Type}                                                                  *)
+(* ************************************************************************** *)
 
-(* type activity = *)
-(*   | NetworkAddition     of ApiUser.t *)
-(*   | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list) *)
-(*   | AchievementUnlocked of ApiAchievementStatus.t *)
-(*   | NewObjective        of ApiAchievementStatus.t *)
-(*   | LevelReached        of int *)
-(*   | Other               of (string *)
-(* 			    * ApiUser.t list *)
-(* 			    * ApiAchievementStatus.t list *)
-(* 			    * ApiMedia.t list *)
-(* 			    * string option) *)
-(*   | Failure             of (string * activity) *)
+type user_activity =
+  | NetworkAddition     of ApiUser.t
+  | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
+  | AchievementUnlocked of ApiAchievementStatus.t
+  | NewObjective        of ApiAchievementStatus.t
+  | LevelReached        of int
+  | Other               of (string
+			    * ApiUser.t list
+			    * ApiAchievementStatus.t list
+			    * ApiMedia.t list
+			    * string option)
+  | Failure             of (string * user_activity)
 
-(* type t = { *)
-(*   info : Info.t; *)
-(*   owner : ApiUser.t; *)
-(*   stype : string; *)
-(*   template : string; *)
-(*   activity : activity; *)
-(* } *)
+type ('a, 'b) t = {
+  info : Info.t;
+  owner : 'a;
+  stype : string;
+  template : string;
+  activity : 'b;
+}
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 API Methods}                                                           *\) *)
-(* (\* ************************************************************************** *\) *)
+type user = (ApiUser.t, user_activity) t
 
-(* (\** Get activities                                                            *\) *)
-(* val get : *)
-(*   ?auth:auth option *)
-(*   -> ?page:Page.parameters *)
-(*   -> ?activity_type:string list *)
-(*   -> id -> (t Page.t Api.t) *)
+(* ************************************************************************** *)
+(** {3 API Methods}                                                           *)
+(* ************************************************************************** *)
 
+(** Get user activities                                                       *)
+val user :
+  ?page:Page.parameters
+  -> ?owners:login list
+  -> unit -> user Page.t Api.t
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 Tools}                                                                 *\) *)
-(* (\* ************************************************************************** *\) *)
+val feed :
+  ?page:Page.parameters
+  -> unit -> user Page.t Api.t
 
-(* val from_json : Yojson.Basic.json -> t *)
+val delete_user : id -> unit Api.t
+
+(* ************************************************************************** *)
+(** {3 Tools}                                                                 *)
+(* ************************************************************************** *)
+
+val user_from_json : Yojson.Basic.json -> user
