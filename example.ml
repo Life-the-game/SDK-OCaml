@@ -16,7 +16,7 @@ let _ =
       verbose := false;
       (Arg.parse
          [("-u", Arg.String (fun url -> base_url := url),
-	   "the URL of the web service")]
+           "the URL of the web service")]
          (fun _ -> ()) "./example [-u url]")
 
 (* ************************************************************************** *)
@@ -92,6 +92,7 @@ and color2 = "#0f0f0f"
 and message = random_string 30
 and picture = (["example.png"], "image/png")
 and picture2 = (["example2.jpg"], "image/jpeg")
+and picture3 = (["example3.png"], "image/png")
 and achievement_name = random_string 15
 and achievement_name2 = random_string 15
 and achievement_description = random_string 30
@@ -147,18 +148,18 @@ let _ =
   let user = ref
     (test (ApiUser.create
               ~login:login
-	      ~email:("prefix" ^ email)
+              ~email:("prefix" ^ email)
               ~lang:lang
-	      ~firstname:(random_string 10)
-	      ~lastname:(random_string 10)
-	      ~gender:Gender.Male
-	      ~birthday:(Some birthday2)
-	      ~avatar:(File picture2)
+              ~firstname:(random_string 10)
+              ~lastname:(random_string 10)
+              ~gender:Gender.Male
+              ~birthday:(Some birthday2)
+              ~avatar:(File picture2)
               (Password old_password))) in
 
   print_title "Create a user with just the minimum";
   ignore (test (ApiUser.create ~login:friend ~email:(friend ^ "@email.com")
-		  (Password password)));
+                  (Password password)));
 
   print_title "/!\\ Warning! OAuth user creation not tested!";
 
@@ -166,8 +167,8 @@ let _ =
     (* Create a bunch of users that will follow the main user *)
     let tmpuser = (random_string 5) in
     ignore (ApiUser.create ~login:tmpuser
-	      ~email:(tmpuser ^ "@email.com")
-	      (Password password));
+              ~email:(tmpuser ^ "@email.com")
+              (Password password));
     ignore (ApiAuth.login tmpuser password);
     ignore (ApiUser.follow login);
     ignore (ApiAuth.logout ());
@@ -175,14 +176,14 @@ let _ =
 
   print_title "Edit a user";
   user := test (ApiUser.edit
-		  ~email:email
-		  ~firstname:firstname
-		  ~lastname:lastname
-		  ~gender:gender
-		  ~birthday:(Some birthday)
-		  ~avatar:(File picture)
-		  ~password:(Some (old_password, password))
-		  login
+                  ~email:email
+                  ~firstname:firstname
+                  ~lastname:lastname
+                  ~gender:gender
+                  ~birthday:(Some birthday)
+                  ~avatar:(File picture)
+                  ~password:(Some (old_password, password))
+                  login
   );
 
   print_title "Get one user";
@@ -230,8 +231,8 @@ let _ =
 
   print_title "Create an achievement with just a name and a description";
   ignore (test (ApiAchievement.create
-		  ~name:achievement_name
-  		  ~description:achievement_description ()));
+                  ~name:achievement_name
+                    ~description:achievement_description ()));
 
   print_title "Create an achievement with all the fields";
   let achievement = test
@@ -252,7 +253,7 @@ let _ =
 
   print_title "Get next page of achievements";
   (match achievements with (* Check the previous page *)
-      | Error e -> impossible "the previous page failed"
+    | Error e -> impossible "the previous page failed"
     | Result achievements ->
       match Page.next achievements with (* Check if there is a next page *)
         | None -> ApiDump.lprint_endline "It was the last page"
@@ -277,51 +278,51 @@ let _ =
 
       print_title "Edit one achievement";
       ignore (test
-		(ApiAchievement.edit
-		   ~description:achievement_description3
-		   ~icon:(File picture2)
-		   ~color:color2
-		   ~add_tags:["play"]
-		   ~del_tags:["usa"]
-		   achievement_id));
+                (ApiAchievement.edit
+                   ~description:achievement_description3
+                   ~icon:(File picture2)
+                   ~color:color2
+                   ~add_tags:["play"]
+                   ~del_tags:["usa"]
+                   achievement_id));
 
       print_title "Vote (approve)";
-      ignore (test (ApiAchievement.vote Vote.Approved achievement_id));
+      ignore (test (ApiAchievement.vote achievement_id Vote.Approved));
 
       print_title "Change Vote (disapprove)";
-      ignore (test (ApiAchievement.vote Vote.Disapproved achievement_id));      
+      ignore (test (ApiAchievement.vote achievement_id Vote.Disapproved));
 
       print_title "Cancel vote";
       ignore (test (ApiAchievement.cancel_vote achievement_id));
 
       print_title "Add a comment";
       let comment = test
-	(ApiAchievement.add_comment ~content:(random_string 25) achievement_id) in
+        (ApiAchievement.add_comment ~content:(random_string 25) achievement_id) in
 
       for i = 0 to Random.int 20 do
-	ignore (ApiAchievement.add_comment ~content:(random_string (Random.int 25)) achievement_id);
+        ignore (ApiAchievement.add_comment ~content:(random_string (Random.int 25)) achievement_id);
       done;
 
       (match comment with
-	| Error e -> impossible "the previous comment could not be added"
-	| Result comment ->
-	  let comment_id = comment.ApiComment.info.Info.id in
-	  print_title "Edit comment";
-	  ignore (test (ApiAchievement.edit_comment
-			  ~content:(comment.ApiComment.content ^ (random_string 10))
-			  comment_id));
+        | Error e -> impossible "the previous comment could not be added"
+        | Result comment ->
+          let comment_id = comment.ApiComment.info.Info.id in
+          print_title "Edit comment";
+          ignore (test (ApiAchievement.edit_comment
+                          ~content:(comment.ApiComment.content ^ (random_string 10))
+                          comment_id));
 
-	  print_title "Vote Comment (approve)";
-	  ignore (test (ApiAchievement.vote_comment Vote.Approved comment_id));      
+          print_title "Vote Comment (approve)";
+          ignore (test (ApiAchievement.vote_comment comment_id Vote.Approved));
 
-	  print_title "Change Vote Comment (disapprove)";
-	  ignore (test (ApiAchievement.vote_comment Vote.Disapproved comment_id));      
+          print_title "Change Vote Comment (disapprove)";
+          ignore (test (ApiAchievement.vote_comment comment_id Vote.Disapproved));
 
-	  print_title "Cancel vote comment";
-	  ignore (test (ApiAchievement.cancel_vote_comment comment_id));
+          print_title "Cancel vote comment";
+          ignore (test (ApiAchievement.cancel_vote_comment comment_id));
 
-	  print_title "Delete comment";
-	  ignore (test (ApiAchievement.delete_comment comment_id));
+          print_title "Delete comment";
+          ignore (test (ApiAchievement.delete_comment comment_id));
       );
 
       print_title "Get comments";
@@ -336,7 +337,118 @@ let _ =
   ApiDump.lprint_endline "# Achievements statuses tests                   #";
   ApiDump.lprint_endline "#################################################";
 
-  ApiDump.lprint_endline "No test";
+  (match achievement with
+    | Error e -> impossible "the previous test (get achievement) failed"
+    | Result achievement ->
+      let achievement_id = achievement.ApiAchievement.info.Info.id in
+
+      print_title "Create an achievement status";
+      let achievement_status =
+        test (ApiAchievementStatus.create
+                ~achievement:achievement_id
+                ~status:Status.Objective
+                ~medias:[File picture; File picture2]
+                ()) in
+
+      (match achievement_status with
+	| Error e -> impossible "the previous test (create achievement status) failed"
+	| Result achievement_status ->
+	  let achievement_status_id = achievement_status.ApiAchievementStatus.info.Info.id in
+	  print_title "Edit an achievement status";
+	  ignore (test (ApiAchievementStatus.edit
+			  ~status:(Some Status.Unlocked)
+			  ~message:(random_string 20)
+			  ~add_medias:[File picture3]
+			  ~remove_medias:[ApiMedia.id (List.hd achievement_status.ApiAchievementStatus.medias)]
+			  achievement_status_id
+	  ));
+
+	  print_title "Get one achievement status";
+	  ignore (test (ApiAchievementStatus.get_one achievement_status_id));
+
+	  print_title "Vote (approve)";
+	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Approved));
+
+	  print_title "Change Vote (disapprove)";
+	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Disapproved));
+
+	  print_title "Cancel vote";
+	  ignore (test (ApiAchievementStatus.cancel_vote achievement_status_id));
+
+	  print_title "Add a comment";
+	  let comment = test
+            (ApiAchievementStatus.add_comment ~content:(random_string 25) achievement_status_id) in
+
+	  for i = 0 to Random.int 20 do
+            ignore (ApiAchievementStatus.add_comment ~content:(random_string (Random.int 25)) achievement_status_id);
+	  done;
+
+	  (match comment with
+            | Error e -> impossible "the previous comment could not be added"
+            | Result comment ->
+              let comment_id = comment.ApiComment.info.Info.id in
+              print_title "Edit comment";
+              ignore (test (ApiAchievementStatus.edit_comment
+                              ~content:(comment.ApiComment.content ^ (random_string 10))
+                              comment_id));
+
+              print_title "Vote Comment (approve)";
+              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Approved));
+
+              print_title "Change Vote Comment (disapprove)";
+              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Disapproved));
+
+              print_title "Cancel vote comment";
+              ignore (test (ApiAchievementStatus.cancel_vote_comment comment_id));
+
+              print_title "Delete comment";
+              ignore (test (ApiAchievementStatus.delete_comment comment_id));
+	  );
+
+	  print_title "Get comments";
+	  ignore (test (ApiAchievementStatus.comments achievement_status_id));
+
+	  print_title "Delete this achievement status";
+	  ignore (test (ApiAchievementStatus.delete achievement_status_id));
+      );
+
+      print_title "Get achievement statuses with achievements";
+      ignore (test (ApiAchievementStatus.get ~achievements:[achievement_id] ()));
+
+  );
+
+  (* Create a bunch of achievement statuses *)
+  (match achievements with
+    | Error e -> ()
+    | Result achievements ->
+      List.iter (fun achievement ->
+        ignore (ApiAchievementStatus.create
+		  ~achievement:achievement.ApiAchievement.info.Info.id
+		  ~status:(if Random.bool () then Status.Objective else Status.Unlocked)
+		  ())
+      ) achievements.Page.items
+  );
+
+  print_title "Get achievement statuses";
+  let achievement_statuses = test (ApiAchievementStatus.get ()) in
+
+  print_title "Get next page of achievement statuses";
+  (match achievement_statuses with (* Check the previous page *)
+    | Error e -> impossible "the previous page failed"
+    | Result achievement_statuses ->
+      match Page.next achievement_statuses with (* Check if there is a next page *)
+        | None -> ApiDump.lprint_endline "It was the last page"
+        | Some nextpage ->
+          ignore (test ~f:pageprint (ApiAchievementStatus.get ~page:nextpage ())));
+
+  print_title "Get achievement statuses with owners";
+  ignore (test (ApiAchievementStatus.get ~owners:[login] ()));
+
+  print_title "Get all objectives";
+  ignore (test (ApiAchievementStatus.get ~statuses:[Status.Objective] ()));
+
+  print_title "Get achievement statuses with terms (a)";
+  ignore (test (ApiAchievementStatus.get ~terms:["a"] ()));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";

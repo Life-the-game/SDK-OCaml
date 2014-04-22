@@ -5,92 +5,72 @@
 (* ************************************************************************** *)
 (** Achievement statuses API methods                                          *)
 
-(* open ApiTypes *)
+open ApiTypes
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 Type}                                                                  *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(** {3 Type}                                                                  *)
+(* ************************************************************************** *)
 
-(* type t = *)
-(*     { *)
-(*       info             : Info.t; *)
-(*       approvement      : Approvable.t; *)
-(*       owner            : ApiUser.t; *)
-(*       achievement      : ApiAchievement.t; *)
-(*       status           : Status.t; *)
-(*       message          : string option; *)
-(*       medias           : ApiMedia.t list; *)
-(*       url              : url; *)
-(*     } *)
+type t =
+    {
+      info             : Info.t;
+      vote             : Vote.t;
+      comments         : int;
+      owner            : ApiUser.t;
+      achievement      : ApiAchievement.t;
+      status           : Status.t;
+      message          : string option;
+      medias           : ApiMedia.t list;
+      url              : url;
+    }
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 API Methods}                                                           *\) *)
-(* (\* ************************************************************************** *\) *)
+(* ************************************************************************** *)
+(** {3 API Methods}                                                           *)
+(* ************************************************************************** *)
 
-(* (\** Search achievement statuses                                               *\) *)
-(* val search : *)
-(*   req:requirements *)
-(*   -> ?page:Page.parameters *)
-(*   -> ?owner:string *)
-(*   -> ?achievement:string *)
-(*   -> ?status:Status.t option *)
-(*   -> unit -> t ApiTypes.Page.t Api.t *)
+val get :
+  ?page:Page.parameters
+  -> ?owners: login list
+  -> ?achievements: id list
+  -> ?statuses:Status.t list
+  -> ?terms: string list
+  -> ?with_medias: bool option
+  -> unit -> t ApiTypes.Page.t Api.t
 
-(* (\** Get achievement statuses                                                  *\) *)
-(* val get : *)
-(*   req:requirements *)
-(*   -> ?page:Page.parameters *)
-(*   -> ?term: string list *)
-(*   -> ?achievements: id list *)
-(*   -> ?with_medias: bool option *)
-(*   -> ?status:Status.t option *)
-(*   -> id -> t ApiTypes.Page.t Api.t *)
+val get_one : id -> t Api.t
 
-(* (\** Get one achievement status                                                *\) *)
-(* val get_one : *)
-(*   req:requirements *)
-(*   -> id -> t Api.t *)
+val create :
+  achievement:id
+  -> status:Status.t
+  -> ?message:string
+  -> ?medias:either_file list
+  -> unit -> t Api.t
 
-(* (\** Create an achievement status                                              *\) *)
-(* val create : *)
-(*   auth:auth *)
-(*   -> achievement:id *)
-(*   -> status:Status.t *)
-(* (\* PRIVATE *\) *)
-(*   -> ?user: id option *)
-(* (\* /PRIVATE *\) *)
-(*   -> ?message:string *)
-(*   -> ?medias:file list *)
-(*   -> unit -> t Api.t *)
+val edit :
+  ?status:Status.t option
+  -> ?message:string
+  -> ?add_medias:either_file list
+  -> ?remove_medias:id list
+  -> id -> t Api.t
 
-(* (\** Edit an achievement status                                                *\) *)
-(* val edit : *)
-(*   auth:auth *)
-(*   -> ?status:Status.t option *)
-(*   -> ?message:string option *)
-(*   -> ?add_medias:file list *)
-(*   -> ?remove_medias:id list *)
-(*   -> id -> t Api.t *)
+val delete : id -> unit Api.t
 
-(* (\** Approve an achievement status                                             *\) *)
-(* val approve : *)
-(*   auth:auth *)
-(* (\* PRIVATE *\) *)
-(*   -> approver: id *)
-(* (\* /PRIVATE *\) *)
-(*   -> id -> unit Api.t *)
+(** {6 Vote}                                                                  *)
 
-(* (\** Disapprove an achievement status                                          *\) *)
-(* val disapprove : *)
-(*   auth:auth *)
-(* (\* PRIVATE *\) *)
-(*   -> disapprover: id *)
-(* (\* /PRIVATE *\) *)
-(*   -> id -> unit Api.t *)
+val vote : id -> Vote.vote -> t Api.t
+val cancel_vote : id -> t Api.t
 
+(** {6 Comments}                                                              *)
 
-(* (\* ************************************************************************** *\) *)
-(* (\** {3 Tools}                                                                 *\) *)
-(* (\* ************************************************************************** *\) *)
+val comments       : ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
+val add_comment    : content:string -> id -> ApiComment.t Api.t
+val edit_comment   : content:string -> id -> ApiComment.t Api.t
+val delete_comment : id -> unit Api.t
+val vote_comment   : id -> Vote.vote -> ApiComment.t Api.t
+val cancel_vote_comment : id -> ApiComment.t Api.t
 
-(* val from_json : Yojson.Basic.json -> t *)
+(* ************************************************************************** *)
+(** {3 Tools}                                                                 *)
+(* ************************************************************************** *)
+
+val from_json : Yojson.Basic.json -> t
