@@ -287,10 +287,10 @@ let _ =
                    achievement_id));
 
       print_title "Vote (approve)";
-      ignore (test (ApiAchievement.vote achievement_id Vote.Approved));
+      ignore (test (ApiAchievement.vote achievement_id Vote.Up));
 
       print_title "Change Vote (disapprove)";
-      ignore (test (ApiAchievement.vote achievement_id Vote.Disapproved));
+      ignore (test (ApiAchievement.vote achievement_id Vote.Down));
 
       print_title "Cancel vote";
       ignore (test (ApiAchievement.cancel_vote achievement_id));
@@ -313,10 +313,10 @@ let _ =
                           comment_id));
 
           print_title "Vote Comment (approve)";
-          ignore (test (ApiAchievement.vote_comment comment_id Vote.Approved));
+          ignore (test (ApiAchievement.vote_comment comment_id Vote.Up));
 
           print_title "Change Vote Comment (disapprove)";
-          ignore (test (ApiAchievement.vote_comment comment_id Vote.Disapproved));
+          ignore (test (ApiAchievement.vote_comment comment_id Vote.Down));
 
           print_title "Cancel vote comment";
           ignore (test (ApiAchievement.cancel_vote_comment comment_id));
@@ -367,10 +367,10 @@ let _ =
 	  ignore (test (ApiAchievementStatus.get_one achievement_status_id));
 
 	  print_title "Vote (approve)";
-	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Approved));
+	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Up));
 
 	  print_title "Change Vote (disapprove)";
-	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Disapproved));
+	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Down));
 
 	  print_title "Cancel vote";
 	  ignore (test (ApiAchievementStatus.cancel_vote achievement_status_id));
@@ -393,10 +393,10 @@ let _ =
                               comment_id));
 
               print_title "Vote Comment (approve)";
-              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Approved));
+              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Up));
 
               print_title "Change Vote Comment (disapprove)";
-              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Disapproved));
+              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Down));
 
               print_title "Cancel vote comment";
               ignore (test (ApiAchievementStatus.cancel_vote_comment comment_id));

@@ -15,7 +15,7 @@
     {- Requirements (Auth, Lang, ...) }
     {- Date & Time }
     {- Information Element }
-    {- Approvable elements }
+    {- Vote elements }
     {- List Pagination }
     {- Status }
     {- Gender }
@@ -181,7 +181,7 @@ module Info : INFO
 
 module type VOTE =
 sig
-  type vote = Approved | Disapproved
+  type vote = Up | Down
   type t =
       {
 	downvotes : int;

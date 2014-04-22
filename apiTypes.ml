@@ -307,7 +307,7 @@ end
 
 module type VOTE =
 sig
-  type vote = Approved | Disapproved
+  type vote = Up | Down
   type t =
       {
 	downvotes : int;
@@ -321,7 +321,7 @@ sig
 end
 module Vote : VOTE =
 struct
-  type vote = Approved | Disapproved
+  type vote = Up | Down
   type t =
       {
 	downvotes : int;
@@ -330,12 +330,12 @@ struct
 	vote      : vote option;
       }
   let to_string = function
-    | Approved     -> "upvoted"
-    | Disapproved  -> "downvoted"
+    | Up     -> "up"
+    | Down   -> "down"
   let of_string = function
-    | "upvoted"     -> Approved
-    | "downvoted"   -> Disapproved
-    | _             -> Approved
+    | "up"     -> Up
+    | "down"   -> Down
+    | _        -> Up
   let from_json c =
     let open Yojson.Basic.Util in
         {
