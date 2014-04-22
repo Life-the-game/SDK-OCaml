@@ -40,6 +40,7 @@ let error e =
     | NotAcceptable (mimetypes, languages) -> lprint_endline "  NotAcceptable";
       lprint_endline ("    Accept-media: " ^ (String.concat ", " mimetypes));
       lprint_endline ("    Accept-language: " ^ (String.concat ", " (List.map Lang.to_string languages)));
+    | InternalServerError -> lprint_endline "  InternalServerError"
     | NotImplemented -> lprint_endline "  NotImplemented"
     | Client str -> lprint_endline ("  Client-side: " ^ str)
     | Unknown code -> lprint_endline ("  Unknown Error " ^ (string_of_int code))

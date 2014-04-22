@@ -328,6 +328,7 @@ type error =
   | NotFound
   | NotAllowed
   | NotAcceptable of not_acceptable
+  | InternalServerError
   | NotImplemented
   | Client of string
   | Unknown of Network.code

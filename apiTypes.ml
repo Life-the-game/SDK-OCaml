@@ -717,6 +717,7 @@ type error =
   | NotFound
   | NotAllowed
   | NotAcceptable of not_acceptable
+  | InternalServerError
   | NotImplemented
   | Client of string
   | Unknown of Network.code
@@ -745,6 +746,7 @@ let error_from_json code c =
     | 404 -> NotFound
     | 405 -> NotAllowed
     | 406 -> NotAcceptable (not_acceptable_from_json ())
+    | 500 -> InternalServerError
     | 501 -> NotImplemented
     | code -> Unknown code
 

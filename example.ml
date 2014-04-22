@@ -13,7 +13,7 @@ open ApiTypes
 
 let _ =
   let open ApiConf in
-      verbose := false;
+      verbose := true;
       (Arg.parse
          [("-u", Arg.String (fun url -> base_url := url),
            "the URL of the web service")]
@@ -24,7 +24,7 @@ let _ =
 (* ************************************************************************** *)
 
 let print_success = false
-let stop_on_error = false
+let stop_on_error = true
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
