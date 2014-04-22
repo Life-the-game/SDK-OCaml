@@ -93,8 +93,9 @@ sig
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
   val files_filter   : (filename * either_file) list -> file_parameter list
+  val multiple_files_filter : string -> either_file list -> file_parameter list
+  val multiple_files_url_filter : string -> either_file list -> parameters
   val list_parameter : string list -> string
-  val multiple_files : string -> file list -> file_parameter list
 end
 module Network : NETWORK =
 struct
@@ -146,10 +147,13 @@ struct
       | _::t -> aux acc t
     in
     aux [] l
+  let multiple_files_filter name l =
+    List.map (function | File file -> (name, file))
+      (List.filter (function | File _ -> true | _ -> false) l)
+  let multiple_files_url_filter name l =
+    List.map (function | FileUrl url -> (name, url))
+      (List.filter (function | FileUrl _ -> true | _ -> false) l)
   let list_parameter = String.concat ","
-  let multiple_files name =
-    List.fold_left (fun l ((path, _) as file) ->
-      match path with [] -> l | path -> (name, file)::l) []
 end
 
 (* ************************************************************************** *)
@@ -498,7 +502,7 @@ module type STATUS =
 sig
   type t =
     | Objective
-    | Achieved
+    | Unlocked
   val to_string : t -> string
   val of_string : string -> t
 end
@@ -506,13 +510,13 @@ module Status : STATUS =
 struct
   type t =
     | Objective
-    | Achieved
+    | Unlocked
   let to_string = function
     | Objective -> "objective"
-    | Achieved  -> "achieved"
+    | Unlocked  -> "unlocked"
   let of_string = function
     | "objective" -> Objective
-    | "achieved"  -> Achieved
+    | "unlocked"  -> Unlocked
     | _           -> Objective
 end
 

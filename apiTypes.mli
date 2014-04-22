@@ -101,8 +101,9 @@ sig
   val option_filter  : (string * string option) list -> parameters
   val empty_filter   :  parameters -> parameters
   val files_filter   : (filename * either_file) list -> file_parameter list
+  val multiple_files_filter : string -> either_file list -> file_parameter list
+  val multiple_files_url_filter : string -> either_file list -> parameters
   val list_parameter : string list -> string
-  val multiple_files : string -> file list -> file_parameter list
 end
 module Network : NETWORK
 
@@ -262,7 +263,7 @@ module type STATUS =
 sig
   type t =
     | Objective
-    | Achieved
+    | Unlocked
   val to_string : t -> string
   val of_string : string -> t
 end
