@@ -14,7 +14,7 @@ open ApiTypes
 type t =
     {
       info           : ApiTypes.Info.t;
-      mutable owner   : ApiUser.t;
+      mutable user   : ApiUser.t;
       token          : token;
       expiration     : ApiTypes.DateTime.t;
     }

@@ -14,7 +14,7 @@ open Network
 type t =
     {
       info           : Info.t;
-      mutable owner  : ApiUser.t;
+      mutable user   : ApiUser.t;
       token          : token;
       expiration     : DateTime.t;
     }
@@ -27,7 +27,7 @@ let from_json content =
   let open Yojson.Basic.Util in
       {
         info       = Info.from_json content;
-        owner       = ApiUser.from_json (content |> member "owner");
+        user       = ApiUser.from_json (content |> member "user");
         token      = content |> member "token" |> to_string;
         expiration = DateTime.of_string
           (content |> member "expiration" |> to_string);
