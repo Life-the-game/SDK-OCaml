@@ -28,7 +28,7 @@ let from_json c =
     {
         info         = Info.from_json c;
         vote         = Vote.from_json c;
-        author       = ApiUser.from_json (c |> member "author");
+        author       = ApiUser.from_json (c |> member "owner");
         content      = c |> member "content" |> to_string;
     }
 
@@ -65,7 +65,7 @@ let create resource ~content id =
 let edit ~content id =
   Api.go
     ~auth_required:true
-    ~rtype:PUT
+    ~rtype:PATCH
     ~path:["comments"; id_to_string id]
     ~post:(PostList [("content", content)])
     from_json

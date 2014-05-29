@@ -22,6 +22,7 @@ type t =
     {
       info               : Info.t;
       vote               : Vote.t;
+      owner              : ApiUser.t;
       comments           : int;
       name               : string;
       description        : string option;
@@ -44,10 +45,11 @@ let rec from_json c =
       {
         info               = Info.from_json c;
 	vote               = Vote.from_json c;
+	owner              = ApiUser.from_json (c |> member "owner");
 	comments           = c |> member "comments" |> ApiTypes.to_int_option;
         name               = c |> member "name" |> to_string;
         description        = c |> member "description" |> to_string_option;
-        icon              = (c |> member "icon"
+        icon               = (c |> member "icon"
                                 |> to_option ApiMedia.Picture.from_json);
         color              = c |> member "color" |> to_string_option;
         tags               = ApiTypes.convert_each (c |> member "tags") to_string;
@@ -61,7 +63,7 @@ let rec from_json c =
         secret             = c |> member "secret" |> to_bool_option;
         visibility         = Visibility.of_string
           (match c |> member "visibility" |> to_string_option with Some s -> s | None -> "");
-        url                = c |> member "url" |> to_string;
+        url                = c |> member "website_url" |> to_string;
       }
 
 (* ************************************************************************** *)
@@ -98,7 +100,7 @@ let get_one id =
 (* ************************************************************************** *)
 
 let create ~name ~description ?(icon = NoFile) ?(color = "")
-    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) () =
+    ?(secret = false) ?(location = None) ?(radius = 0) () =
   let radius = if radius > 0 then string_of_int radius else ""
   and location = match location with
     | Some l -> Location.to_string l | None -> "" in
@@ -109,7 +111,6 @@ let create ~name ~description ?(icon = NoFile) ?(color = "")
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
        ("secret", if secret then "1" else "0");
-       ("tags", Network.list_parameter tags);
        ("location", location);
        ("radius", radius);
       ] in
@@ -129,7 +130,7 @@ let create ~name ~description ?(icon = NoFile) ?(color = "")
 (* ************************************************************************** *)
 
 let edit ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
-    ?(secret = None) ?(add_tags = []) ?(del_tags = []) id =
+    ?(secret = None) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);
@@ -137,8 +138,6 @@ let edit ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
        ("secret", match secret with Some b -> string_of_bool b | None -> "");
-       ("add_tags", Network.list_parameter add_tags);
-       ("del_tags", Network.list_parameter del_tags);
       ] in
   let post =
     Network.PostMultiPart
@@ -146,12 +145,10 @@ let edit ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
        ApiMedia.Picture.checker) in
   Api.go
     ~auth_required:true
-    ~rtype:PUT
+    ~rtype:PATCH
     ~path:["achievements"; id_to_string id]
     ~post:post
     from_json
-
-(* PRIVATE *)
 
 (* ************************************************************************** *)
 (* Delete an Achievement                                                      *)
@@ -164,7 +161,53 @@ let delete id =
     ~path:["achievements"; id_to_string id]
     Api.noop
 
-(* /PRIVATE *)
+(* ************************************************************************** *)
+(* Tags                                                                       *)
+(* ************************************************************************** *)
+
+let add_tags tags id =
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:["achievements"; id_to_string id; "tags"]
+    ~get:[("tags", list_parameter tags)]
+    from_json
+
+let delete_tags tags id =
+  Api.go
+    ~auth_required:true
+    ~rtype:DELETE
+    ~path:["achievements"; id_to_string id; "tags"]
+    ~get:[("tags", list_parameter tags)]
+    from_json
+
+(* ************************************************************************** *)
+(* Icon                                                                       *)
+(* ************************************************************************** *)
+
+let delete_icon id =
+  Api.go
+    ~rtype:DELETE
+    ~path:["achievements"; id_to_string id; "icon"]
+    ~auth_required:true
+    Api.noop
+
+let icon id icon =
+  let go post = Api.go
+    ~rtype:POST
+    ~path:["achievements"; id_to_string id; "icon"]
+    ~auth_required:true
+    ~post:post
+    (fun c ->
+      let open Yojson.Basic.Util in
+	  c |> member "icon" |> to_string) in
+  match icon with
+    | FileUrl url -> go (PostList [("icon", url)])
+    | File file -> go (PostMultiPart ([], [("icon", file)],
+				      ApiMedia.Picture.checker))
+    | NoFile -> match delete_icon id with
+	| Error e -> Error e
+	| Result () -> Result ""
 
 (* ************************************************************************** *)
 (* Vote                                                                       *)

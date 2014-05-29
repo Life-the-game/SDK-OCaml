@@ -13,10 +13,11 @@ open Network
 
 type t =
     {
-      info           : Info.t;
-      mutable user   : ApiUser.t;
-      token          : token;
-      expiration     : DateTime.t;
+      access_token  : token;
+      token_type    : string;
+      expires_in    : int;
+      refresh_token : token;
+      scope         : string list;
     }
 
 (* ************************************************************************** *)
@@ -26,11 +27,12 @@ type t =
 let from_json content =
   let open Yojson.Basic.Util in
       {
-        info       = Info.from_json content;
-        user       = ApiUser.from_json (content |> member "user");
-        token      = content |> member "token" |> to_string;
-        expiration = DateTime.of_string
-          (content |> member "expiration" |> to_string);
+	access_token  = content |> member "access_token" |> to_string;
+	token_type    = content |> member "token_type" |> to_string;
+	expires_in    = content |> member "expires_in" |> to_int;
+	refresh_token = content |> member "access_token" |> to_string;
+	scope         = Str.split (Str.regexp " ")
+	  (content |> member "scope" |> to_string);
       }
 
 (* ************************************************************************** *)
@@ -38,44 +40,59 @@ let from_json content =
 (* ************************************************************************** *)
 
 (* ************************************************************************** *)
+(* Logout (delete token)                                                      *)
+(* ************************************************************************** *)
+
+let client_logout () =
+  ApiConf.auth_token := ""
+
+let logout ?(token = !ApiConf.auth_token) () =
+  let r = Api.go
+    ~rtype:DELETE
+    ~path:["tokens"; token]
+    Api.noop in
+  if token = !ApiConf.auth_token
+  then match r with
+    | Result auth -> client_logout (); r
+    | _ -> r
+  else r
+
+(* ************************************************************************** *)
 (* Login (create token)                                                       *)
 (* ************************************************************************** *)
 
-let login_ params =
+let _login ~oauth_id ~oauth_secret ~scope parameters =
   let r = Api.go
+    ~httpauth:(Some (oauth_id, oauth_secret))
     ~rtype:POST
-    ~path:["tokens"]
-    ~post:(Network.PostList params)
+    ~path:["oauth2"; "access_token"]
+    ~post:(Network.PostList ([
+      ("scope", Network.list_parameter scope);
+    ] @ parameters))
     from_json in
   match r with
-    | Result auth -> ApiConf.auth_token := auth.token; r
+    | Result auth -> ApiConf.auth_token := auth.access_token; r
     | _ -> r
 
-let login login password =
-  login_ [
-    ("login", login);
-    ("password", password);
+let login ~oauth_id ~oauth_secret ~scope login password =
+  _login ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [
+      ("grant_type", "password");
+      ("username", login);
+      ("password", password);
   ]
 
 (* ************************************************************************** *)
 (* OAuth Login                                                                *)
 (* ************************************************************************** *)
 
-let oauth oauth_provider oauth_token =
-  login_ [
-    ("oauth_provider", oauth_provider);
-    ("oauth_token", oauth_token)
+let oauth ?(refresh_token="") ~oauth_id ~oauth_secret ~scope provider token =
+  _login ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [
+      ("grant_type", "3rdparty_token");
+      ("provider", provider);
+      ("provider_access_token", token);
+      ("provider_refresh_token", refresh_token);
   ]
 
-let facebook = oauth "facebook"
-
-(* ************************************************************************** *)
-(* Logout (delete token)                                                      *)
-(* ************************************************************************** *)
-
-let logout ?(token = !ApiConf.auth_token) () =
-  Api.go
-    ~rtype:DELETE
-    ~path:["tokens"; token]
-    Api.noop
-
+let facebook ?(refresh_token="") ~oauth_id ~oauth_secret ~scope token =
+  oauth ~refresh_token:refresh_token ~oauth_id:oauth_id
+    ~oauth_secret:oauth_secret ~scope:scope "facebook" token

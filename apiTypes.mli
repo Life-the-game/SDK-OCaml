@@ -86,6 +86,7 @@ sig
     | GET
     | POST
     | PUT
+    | PATCH
     | DELETE
   type post =
     | PostText of string
@@ -167,10 +168,12 @@ sig
   type t =
       {
         id           : id;
-        creation     : DateTime.t option;
-        modification : DateTime.t option;
+        creation     : DateTime.t;
+        modification : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
+  val creation : Yojson.Basic.json -> DateTime.t
+  val modification : Yojson.Basic.json -> DateTime.t
 end
 module Info : INFO
 
@@ -201,44 +204,31 @@ module Vote : VOTE
 
 module type PAGE =
 sig
-  type order =
-    | Smart
-    | Date_modified
-    | Alphabetic
-    | Score
-    | Nb_comments
-  type direction = Asc | Desc
-  type index = int
-  type limit = int
+  type order = string
+  type size = int
+  type number = int
   type 'a t =
       {
-        server_size : int;
-        index       : int;
-	count       : int;
-        limit       : int;
-        order       : order;
-        direction   : direction;
+	total       : size;
+	size        : size;
+	number      : number;
+	next        : number option;
+	previous    : number option;
         items       : 'a list;
       }
-  type parameters = (index * limit * (order * direction) option)
+  type parameters = (number * size option * order option)
   val default_parameters : parameters
   (** Take a page and return the arguments to get the next one,
       or None if there's no next page *)
-  val next : 'a t -> parameters option
-  val previous : 'a t -> parameters option
+  val next : ?order:string -> 'a t -> parameters option
+  val previous : ?order:string -> 'a t -> parameters option
   (** Generate a page from the JSON tree using a converter function *)
   val from_json :
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
     -> 'a t
-  val just_limit : int -> parameters
-  val default_order : order
-  val order_to_string : order -> string
-  val order_of_string : string -> order
-  val default_direction : direction
-  val direction_to_string : direction -> string
-  val direction_of_string : string -> direction
-  val get_total : 'a t -> int
+  val just_limit : size -> parameters
+  val get_total: 'a t -> size
 end
 module Page : PAGE
 
@@ -317,21 +307,15 @@ module Visibility : VISIBILITY
 (** {3 Error}                                                                 *)
 (* ************************************************************************** *)
 
-type bad_request =
-  | Invalid of string * string list
-  | Requested of string * string list
-
-type not_acceptable = mimetype list * Lang.t list
-
 type error =
-  | BadRequest of bad_request list
-  | NotFound
-  | NotAllowed
-  | NotAcceptable of not_acceptable
-  | InternalServerError
-  | NotImplemented
+  | BadRequest of string
+  | NotFound of string
+  | NotAllowed of string
+  | NotAcceptable of string
+  | InternalServerError of string
+  | NotImplemented of string
   | Client of string
-  | Unknown of Network.code
+  | Unknown of (Network.code * string)
 
 val error_from_json : Network.code -> string -> error
 

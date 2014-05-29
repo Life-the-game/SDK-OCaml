@@ -13,7 +13,8 @@ open ApiTypes
 
 type t =
     {
-      info                     : Info.t;
+      creation                 : DateTime.t;
+      modification             : DateTime.t;
       login                    : login;
       firstname                : string;
       lastname                 : string;
@@ -55,7 +56,6 @@ val create :
   -> ?lastname:string
   -> ?gender:Gender.t
   -> ?birthday:Date.t option
-  -> ?avatar:either_file
   -> either -> t Api.t
 
 val edit :
@@ -65,8 +65,12 @@ val edit :
   -> ?lastname:string
   -> ?gender:Gender.t
   -> ?birthday:Date.t option
-  -> ?avatar:either_file
   -> login -> t Api.t
+
+(** {6 Avatar}                                                                *)
+
+val avatar : login -> either_file -> url Api.t
+val delete_avatar : login -> unit Api.t
 
 (** {6 Follow}                                                                *)
 

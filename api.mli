@@ -20,8 +20,9 @@ val disconnect : unit -> unit
     {{: https://github.com/Life-the-game/SDK-OCaml #readme} the repository
     documentation} *)
 val go :
-  ?auth_required:bool             (** Will check the presence of a token *)
-  -> ?rtype:Network.t                (** GET, POST, ... *)
+  ?httpauth:(login * password) option (** Will perform a Curl auth request *)
+  -> ?auth_required:bool          (** Will check the presence of a token *)
+  -> ?rtype:Network.t             (** GET, POST, ... *)
   -> ?path:string list            (** URL/path/ *)
   -> ?page:Page.parameters option (** index, limit, ... *)
   -> ?get:parameters              (** GET parameters (URL?a=b&c=d) *)
@@ -34,6 +35,6 @@ val go :
 val noop : Yojson.Basic.json -> unit
 
 (** For resources that can be voted                                          *)
-val vote : string -> (Yojson.Basic.json -> 'a) -> id -> Vote.vote -> 'a t
-val cancel_vote : string -> (Yojson.Basic.json -> 'a) -> id -> 'a t
+val vote : string -> (Yojson.Basic.json -> 'a) -> id -> Vote.vote -> unit t
+val cancel_vote : string -> (Yojson.Basic.json -> 'a) -> id -> unit t
 

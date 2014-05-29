@@ -41,13 +41,15 @@ type user = (ApiUser.t, user_activity) t
 (** Get user activities                                                       *)
 val user :
   ?page:Page.parameters
-  -> ?owners:login list
+  -> ?owner:login
+  -> ?feed:string
   -> unit -> user Page.t Api.t
 
-val feed :
-  ?page:Page.parameters
-  -> unit -> user Page.t Api.t
+(** Get feed *)
+val following : ?page:Page.parameters -> unit -> user Page.t Api.t 
+val hot : ?page:Page.parameters -> unit -> user Page.t Api.t 
 
+(** Delete user activities *)
 val delete_user : id -> unit Api.t
 
 (* ************************************************************************** *)

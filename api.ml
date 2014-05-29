@@ -52,7 +52,7 @@ exception FileNotFound
 
 (* Return a text from a url using Curl and HTTP Auth (if needed).
    Error handling with exceptions to catch                                    *)
-let curl_perform ~path ~get ~post ~rtype () : (code * string) =
+let curl_perform ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string) =
 
   let parameters_to_string parameters =
     let str =
@@ -73,14 +73,17 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
 	      | _ -> c)) in
 
   let url =
-    let path = List.fold_left (fun f s -> f ^ "/" ^ s) "" path
+    let path = (List.fold_left (fun f s -> f ^ "/" ^ s) "" path) ^ "/"
     and get =
       let str = parameters_to_string get in
       if (String.length str) = 0 then str else "?" ^ str in
     !ApiConf.base_url ^ path ^ get in
-  let _ = ApiDump.verbose (" ## URL: " ^ url) in
+  let _ = ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url) in
 
   Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string !ApiConf.lang)];
+  (match !ApiConf.auth_token with
+    | "" -> () | token -> (Curl.set_httpheader c ["Authorization: Bearer " ^ token];
+			   ApiDump.verbose (" ## Authentified with: " ^ token)));
   Curl.set_postfieldsize c 0;
   let post_string str =
     ApiDump.verbose (" ## POST data: " ^ str);
@@ -117,6 +120,15 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
 	  then post_list p else post_multipart (p, f, c));
 
       Buffer.reset result;
+
+      (match httpauth with
+	| None -> ()
+	| Some (login, password) ->
+	  Curl.set_httpauth c [Curl.CURLAUTH_BASIC];
+	  Curl.set_userpwd c (login ^ ":" ^ password);
+	  ApiDump.verbose (" ## HTTPAuth: " ^ login ^ " : " ^ password);
+      );
+
       Curl.set_customrequest c (Network.to_string rtype);
       Curl.set_url c url;
       Curl.perform c;
@@ -124,34 +136,31 @@ let curl_perform ~path ~get ~post ~rtype () : (code * string) =
       let text = Buffer.contents result
       and code = Curl.get_responsecode c in
       let _ = ApiDump.verbose (" ## Response Code: " ^ (string_of_int code)) in
-      let _ = ApiDump.verbose (" ## Response Body: " ^ text) in
+      let _ =
+	let str = try (* String.sub text 0 800 *) text
+	  with _ -> text in ApiDump.verbose (" ## Response Body: " ^ str) in
+      (match httpauth with | None -> () | Some _ -> ignore (reconnect ()));
       (code, text)
 
 (* ************************************************************************** *)
 (* Internal tools for extra parameters                                        *)
 (* ************************************************************************** *)
 
-let req_parameters (parameters : parameters)
-    : parameters =
-  let parameters = ("lang", Lang.to_string !ApiConf.lang)::parameters in
-  match !ApiConf.auth_token with
-    | "" -> parameters | token -> (("token", token)::parameters)
-
 let page_parameters (parameters : parameters) (page : Page.parameters option)
     : parameters =
   match page with
-    | Some (index, limit, sort) ->
+    | Some (number, size, order) ->
       (Network.option_filter
-	 [("index", Some (string_of_int index));
-          ("limit", Some (string_of_int limit));
-          ("order", Option.map (fun (order, _) -> Page.order_to_string order) sort);
-          ("direction", Option.map (fun (_, direction) -> Page.direction_to_string direction) sort);
+	 [("page", match number with 1 -> None
+	   | number -> Some (string_of_int number));
+          ("page_size", Option.map string_of_int size);
+          ("ordering", order);
 	 ]) @ parameters
     | None -> parameters
 
 let extra_parameters (parameters : parameters)
     (page : Page.parameters option) : parameters =
-  page_parameters (req_parameters parameters) page
+  page_parameters parameters page
 
 (* ************************************************************************** *)
 (* Make a call to the API                                                     *)
@@ -160,6 +169,7 @@ let extra_parameters (parameters : parameters)
 exception ParseError of string
 
 let go
+    ?(httpauth = None)
     ?(auth_required = false)
     ?(rtype = Network.default)
     ?(path = [])
@@ -178,16 +188,20 @@ let go
 
       (try
 	 let (code, result) =
-	   curl_perform ~path:path
+	   curl_perform ~path:path ~httpauth:httpauth
              ~get:get ~post:post ~rtype:rtype () in
 	 if code >= 200 && code < 300
-	 then Result (from_json (Yojson.Basic.from_string result))
+	 then
+	   let json = try Yojson.Basic.from_string result
+	     with Yojson.Json_error "Blank input data" -> `Null in
+	   Result (from_json json)
 	 else Error (error_from_json code result)
 
        with
 	 | Yojson.Basic.Util.Type_error (msg, tree) ->
+	   ApiDump.verbose ("Trace [" ^ (Printexc.get_backtrace ()) ^ "]");
 	   Error (ApiTypes.invalid_json
-		    (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
+	 	    (msg ^ "\n" ^ (Yojson.Basic.to_string tree)))
 	 | Yojson.Json_error msg ->
 	   Error (ApiTypes.invalid_json msg)
 	 | Curl.CurlException (_, _, _) -> Error
@@ -212,11 +226,11 @@ let vote resource from_json id vote =
     ~rtype:POST
     ~path:[resource; id_to_string id; "vote"]
     ~post:(PostList [("vote", Vote.to_string vote)])
-    from_json
+    noop
 
 let cancel_vote resource from_json id =
   go
     ~auth_required:true
     ~rtype:DELETE
     ~path:[resource; id_to_string id; "vote"]
-    from_json
+    noop

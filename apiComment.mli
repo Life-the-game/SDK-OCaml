@@ -30,8 +30,8 @@ val delete : id -> unit Api.t
 
 (** {6 Vote}                                                                  *)
 
-val vote : id -> Vote.vote -> t Api.t
-val cancel_vote : id -> t Api.t
+val vote : id -> Vote.vote -> unit Api.t
+val cancel_vote : id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

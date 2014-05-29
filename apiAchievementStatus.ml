@@ -39,7 +39,7 @@ let from_json c =
     status           = Status.of_string (c |> member "status" |> to_string);
     message          = c |> member "message" |> to_string_option;
     medias           = ApiTypes.convert_each (c |> member "medias") ApiMedia.from_json;
-    url              = c |> member "url" |> to_string;
+    url              = c |> member "website_url" |> to_string;
   }
 
 (* ************************************************************************** *)
@@ -82,19 +82,13 @@ let get_one achievement_id =
 (* Create an achievement status                                               *)
 (* ************************************************************************** *)
 
-let create ~achievement ~status
-    ?(message = "") ?(medias = []) () =
+let create ~achievement ~status ?(message = "") () =
   let post_parameters = Network.empty_filter ([
     ("achievement", id_to_string achievement);
     ("status",      Status.to_string status);
     ("message",     message);
-  ] @ (Network.multiple_files_url_filter "medias" medias)) in
-  let post = if List.length medias != 0
-    then Network.PostMultiPart
-      (post_parameters,
-       Network.multiple_files_filter "medias" medias,
-      ApiMedia.checker)
-    else Network.PostList post_parameters in
+  ]) in
+  let post = Network.PostList post_parameters in
   Api.go
     ~auth_required:true
     ~rtype:POST
@@ -106,24 +100,14 @@ let create ~achievement ~status
 (* Edit an achievement status                                                 *)
 (* ************************************************************************** *)
 
-let edit
-    ?(status = None)
-    ?(message = "")
-    ?(add_medias = [])
-    ?(remove_medias = [])
-    id =
+let edit ?(status = None) ?(message = "") id =
   let post_parameters = Network.option_filter [
     ("status", Option.map Status.to_string status);
     ("message", Some message);
-    ("remove_medias", Some (Network.list_parameter (List.map id_to_string remove_medias)));
-  ] @ (Network.multiple_files_url_filter "add_medias" add_medias) in
-  let post =
-    Network.PostMultiPart
-      (post_parameters,
-       Network.multiple_files_filter "add_medias" add_medias,
-       ApiMedia.checker) in
+  ] in
+  let post = Network.PostList post_parameters in
   Api.go
-    ~rtype:PUT
+    ~rtype:PATCH
     ~path:(["achievement_statuses"; id_to_string id])
     ~auth_required:true
     ~post:post
@@ -138,6 +122,28 @@ let delete id =
     ~auth_required:true
     ~rtype:DELETE
     ~path:["achievement_statuses"; id_to_string id]
+    Api.noop
+
+(* ************************************************************************** *)
+(* Medias                                                                     *)
+(* ************************************************************************** *)
+
+let add_media media id =
+  let post = match media with FileUrl url -> [("picture", url)] | _ -> [] in
+  let post = Network.PostMultiPart
+    (post, Network.files_filter [("picture", media)], ApiMedia.checker) in
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:["achievement_statuses"; id_to_string id; "medias"]
+    ~post:post
+    ApiMedia.from_json
+
+let delete_media id =
+  Api.go
+    ~auth_required:true
+    ~rtype:DELETE
+    ~path:["medias"; id_to_string id]
     Api.noop
 
 (* ************************************************************************** *)

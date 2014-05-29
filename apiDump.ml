@@ -6,6 +6,8 @@
 
 open ApiTypes
 
+let _ = Printexc.record_backtrace true
+
 (* ************************************************************************** *)
 (* Tools                                                                      *)
 (* ************************************************************************** *)
@@ -28,31 +30,23 @@ let available_languages () =
 let error e =
   lprint_endline "[Error]";
   match e with
-    | BadRequest r -> lprint_endline "  BadRequest";
-      List.iter (function
-	| Invalid (message, list) -> lprint_endline ("    Invalid: " ^ message);
-	  lprint_endline ("      " ^ (String.concat ", " list))
-	| Requested (message, list) -> lprint_endline ("    Requested: " ^ message);
-	  lprint_endline ("      " ^ (String.concat ", " list))
-      ) r
-    | NotFound -> lprint_endline "  Not found"
-    | NotAllowed -> lprint_endline "  NotAllowed"
-    | NotAcceptable (mimetypes, languages) -> lprint_endline "  NotAcceptable";
-      lprint_endline ("    Accept-media: " ^ (String.concat ", " mimetypes));
-      lprint_endline ("    Accept-language: " ^ (String.concat ", " (List.map Lang.to_string languages)));
-    | InternalServerError -> lprint_endline "  InternalServerError"
-    | NotImplemented -> lprint_endline "  NotImplemented"
-    | Client str -> lprint_endline ("  Client-side: " ^ str)
-    | Unknown code -> lprint_endline ("  Unknown Error " ^ (string_of_int code))
+    | BadRequest r -> lprint_endline ("  BadRequest" ^ r)
+    | NotFound s -> lprint_endline ("  Not found" ^ s)
+    | NotAllowed s -> lprint_endline ("  NotAllowed" ^ s)
+    | NotAcceptable s -> lprint_endline ("  NotAcceptable" ^ s)
+    | InternalServerError s -> lprint_endline ("  InternalServerError" ^ s)
+    | NotImplemented s -> lprint_endline ("  NotImplemented" ^ s)
+    | Client s -> lprint_endline ("  Client-side: " ^ s)
+    | Unknown (code, s) -> lprint_endline ("  Unknown Error " ^ (string_of_int code) ^ " " ^ s)
 
 let page l f =
   lprint_endline "[Page]";
-  lprint_endline ("  Total items (server_size): " ^
-                    (string_of_int l.Page.server_size));
-  lprint_endline ("  Index: " ^
-                    (string_of_int l.Page.index));
-  lprint_endline ("  Limit: " ^
-                    (string_of_int l.Page.limit));
+  lprint_endline ("  Total items in page: " ^
+                    (string_of_int l.Page.total));
+  lprint_endline ("  Page Size: " ^
+                    (string_of_int l.Page.size));
+  lprint_endline ("  Page number: " ^
+                    (string_of_int l.Page.number));
   lprint_endline "  Items:";
   if List.length l.Page.items = 0
   then lprint_endline "    Empty page"

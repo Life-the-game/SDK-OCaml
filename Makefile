@@ -52,8 +52,8 @@ FLAGS		=	-linkpkg
 CMO		=	$(SRC:.ml=.cmo)
 CMI		=	$(SRC:.ml=.cmi)
 
-COMPILER	=	ocamlc
-DOCCOMPILER	=	ocamldoc
+COMPILER	=	ocamlc -g
+DOCCOMPILER	=	ocamldoc -g
 OCAMLFIND	=	ocamlfind
 RM		=	rm -f
 

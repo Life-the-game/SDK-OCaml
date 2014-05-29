@@ -21,6 +21,7 @@ type t =
     {
       info               : Info.t;
       vote               : Vote.t;
+      owner              : ApiUser.t;
       comments           : int;
       name               : string;
       description        : string option;
@@ -53,7 +54,6 @@ val create :
   -> ?icon:either_file
   -> ?color:color
   -> ?secret:bool
-  -> ?tags:string list
   -> ?location:Location.parameters option
   -> ?radius:int
   -> unit -> t Api.t
@@ -64,16 +64,24 @@ val edit :
   -> ?icon:either_file
   -> ?color:color
   -> ?secret:bool option
-  -> ?add_tags:string list
-  -> ?del_tags:string list
   -> id -> t Api.t
 
 val delete : id -> unit Api.t
 
+(** {6 Tags}                                                                *)
+
+val add_tags : string list -> id -> t Api.t
+val delete_tags : string list -> id -> t Api.t
+
+(** {6 Icon}                                                                *)
+
+val icon : id -> either_file -> url Api.t
+val delete_icon : id -> unit Api.t
+
 (** {6 Vote}                                                                  *)
 
-val vote : id -> Vote.vote -> t Api.t
-val cancel_vote : id -> t Api.t
+val vote : id -> Vote.vote -> unit Api.t
+val cancel_vote : id -> unit Api.t
 
 (** {6 Comments}                                                              *)
 
@@ -81,8 +89,8 @@ val comments       : ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
 val add_comment    : content:string -> id -> ApiComment.t Api.t
 val edit_comment   : content:string -> id -> ApiComment.t Api.t
 val delete_comment : id -> unit Api.t
-val vote_comment   : id -> Vote.vote -> ApiComment.t Api.t
-val cancel_vote_comment : id -> ApiComment.t Api.t
+val vote_comment   : id -> Vote.vote -> unit Api.t
+val cancel_vote_comment : id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

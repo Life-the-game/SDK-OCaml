@@ -80,6 +80,7 @@ sig
     | GET
     | POST
     | PUT
+    | PATCH
     | DELETE
   type post =
     | PostText of string
@@ -103,6 +104,7 @@ struct
     | GET
     | POST
     | PUT
+    | PATCH
     | DELETE
   type parameters = (string (* key *) * string (* value *)) list
   type post =
@@ -116,11 +118,13 @@ struct
     | GET    -> "GET"
     | POST   -> "POST"
     | PUT    -> "PUT"
+    | PATCH  -> "PATCH"
     | DELETE -> "DELETE"
   let of_string = function
     | "GET"    -> GET
     | "POST"   -> POST
     | "PUT"    -> PUT
+    | "PATCH"  -> PATCH
     | "DELETE" -> DELETE
     | _        -> default
   let option_filter l =
@@ -278,25 +282,33 @@ sig
   type t =
       {
         id           : id;
-        creation     : DateTime.t option;
-        modification : DateTime.t option;
+        creation     : DateTime.t;
+        modification : DateTime.t;
       }
   val from_json : Yojson.Basic.json -> t
+  val creation : Yojson.Basic.json -> DateTime.t
+  val modification : Yojson.Basic.json -> DateTime.t
 end
 module Info : INFO =
 struct
   type t =
       {
         id           : id;
-        creation     : DateTime.t option;
-        modification : DateTime.t option;
+        creation     : DateTime.t;
+        modification : DateTime.t;
       }
+  let creation c = 
+    let open Yojson.Basic.Util in
+        DateTime.of_string (c |> member "creation" |> to_string)
+  let modification c = 
+    let open Yojson.Basic.Util in
+        DateTime.of_string (c |> member "modification" |> to_string)
   let from_json c =
     let open Yojson.Basic.Util in
         {
           id           = c |> member "id" |> to_int;
-          creation     = Option.map DateTime.of_string (c |> member "creation" |> to_string_option);
-          modification = Option.map DateTime.of_string (c |> member "modification" |> to_string_option);
+          creation     = creation c;
+          modification = modification c;
         }
 end
 
@@ -353,117 +365,67 @@ end
 
 module type PAGE =
 sig
-  type order =
-    | Smart
-    | Date_modified
-    | Alphabetic
-    | Score
-    | Nb_comments
-  type direction = Asc | Desc
-  type index = int
-  type limit = int
+  type order = string
+  type size = int
+  type number = int
   type 'a t =
       {
-        server_size : int;
-        index       : int;
-	count       : int;
-        limit       : int;
-        order       : order;
-        direction   : direction;
+	total       : size;
+	size        : size;
+	number      : number;
+	next        : number option;
+	previous    : number option;
         items       : 'a list;
       }
-  type parameters = (index * limit * (order * direction) option)
+  type parameters = (number * size option * order option)
   val default_parameters : parameters
   (** Take a page and return the arguments to get the next one,
       or None if there's no next page *)
-  val next : 'a t -> parameters option
-  val previous : 'a t -> parameters option
+  val next : ?order:string -> 'a t -> parameters option
+  val previous : ?order:string -> 'a t -> parameters option
   (** Generate a page from the JSON tree using a converter function *)
   val from_json :
     (Yojson.Basic.json -> 'a)
     -> Yojson.Basic.json
     -> 'a t
-  val just_limit : int -> parameters
-  val default_order : order
-  val order_to_string : order -> string
-  val order_of_string : string -> order
-  val default_direction : direction
-  val direction_to_string : direction -> string
-  val direction_of_string : string -> direction
-  val get_total: 'a t -> int
+  val just_limit : size -> parameters
+  val get_total: 'a t -> size
 end
 module Page : PAGE =
 struct
-  type order =
-    | Smart
-    | Date_modified
-    | Alphabetic
-    | Score
-    | Nb_comments
-  type direction = Asc | Desc
-  type index = int
-  type limit = int
+  type order = string
+  type size = int
+  type number = int
   type 'a t =
       {
-        server_size : int;
-        index       : int;
-	count       : int;
-        limit       : int;
-        order       : order;
-        direction   : direction;
-        items       : 'a list;
+	total    : size;
+	size     : size;
+	number   : number;
+	next     : number option;
+	previous : number option;
+        items    : 'a list;
       }
-  type parameters = (index * limit * (order * direction) option)
-  let just_limit n = (0, n, None)
-  let default_parameters = (0, 10, None)
-  let next page =
-    let nextpage = page.index + page.limit in
-    if nextpage < page.server_size
-    then Some (nextpage, page.limit, None) (* todo order direction params *)
-    else None
-  let previous page =
-    let previouspage = page.index + page.limit in
-    if previouspage >= 0
-    then Some (previouspage, page.limit, None) (* todo order direction params *)
-    else None
-  let default_order = Smart
-  let order_to_string = function
-    | Smart         -> "smart"
-    | Date_modified -> "date_modified"
-    | Alphabetic    -> "alphabetic"
-    | Score         -> "score"
-    | Nb_comments   -> "nb_comments"
-  let order_of_string = function
-    | "smart"         -> Smart
-    | "date_modified" -> Date_modified
-    | "alphabetic"    -> Alphabetic
-    | "score"         -> Score
-    | "Nb_comments"   -> Nb_comments
-    | _               -> default_order
-  let default_direction = Asc
-  let direction_to_string = function
-    | Asc  -> "asc"
-    | Desc -> "desc"
-  let direction_of_string = function
-    | "asc"  -> Asc
-    | "desc" -> Desc
-    | _      -> default_direction
+  type parameters = (number * size option * order option)
+  let default_parameters = (1, None, None)
+  let next ?(order = "") page =
+    Option.map (fun number ->
+      (number, Some page.size,
+       match order with "" -> None | o -> Some o)) page.next
+  let previous ?(order = "") page =
+    Option.map (fun number ->
+      (number, Some page.size,
+       match order with "" -> None | o -> Some o)) page.previous
   let from_json f c =
-    let open Yojson.Basic.Util in
-	try {
-          server_size = c |> member "server_size" |> to_int_option_;
-          index       = c |> member "index"       |> to_int_option_;
-          count       = c |> member "count"       |> to_int_option_;
-          limit       = c |> member "limit"       |> to_int_option_;
-          order       = order_of_string (c |> member "order" |> to_string);
-          direction   = direction_of_string
-            (c |> member "direction" |> to_string);
-          items       = convert_each_ (c |> member "content") f;
-        } with Yojson.Json_error "Blank input data" -> {
-          server_size = 0; index = 0; count = 0; limit = 0;
-	  order = default_order; direction = default_direction; items = [];
-	}
-  let get_total page = page.server_size
+    let open Yojson.Basic.Util in {
+      total       = c |> member "total"    |> to_int_option_;
+      size        = c |> member "size"     |> to_int_option_;
+      number      = c |> member "number"   |> to_int_option_;
+      next        = c |> member "next"     |> to_int_option;
+      previous    = c |> member "previous" |> to_int_option;
+      items       = convert_each_ (c |> member "items") f;
+    }
+  let just_limit limit = (1, Some limit, None)
+  let get_total page = page.total
 end
 
 (* ************************************************************************** *)
@@ -706,49 +668,31 @@ end
 (* Error                                                                      *)
 (* ************************************************************************** *)
 
-type bad_request =
-  | Invalid of string * string list
-  | Requested of string * string list
-
-type not_acceptable = mimetype list * Lang.t list
-
 type error =
-  | BadRequest of bad_request list
-  | NotFound
-  | NotAllowed
-  | NotAcceptable of not_acceptable
-  | InternalServerError
-  | NotImplemented
+  | BadRequest of string
+  | NotFound of string
+  | NotAllowed of string
+  | NotAcceptable of string
+  | InternalServerError of string
+  | NotImplemented of string
   | Client of string
-  | Unknown of Network.code
+  | Unknown of (Network.code * string)
 
 let error_from_json code c =
-  let open Yojson.Basic.Util in
 
-  let get_json c = Yojson.Basic.from_string c in
+  (* let c = try String.sub c 0 800 *)
+  (*   with _ -> c in *)
 
-  let bad_request_from_json () =
-    let c = get_json c in
-    let f ca =
-      let message = ca |> member "message" |> to_string in
-      try Invalid (message, convert_each_ (ca |> member "invalid") to_string)
-      with _ -> Requested (message, convert_each_ (ca |> member "requested") to_string) in
-    convert_each_ c f in
-
-  let not_acceptable_from_json () =
-    let c = get_json c in
-    (convert_each_ (c |> member "accept-media") to_string,
-     convert_each_ (c |> member "accept-language")
-       (fun s -> Lang.of_string (to_string s))) in
-
+  (* let open Yojson.Basic.Util in *)
+  (* let get_json c = Yojson.Basic.from_string c in *)
   match code with
-    | 400 -> BadRequest (bad_request_from_json ())
-    | 404 -> NotFound
-    | 405 -> NotAllowed
-    | 406 -> NotAcceptable (not_acceptable_from_json ())
-    | 500 -> InternalServerError
-    | 501 -> NotImplemented
-    | code -> Unknown code
+    | 400 -> BadRequest c
+    | 404 -> NotFound c
+    | 405 -> NotAllowed c
+    | 406 -> NotAcceptable c
+    | 500 -> InternalServerError c
+    | 501 -> NotImplemented c
+    | code -> Unknown (code, c)
 
 (* ************************************************************************** *)
 (* Client-side errors                                                         *)

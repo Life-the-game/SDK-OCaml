@@ -62,24 +62,24 @@ let user_from_json c =
   let other stype =
     Other (stype, get_list users, get_list achievement_statuses,
 	   get_list medias,
-	   c |> member "metadata" |> to_string_option) in
+	   c |> member "data" |> to_string_option) in
   {
     info = Info.from_json c;
     owner = ApiUser.from_json (c |> member "owner");
-    template = c |> member "template" |> to_string;
+    template = "not_implemented";
     stype = stype;
     activity =  try (match stype with
       | "new_media" -> NewMedia (get_first achievement_statuses,
-				 get_list medias)
+      				 get_list medias)
 
       | "achievement_unlocked" -> AchievementUnlocked
-	(get_first achievement_statuses)
+      	(get_first achievement_statuses)
 
       | "new_objective" -> NewObjective (get_first achievement_statuses)
 
-      | "level_reached" -> LevelReached (c |> member "metadata" |> to_int)
+      | "level_reached" -> LevelReached (c |> member "data" |> to_int)
 
-      | "network_addition" -> NetworkAddition (get_first users)
+      | "new_following" -> NetworkAddition (get_first users)
 
       | stype -> other stype
     ) with InvalidList l -> Failure (l, other "failure")
@@ -93,12 +93,13 @@ let user_from_json c =
 (* Get User activities                                                        *)
 (* ************************************************************************** *)
 
-let user ?(page = Page.default_parameters) ?(owners = []) () =
+let user ?(page = Page.default_parameters) ?(owner = "") ?(feed = "") () =
   Api.go
-    ~path:["user_activities"]
+    ~path:["player_activities"]
     ~page:(Some page)
     ~get:(Network.empty_filter [
-      ("owners", Network.list_parameter owners);
+      ("owner", owner);
+      ("feed", feed)
     ])
     (Page.from_json user_from_json)
 
@@ -106,12 +107,16 @@ let user ?(page = Page.default_parameters) ?(owners = []) () =
 (* Get feed                                                                   *)
 (* ************************************************************************** *)
 
-let feed ?(page = Page.default_parameters) () =
-  Api.go
-    ~path:["feed"]
-    ~auth_required:true
-    ~page:(Some page)
-    (Page.from_json user_from_json)
+let following ?(page = Page.default_parameters) () =
+  user ~page:page ~feed:"following" ()
+
+let hot ?(page = Page.default_parameters) () =
+  user ~page:page ~feed:"hot" ()
+
+
+(* ************************************************************************** *)
+(* Delete user activity                                                       *)
+(* ************************************************************************** *)
 
 let delete_user id =
   Api.go

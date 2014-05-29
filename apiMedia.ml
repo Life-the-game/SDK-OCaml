@@ -64,12 +64,23 @@ struct
       url_small : url;
       url_big   : url;
     }
-  let from_json c =
-    {
-      info      = Info.from_json c;
-      url_small = c |> member "url_small" |> to_string;
-      url_big   = c |> member "url_big"   |> to_string;
-    }
+
+  let date =
+    CalendarLib.Calendar.make 2013 12 01 9 5 6
+  let from_json c = {
+    info = (let open ApiTypes.Info in {
+      id = 10;
+      creation = date;
+      modification = date;
+    });
+    url_small = c |> to_string;
+    url_big = c |> to_string;
+  }
+    (* { *)
+    (*   info      = Info.from_json c; *)
+    (*   url_small = c |> member "url_small" |> to_string; *)
+    (*   url_big   = c |> member "url_big"   |> to_string; *)
+    (* } *)
   let contenttypes = [
     "image/jpeg";
     "image/png";
@@ -177,10 +188,9 @@ type t =
   | Media   of (string * string)
   | Id      of string
 
-let from_json c = (* todo match type with *)
-  try Picture (Picture.from_json c)
-  with
-    | Yojson.Basic.Util.Type_error (msg, tree) -> Id (c |> to_string)
+let from_json c = match c |> member "type" |> to_string with
+  | "picture" -> Picture (Picture.from_json (c |> member "picture"))
+  | _ -> Id (c |> to_string)
 
 let checker = checker (Picture.contenttypes @ Video.contenttypes)
 

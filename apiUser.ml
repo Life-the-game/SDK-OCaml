@@ -13,7 +13,8 @@ open Network
 
 type t =
     {
-      info                     : Info.t;
+      creation                 : DateTime.t;
+      modification             : DateTime.t;
       login                    : login;
       firstname                : string;
       lastname                 : string;
@@ -36,10 +37,11 @@ let from_json c =
   let open Yojson.Basic.Util in
   let open ApiMedia in
       {
-        info        = Info.from_json c;
+	creation    = Info.creation c;
+	modification= Info.modification c;
         login       = c |> member "login" |> to_string;
-        firstname   = c |> member "firstname" |> ApiTypes.to_string_option;
-        lastname    = c |> member "lastname" |> ApiTypes.to_string_option;
+        firstname   = c |> member "first_name" |> ApiTypes.to_string_option;
+        lastname    = c |> member "last_name" |> ApiTypes.to_string_option;
         name        = c |> member "name" |> ApiTypes.to_string_option;
         avatar      = c |> member "avatar" |> to_option Picture.from_json;
         gender      = Gender.of_string (c |> member "gender" |> to_string);
@@ -48,8 +50,8 @@ let from_json c =
         email       = c |> member "email" |> to_string_option;
         (* score       = c |> member "score" |> to_int; *)
         (* level       = c |> member "level" |> to_int; *)
-	following   = c |> member "in_game_network" |> to_bool_option;
-        url         = c |> member "url" |> to_string;
+	following   = c |> member "following" |> to_bool_option;
+        url         = c |> member "website_url" |> to_string;
       }
 
 let equal u1 u2 =
@@ -69,7 +71,7 @@ let get ?(term = []) ?(page = Page.default_parameters) () =
     (* ?(min_level = None) ?(max_level = None) *)
     (* ?(is_in_network = None) () = *)
   Api.go
-    ~path:["users"]
+    ~path:["players"]
     ~page:(Some page)
     ~get:(Network.option_filter
             [("term", Some (Network.list_parameter term));
@@ -92,7 +94,7 @@ let get ?(term = []) ?(page = Page.default_parameters) () =
 
 let get_one id =
   Api.go
-    ~path:["users"; id]
+    ~path:["players"; id]
     from_json
 
 (* ************************************************************************** *)
@@ -100,30 +102,25 @@ let get_one id =
 (* ************************************************************************** *)
 
 let create ~login ~email ?(lang = Lang.default) ?(firstname = "") ?(lastname = "")
-    ?(gender = Gender.default) ?(birthday = None) ?(avatar = NoFile) either =
+    ?(gender = Gender.default) ?(birthday = None) either =
   let either = match either with
     | Password password -> [("password", password)]
     | OAuth (oauth_provider, oauth_token) ->
-      [("oauth_provider", oauth_provider); ("oauth_token", oauth_token)]
+      [("provider", oauth_provider); ("provider_access_token", oauth_token)]
   in
   let post_parameters = either
-    @ (Network.option_filter
-	 ([("login",     Some login);
-	  ("email",     Some email);
-	  ("firstname", Some firstname);
-	  ("lastname",  Some lastname);
-	  ("gender",    Some (Gender.to_string gender));
-	  ("birthday",  Option.map Date.to_string birthday);
-	 ] @ (match avatar with FileUrl url -> [("avatar", Some url)] | _ -> []))
-    ) in
-  let post =
-    Network.PostMultiPart
-      (post_parameters,
-       Network.files_filter [("avatar", avatar)],
-       ApiMedia.Picture.checker) in
+    @ (Network.option_filter [
+      ("login",     Some login);
+      ("email",     Some email);
+      ("first_name", Some firstname);
+      ("last_name",  Some lastname);
+      ("gender",    Some (Gender.to_string gender));
+      ("birthday",  Option.map Date.to_string birthday);
+    ]) in
+  let post = PostList post_parameters in
   Api.go
     ~rtype:POST
-    ~path:["users"]
+    ~path:["players"]
     ~post:post
     from_json
 
@@ -138,7 +135,6 @@ let edit
     ?(lastname = "")
     ?(gender = Gender.default)
     ?(birthday = None)
-    ?(avatar = NoFile)
     user =
    let post_parameters =
     Network.option_filter
@@ -154,19 +150,42 @@ let edit
 	   ("old_password", Some old_password);
 	   ("password", Some password);
 	 ])
-       @ (match avatar with FileUrl url -> [("avatar", Some url)] | _ -> [])
       ) in
-   let post =
-     Network.PostMultiPart
-       (post_parameters,
-	Network.files_filter [("avatar", avatar)],
-	ApiMedia.Picture.checker) in
+   let post = PostList post_parameters in
    Api.go
-     ~rtype:PUT
-     ~path:["users"; user]
+     ~rtype:PATCH
+     ~path:["players"; user]
      ~auth_required:true
      ~post:post
      from_json
+
+(* ************************************************************************** *)
+(* Avatar                                                                     *)
+(* ************************************************************************** *)
+
+let delete_avatar user =
+  Api.go
+    ~rtype:DELETE
+    ~path:["players"; user; "avatar"]
+    ~auth_required:true
+    Api.noop
+
+let avatar user avatar =
+  let go post = Api.go
+    ~rtype:POST
+    ~path:["players"; user; "avatar"]
+    ~auth_required:true
+    ~post:post
+    (fun c ->
+      let open Yojson.Basic.Util in
+	  c |> member "avatar" |> to_string) in
+  match avatar with
+    | FileUrl url -> go (PostList [("avatar", url)])
+    | File file -> go (PostMultiPart ([], [("avatar", file)],
+				      ApiMedia.Picture.checker))
+    | NoFile -> match delete_avatar user with
+	| Error e -> Error e
+	| Result () -> Result ""
 
 (* ************************************************************************** *)
 (* Get followers                                                              *)
@@ -174,7 +193,7 @@ let edit
 
 let get_followers ?(page = Page.default_parameters) user =
   Api.go
-    ~path:["users"; user; "followers"]
+    ~path:["players"; user; "followers"]
     ~page:(Some page)
     (Page.from_json from_json)
 
@@ -184,7 +203,7 @@ let get_followers ?(page = Page.default_parameters) user =
 
 let get_following ?(page = Page.default_parameters) user =
   Api.go
-    ~path:["users"; user; "following"]
+    ~path:["players"; user; "following"]
     ~page:(Some page)
     (Page.from_json from_json)
 
@@ -196,12 +215,40 @@ let follow user =
   Api.go
     ~auth_required:true
     ~rtype:POST
-    ~path:["users"; user; "followers"]
+    ~path:["players"; user; "followers"]
     Api.noop
 
 let unfollow user =
   Api.go
     ~auth_required:true
     ~rtype:DELETE
-    ~path:["users"; user; "followers"]
+    ~path:["players"; user; "followers"]
+    Api.noop
+
+(* ************************************************************************** *)
+(* Challenge                                                                  *)
+(* ************************************************************************** *)
+
+let challenge user achievement =
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:["players"; user; "challenge"]
+    ~post:(PostList [
+      ("achievement", achievement);
+    ])
+    Api.noop
+
+(* ************************************************************************** *)
+(* Send a message                                                             *)
+(* ************************************************************************** *)
+
+let message user message =
+  Api.go
+    ~auth_required:true
+    ~rtype:POST
+    ~path:["players"; user; "challenge"]
+    ~post:(PostList [
+      ("message", message);
+    ])
     Api.noop
