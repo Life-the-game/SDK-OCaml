@@ -81,7 +81,7 @@ let curl_perform ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string)
   let _ = ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url) in
 
   Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string !ApiConf.lang)];
-  (match !ApiConf.auth_token with
+  (match !ApiConf.auth_token () with
     | "" -> () | token -> (Curl.set_httpheader c ["Authorization: Bearer " ^ token];
 			   ApiDump.verbose (" ## Authentified with: " ^ token)));
   Curl.set_postfieldsize c 0;
@@ -169,6 +169,7 @@ let extra_parameters (parameters : parameters)
 exception ParseError of string
 
 let go
+    ~session
     ?(httpauth = None)
     ?(auth_required = false)
     ?(rtype = Network.default)
@@ -178,7 +179,7 @@ let go
     ?(post = Network.PostEmpty)
     from_json =
 
-  match auth_required, !ApiConf.auth_token with
+  match auth_required, !ApiConf.auth_token () with
     | false, token | true, token when token != "" ->
 
       let get = extra_parameters get page
@@ -211,6 +212,7 @@ let go
 	 | InvalidFileFormat -> Error ApiTypes.invalid_format
 	 | FileNotFound -> Error ApiTypes.file_not_found
 	 | ParseError e -> Error (ApiTypes.invalid_json e)
+	 | OtherError e -> Error e
 	 | _ -> Error ApiTypes.generic)
     | _ -> Error ApiTypes.auth_required
 
@@ -220,16 +222,18 @@ let go
 
 let noop _ = ()
 
-let vote resource from_json id vote =
+let vote ~session resource from_json id vote =
   go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:[resource; id_to_string id; "vote"]
     ~post:(PostList [("vote", Vote.to_string vote)])
     noop
 
-let cancel_vote resource from_json id =
+let cancel_vote ~session resource from_json id =
   go
+    ~session:session
     ~auth_required:true
     ~rtype:DELETE
     ~path:[resource; id_to_string id; "vote"]

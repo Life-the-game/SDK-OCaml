@@ -40,8 +40,9 @@ let from_json c =
 (* Get comments                                                               *)
 (* ************************************************************************** *)
 
-let get resource ?(page = Page.default_parameters) id =
+let get resource ~session ?(page = Page.default_parameters) id =
   Api.go
+    ~session:session
     ~path:[resource; id_to_string id; "comments"]
     ~page:(Some page)
     (Page.from_json from_json)
@@ -50,8 +51,9 @@ let get resource ?(page = Page.default_parameters) id =
 (* Add a comment                                                              *)
 (* ************************************************************************** *)
 
-let create resource ~content id =
+let create resource ~session ~content id =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:[resource; id_to_string id; "comments"]
@@ -62,8 +64,9 @@ let create resource ~content id =
 (* Edit a comment                                                             *)
 (* ************************************************************************** *)
 
-let edit ~content id =
+let edit ~session ~content id =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:PATCH
     ~path:["comments"; id_to_string id]
@@ -74,8 +77,9 @@ let edit ~content id =
 (* Delete a comment                                                           *)
 (* ************************************************************************** *)
 
-let delete id =
+let delete ~session id =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:DELETE
     ~path:["comments"; id_to_string id]

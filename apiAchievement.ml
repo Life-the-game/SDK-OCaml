@@ -26,13 +26,14 @@ type t =
       comments           : int;
       name               : string;
       description        : string option;
-      icon               : ApiMedia.Picture.t option;
+      icon               : Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
       location           : Location.t option;
       secret             : bool option;
       visibility         : Visibility.t;
+      total_comments     : int;
       url                : url;
     }
 
@@ -50,7 +51,7 @@ let rec from_json c =
         name               = c |> member "name" |> to_string;
         description        = c |> member "description" |> to_string_option;
         icon               = (c |> member "icon"
-                                |> to_option ApiMedia.Picture.from_json);
+                                |> to_option Picture.from_json);
         color              = c |> member "color" |> to_string_option;
         tags               = ApiTypes.convert_each (c |> member "tags") to_string;
         achievement_status = None;(* c |> member "achievement_status" |> to_option *)
@@ -63,6 +64,7 @@ let rec from_json c =
         secret             = c |> member "secret" |> to_bool_option;
         visibility         = Visibility.of_string
           (match c |> member "visibility" |> to_string_option with Some s -> s | None -> "");
+	total_comments     = c |> member "total_comments" |> ApiTypes.to_int_option;
         url                = c |> member "website_url" |> to_string;
       }
 
@@ -74,9 +76,10 @@ let rec from_json c =
 (* Get Achievements                                                           *)
 (* ************************************************************************** *)
 
-let get ?(page = Page.default_parameters)
+let get ~session ?(page = Page.default_parameters)
     ?(terms = []) ?(tags = []) ?(location = None) () =
   Api.go
+    ~session:session
     ~path:["achievements"]
     ~page:(Some page)
     ~get:(Network.option_filter
@@ -90,8 +93,9 @@ let get ?(page = Page.default_parameters)
 (* Get one Achievement                                                        *)
 (* ************************************************************************** *)
 
-let get_one id =
+let get_one ~session id =
   Api.go
+    ~session:session
     ~path:["achievements"; id_to_string id]
     from_json
 
@@ -99,8 +103,8 @@ let get_one id =
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~name ~description ?(icon = NoFile) ?(color = "")
-    ?(secret = false) ?(location = None) ?(radius = 0) () =
+let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
+    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) () =
   let radius = if radius > 0 then string_of_int radius else ""
   and location = match location with
     | Some l -> Location.to_string l | None -> "" in
@@ -110,6 +114,7 @@ let create ~name ~description ?(icon = NoFile) ?(color = "")
        ("description", description);
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("tags", Network.list_parameter tags);
        ("secret", if secret then "1" else "0");
        ("location", location);
        ("radius", radius);
@@ -117,8 +122,9 @@ let create ~name ~description ?(icon = NoFile) ?(color = "")
   let post =
     Network.PostMultiPart
       (post_parameters, Network.files_filter [("icon", icon)],
-      ApiMedia.Picture.checker) in
+       Picture.checker) in
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:["achievements"]
@@ -129,21 +135,24 @@ let create ~name ~description ?(icon = NoFile) ?(color = "")
 (* Edit an Achievement                                                        *)
 (* ************************************************************************** *)
 
-let edit ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
-    ?(secret = None) id =
+let edit ~session ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
+    ?(secret = None) ?(add_tags = []) ?(delete_tags = []) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);
        ("description", description);
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("add_tags", Network.list_parameter add_tags);
+       ("delete_tags", Network.list_parameter delete_tags);
        ("secret", match secret with Some b -> string_of_bool b | None -> "");
       ] in
   let post =
     Network.PostMultiPart
       (post_parameters, Network.files_filter [("icon", icon)],
-       ApiMedia.Picture.checker) in
+       Picture.checker) in
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:PATCH
     ~path:["achievements"; id_to_string id]
@@ -154,8 +163,9 @@ let edit ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
 (* Delete an Achievement                                                      *)
 (* ************************************************************************** *)
 
-let delete id =
+let delete ~session id =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:DELETE
     ~path:["achievements"; id_to_string id]
@@ -165,35 +175,53 @@ let delete id =
 (* Tags                                                                       *)
 (* ************************************************************************** *)
 
-let add_tags tags id =
+let tags ~session id =
   Api.go
+    ~session:session
+    ~rtype:GET
+    ~path:["achievements"; id_to_string id; "tags"]
+    (fun c -> ApiTypes.convert_each c Yojson.Basic.Util.to_string)
+
+let add_tags ~session tags id =
+  Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:["achievements"; id_to_string id; "tags"]
     ~get:[("tags", list_parameter tags)]
     from_json
 
-let delete_tags tags id =
+let delete_tags ~session tags id =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:DELETE
     ~path:["achievements"; id_to_string id; "tags"]
     ~get:[("tags", list_parameter tags)]
     from_json
 
+let all_tags ~session () =
+  Api.go
+    ~session:session
+    ~path:["tags"]
+    (fun c -> ApiTypes.convert_each c
+      (fun c -> let open Yojson.Basic.Util in c |> member "tag" |> to_string))
+
 (* ************************************************************************** *)
 (* Icon                                                                       *)
 (* ************************************************************************** *)
 
-let delete_icon id =
+let delete_icon ~session id =
   Api.go
+    ~session:session
     ~rtype:DELETE
     ~path:["achievements"; id_to_string id; "icon"]
     ~auth_required:true
     Api.noop
 
-let icon id icon =
+let icon ~session id icon =
   let go post = Api.go
+    ~session:session
     ~rtype:POST
     ~path:["achievements"; id_to_string id; "icon"]
     ~auth_required:true
@@ -204,8 +232,8 @@ let icon id icon =
   match icon with
     | FileUrl url -> go (PostList [("icon", url)])
     | File file -> go (PostMultiPart ([], [("icon", file)],
-				      ApiMedia.Picture.checker))
-    | NoFile -> match delete_icon id with
+				      Picture.checker))
+    | NoFile -> match delete_icon ~session:session id with
 	| Error e -> Error e
 	| Result () -> Result ""
 

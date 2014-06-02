@@ -11,23 +11,7 @@ open Network
 (* Type                                                                       *)
 (* ************************************************************************** *)
 
-type t =
-    {
-      creation                 : DateTime.t;
-      modification             : DateTime.t;
-      login                    : login;
-      firstname                : string;
-      lastname                 : string;
-      name                     : string;
-      avatar                   : ApiMedia.Picture.t option;
-      gender                   : Gender.t;
-      birthday                 : Date.t option;
-      email                    : email option;
-      (* score                    : int; *)
-      (* level                    : int; *)
-      following                : bool option;
-      url                      : url;
-    }
+type t = _user
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -35,7 +19,6 @@ type t =
 
 let from_json c =
   let open Yojson.Basic.Util in
-  let open ApiMedia in
       {
 	creation    = Info.creation c;
 	modification= Info.modification c;
@@ -65,12 +48,13 @@ let equal u1 u2 =
 (* Get users                                                                  *)
 (* ************************************************************************** *)
 
-let get ?(term = []) ?(page = Page.default_parameters) () =
+let get ~session ?(term = []) ?(page = Page.default_parameters) () =
     (* ?(with_avatar = None) ?(genders = []) *)
     (* ?(lang = []) ?(min_score = None) ?(max_score = None) *)
     (* ?(min_level = None) ?(max_level = None) *)
     (* ?(is_in_network = None) () = *)
   Api.go
+    ~session:session
     ~path:["players"]
     ~page:(Some page)
     ~get:(Network.option_filter
@@ -92,8 +76,9 @@ let get ?(term = []) ?(page = Page.default_parameters) () =
 (* Get one user                                                               *)
 (* ************************************************************************** *)
 
-let get_one id =
+let get_one ~session id =
   Api.go
+    ~session:session
     ~path:["players"; id]
     from_json
 
@@ -101,7 +86,7 @@ let get_one id =
 (* Create a user                                                              *)
 (* ************************************************************************** *)
 
-let create ~login ~email ?(lang = Lang.default) ?(firstname = "") ?(lastname = "")
+let create ~session ~login ~email ?(lang = Lang.default) ?(firstname = "") ?(lastname = "")
     ?(gender = Gender.default) ?(birthday = None) either =
   let either = match either with
     | Password password -> [("password", password)]
@@ -119,6 +104,7 @@ let create ~login ~email ?(lang = Lang.default) ?(firstname = "") ?(lastname = "
     ]) in
   let post = PostList post_parameters in
   Api.go
+    ~session:session
     ~rtype:POST
     ~path:["players"]
     ~post:post
@@ -129,6 +115,7 @@ let create ~login ~email ?(lang = Lang.default) ?(firstname = "") ?(lastname = "
 (* ************************************************************************** *)
 
 let edit
+    ~session
     ?(email = "")
     ?(password = None)
     ?(firstname = "")
@@ -153,6 +140,7 @@ let edit
       ) in
    let post = PostList post_parameters in
    Api.go
+    ~session:session
      ~rtype:PATCH
      ~path:["players"; user]
      ~auth_required:true
@@ -163,15 +151,17 @@ let edit
 (* Avatar                                                                     *)
 (* ************************************************************************** *)
 
-let delete_avatar user =
+let delete_avatar ~session user =
   Api.go
+    ~session:session
     ~rtype:DELETE
     ~path:["players"; user; "avatar"]
     ~auth_required:true
     Api.noop
 
-let avatar user avatar =
+let avatar ~session user avatar =
   let go post = Api.go
+    ~session:session
     ~rtype:POST
     ~path:["players"; user; "avatar"]
     ~auth_required:true
@@ -182,8 +172,8 @@ let avatar user avatar =
   match avatar with
     | FileUrl url -> go (PostList [("avatar", url)])
     | File file -> go (PostMultiPart ([], [("avatar", file)],
-				      ApiMedia.Picture.checker))
-    | NoFile -> match delete_avatar user with
+				      Picture.checker))
+    | NoFile -> match delete_avatar ~session:session user with
 	| Error e -> Error e
 	| Result () -> Result ""
 
@@ -191,8 +181,9 @@ let avatar user avatar =
 (* Get followers                                                              *)
 (* ************************************************************************** *)
 
-let get_followers ?(page = Page.default_parameters) user =
+let get_followers ~session ?(page = Page.default_parameters) user =
   Api.go
+    ~session:session
     ~path:["players"; user; "followers"]
     ~page:(Some page)
     (Page.from_json from_json)
@@ -201,8 +192,9 @@ let get_followers ?(page = Page.default_parameters) user =
 (* Get following                                                              *)
 (* ************************************************************************** *)
 
-let get_following ?(page = Page.default_parameters) user =
+let get_following ~session ?(page = Page.default_parameters) user =
   Api.go
+    ~session:session
     ~path:["players"; user; "following"]
     ~page:(Some page)
     (Page.from_json from_json)
@@ -211,15 +203,17 @@ let get_following ?(page = Page.default_parameters) user =
 (* Follow                                                                     *)
 (* ************************************************************************** *)
 
-let follow user =
+let follow ~session user =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:["players"; user; "followers"]
     Api.noop
 
-let unfollow user =
+let unfollow ~session user =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:DELETE
     ~path:["players"; user; "followers"]
@@ -229,8 +223,9 @@ let unfollow user =
 (* Challenge                                                                  *)
 (* ************************************************************************** *)
 
-let challenge user achievement =
+let challenge ~session user achievement =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:["players"; user; "challenge"]
@@ -243,8 +238,9 @@ let challenge user achievement =
 (* Send a message                                                             *)
 (* ************************************************************************** *)
 
-let message user message =
+let message ~session user message =
   Api.go
+    ~session:session
     ~auth_required:true
     ~rtype:POST
     ~path:["players"; user; "challenge"]

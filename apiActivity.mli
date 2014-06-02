@@ -13,14 +13,14 @@ open ApiTypes
 
 type user_activity =
   | NetworkAddition     of ApiUser.t
-  | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
+  | NewMedia            of (ApiAchievementStatus.t * media list)
   | AchievementUnlocked of ApiAchievementStatus.t
   | NewObjective        of ApiAchievementStatus.t
   | LevelReached        of int
   | Other               of (string
 			    * ApiUser.t list
 			    * ApiAchievementStatus.t list
-			    * ApiMedia.t list
+			    * media list
 			    * string option)
   | Failure             of (string * user_activity)
 
@@ -40,17 +40,24 @@ type user = (ApiUser.t, user_activity) t
 
 (** Get user activities                                                       *)
 val user :
-  ?page:Page.parameters
+  session:session
+  -> ?page:Page.parameters
   -> ?owner:login
   -> ?feed:string
   -> unit -> user Page.t Api.t
 
 (** Get feed *)
-val following : ?page:Page.parameters -> unit -> user Page.t Api.t 
-val hot : ?page:Page.parameters -> unit -> user Page.t Api.t 
+val following :
+  session:session
+  -> ?page:Page.parameters -> unit -> user Page.t Api.t 
+val hot :
+  session:session
+  -> ?page:Page.parameters -> unit -> user Page.t Api.t 
 
 (** Delete user activities *)
-val delete_user : id -> unit Api.t
+val delete_user :
+  session:session
+  -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

@@ -15,12 +15,12 @@ type t =
     {
       info             : Info.t;
       vote             : Vote.t;
-      comments         : int;
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
       status           : Status.t;
       message          : string option;
-      medias           : ApiMedia.t list;
+      medias           : media list;
+      total_comments   : int;
       url              : url;
     }
 
@@ -29,7 +29,8 @@ type t =
 (* ************************************************************************** *)
 
 val get :
-  ?page:Page.parameters
+  session:session
+  -> ?page:Page.parameters
   -> ?owners: login list
   -> ?achievements: id list
   -> ?statuses:Status.t list
@@ -37,39 +38,63 @@ val get :
   -> ?with_medias: bool option
   -> unit -> t ApiTypes.Page.t Api.t
 
-val get_one : id -> t Api.t
+val get_one : session:session -> id -> t Api.t
 
 val create :
-  achievement:id
+  session:session
+  -> achievement:id
   -> status:Status.t
   -> ?message:string
   -> unit -> t Api.t
 
 val edit :
-  ?status:Status.t option
+  session:session
+  -> ?status:Status.t option
   -> ?message:string
   -> id -> t Api.t
 
-val delete : id -> unit Api.t
+val delete :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Medias}                                                                *)
 
-val add_media : either_file -> id -> ApiMedia.t Api.t
-val delete_media : id -> unit Api.t
+val add_media :
+  session:session
+  -> either_file -> id -> media Api.t
+val delete_media :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Vote}                                                                  *)
 
-val vote : id -> Vote.vote -> unit Api.t
-val cancel_vote : id -> unit Api.t
+val vote :
+  session:session
+  -> id -> Vote.vote -> unit Api.t
+val cancel_vote :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Comments}                                                              *)
 
-val comments       : ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
-val add_comment    : content:string -> id -> ApiComment.t Api.t
-val edit_comment   : content:string -> id -> ApiComment.t Api.t
-val delete_comment : id -> unit Api.t
-val vote_comment   : id -> Vote.vote -> unit Api.t
-val cancel_vote_comment : id -> unit Api.t
+val comments       :
+  session:session
+  -> ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
+val add_comment    :
+  session:session
+  -> content:string -> id -> ApiComment.t Api.t
+val edit_comment   :
+  session:session
+  -> content:string -> id -> ApiComment.t Api.t
+val delete_comment :
+  session:session
+  -> id -> unit Api.t
+val vote_comment   :
+  session:session
+  -> id -> Vote.vote -> unit Api.t
+val cancel_vote_comment :
+  session:session
+  -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

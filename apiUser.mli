@@ -11,45 +11,49 @@ open ApiTypes
 (** {3 Type}                                                                  *)
 (* ************************************************************************** *)
 
-type t =
-    {
-      creation                 : DateTime.t;
-      modification             : DateTime.t;
-      login                    : login;
-      firstname                : string;
-      lastname                 : string;
-      name                     : string;
-      avatar                   : ApiMedia.Picture.t option;
-      gender                   : Gender.t;
-      birthday                 : Date.t option;
-      email                    : email option;
-      (* score                    : int; *)
-      (* level                    : int; *)
-      following                : bool option;
-      url                      : url;
-    }
+type t = _user
 
 (* ************************************************************************** *)
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
 val get :
-  ?term:string list
+  session:session
+  -> ?term:string list
   -> ?page:Page.parameters
-  (* -> ?with_avatar: bool option *)
-  (* -> ?genders: Gender.t list *)
-  (* -> ?lang: Lang.t list *)
-  (* -> ?min_score: int option *)
-  (* -> ?max_score: int option *)
-  (* -> ?min_level: int option *)
-  (* -> ?max_level: int option *)
-  (* -> ?is_in_network: bool option *)
+  (* -> ?with_avatar:
+  session:session
+  -> bool option *)
+  (* -> ?genders:
+  session:session
+  -> Gender.t list *)
+  (* -> ?lang:
+  session:session
+  -> Lang.t list *)
+  (* -> ?min_score:
+  session:session
+  -> int option *)
+  (* -> ?max_score:
+  session:session
+  -> int option *)
+  (* -> ?min_level:
+  session:session
+  -> int option *)
+  (* -> ?max_level:
+  session:session
+  -> int option *)
+  (* -> ?is_in_network:
+  session:session
+  -> bool option *)
   -> unit -> t Page.t Api.t
 
-val get_one : login -> t Api.t
+val get_one :
+  session:session
+  -> login -> t Api.t
 
 val create :
-  login:login
+  session:session
+  -> login:login
   -> email:email
   -> ?lang:Lang.t
   -> ?firstname:string
@@ -59,7 +63,8 @@ val create :
   -> either -> t Api.t
 
 val edit :
-  ?email:email
+  session:session
+  -> ?email:email
   -> ?password:(string * string) option
   -> ?firstname:string
   -> ?lastname:string
@@ -69,21 +74,31 @@ val edit :
 
 (** {6 Avatar}                                                                *)
 
-val avatar : login -> either_file -> url Api.t
-val delete_avatar : login -> unit Api.t
+val avatar :
+  session:session
+  -> login -> either_file -> url Api.t
+val delete_avatar :
+  session:session
+  -> login -> unit Api.t
 
 (** {6 Follow}                                                                *)
 
 val get_followers :
-  ?page:Page.parameters
+  session:session
+  -> ?page:Page.parameters
   -> login -> t Page.t Api.t
 
 val get_following :
-  ?page:Page.parameters
+  session:session
+  -> ?page:Page.parameters
   -> login -> t Page.t Api.t
 
-val follow : login -> unit Api.t
-val unfollow : login -> unit Api.t
+val follow :
+  session:session
+  -> login -> unit Api.t
+val unfollow :
+  session:session
+  -> login -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

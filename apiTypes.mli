@@ -334,9 +334,135 @@ val auth_required       : error
 val notfound            : error
 
 (* ************************************************************************** *)
-(** {3 API Response}                                                          *)
+(** {3 Multi Media Tools}                                                     *)
 (* ************************************************************************** *)
 
+val extension : string -> string
+val extension_of_path : path -> string
+val checker : contenttype -> bool
+
+val guess_contenttype : string -> contenttype
+val guess_contenttype_from_extension : string -> contenttype
+val guess_contenttype_from_path : path -> contenttype
+
+(* ************************************************************************** *)
+(** {3 Picture}                                                               *)
+(* ************************************************************************** *)
+
+module type PICTURE =
+sig
+  type t =
+    {
+      info      : Info.t;
+      url_small : url;
+      url_big   : url;
+    }
+  val from_json : Yojson.Basic.json -> t
+  val contenttypes : contenttype list
+  val checker : contenttype -> bool
+end
+module Picture : PICTURE
+
+(* ************************************************************************** *)
+(** {3 Video}                                                                 *)
+(* ************************************************************************** *)
+
+module type VIDEO =
+sig
+  type t =
+    {
+      info      : Info.t;
+      url       : url;
+      thumbnail : Picture.t;
+    }
+  val from_json : Yojson.Basic.json -> t
+  val contenttypes : contenttype list
+  val checker : contenttype -> bool
+end
+module Video : VIDEO
+
+module type EXTERNALVIDEO =
+sig
+  type provider =
+    | Youtube
+    | DailyMotion
+    | Vimeo
+    | Unknown
+  type t =
+    {
+      info      : Info.t;
+      provider  : provider;
+      video_url : url;
+      thumbnail : Picture.t;
+    }
+  val from_json : Yojson.Basic.json -> t
+  val provider_to_string : provider -> string
+  val provider_of_string : string -> provider
+end
+module ExternalVideo : EXTERNALVIDEO
+
+(* ************************************************************************** *)
+(** {3 Media}                                                                 *)
+(* ************************************************************************** *)
+
+type media =
+  | Picture of Picture.t
+  | Video   of Video.t
+  | ExternalVideo of ExternalVideo.t
+  | Media   of (string * string)
+  | Id      of string
+
+val media_from_json : Yojson.Basic.json -> media
+val media_thumbnail : media -> url
+val media_url       : media -> url
+val media_id        : media -> id
+
+(* ************************************************************************** *)
+(* Session Types Dependency                                                   *)
+(* ************************************************************************** *)
+
+type _auth =
+    {
+      access_token  : token;
+      token_type    : string;
+      expires_in    : int;
+      refresh_token : token;
+      scope         : string list;
+    }
+
+type _user =
+    {
+      creation                 : DateTime.t;
+      modification             : DateTime.t;
+      login                    : login;
+      firstname                : string;
+      lastname                 : string;
+      name                     : string;
+      avatar                   : Picture.t option;
+      gender                   : Gender.t;
+      birthday                 : Date.t option;
+      email                    : email option;
+      (* score                    : int; *)
+      (* level                    : int; *)
+      following                : bool option;
+      url                      : url;
+    }
+
+(* ************************************************************************** *)
+(* Session                                                                    *)
+(* ************************************************************************** *)
+
+type session = {
+  mutable auth : _auth option;
+  mutable user : _user option;
+  mutable lang : Lang.t;
+}
+
+(* ************************************************************************** *)
+(** {3 API Response}                                                          *)
+(* ************************************************************************** *)
 type 'a t =
   | Result of 'a
   | Error of error
+
+exception OtherError of error

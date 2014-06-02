@@ -13,7 +13,9 @@ let verbose = ref false
 
 (** Set the authentication token
     Note: It's automatically set on call to the ApiAuth.login function        *)
-let auth_token = ref ""
+let _auth_token = ref ""
+let auth_token = ref (fun () -> !_auth_token)
+let remove_oauth_token = ref (fun () -> _auth_token := "")
 
 (** Set the language in the header                                            *)
 let lang = ref ApiTypes.Lang.default

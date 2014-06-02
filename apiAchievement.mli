@@ -25,13 +25,14 @@ type t =
       comments           : int;
       name               : string;
       description        : string option;
-      icon               : ApiMedia.Picture.t option;
+      icon               : Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
       location           : Location.t option;
       secret             : bool option;
       visibility         : Visibility.t;
+      total_comments     : int;
       url                : url;
     }
 
@@ -40,57 +41,97 @@ type t =
 (* ************************************************************************** *)
 
 val get :
-  ?page:Page.parameters
+  session:session
+  -> ?page:Page.parameters
   -> ?terms:string list
   -> ?tags:string list
   -> ?location:Location.parameters option
   -> unit -> t Page.t Api.t
 
-val get_one : id -> t Api.t
+val get_one :
+  session:session
+  -> id -> t Api.t
 
 val create :
-  name:string
+  session:session
+  -> name:string
   -> description:string
   -> ?icon:either_file
   -> ?color:color
   -> ?secret:bool
+  -> ?tags:string list
   -> ?location:Location.parameters option
   -> ?radius:int
   -> unit -> t Api.t
 
 val edit :
-  ?name:string
+  session:session
+  -> ?name:string
   -> ?description:string
   -> ?icon:either_file
   -> ?color:color
   -> ?secret:bool option
+  -> ?add_tags:string list
+  -> ?delete_tags:string list
   -> id -> t Api.t
 
-val delete : id -> unit Api.t
+val delete :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Tags}                                                                *)
 
-val add_tags : string list -> id -> t Api.t
-val delete_tags : string list -> id -> t Api.t
+val tags :
+  session:session
+  -> id -> string list Api.t
+val add_tags :
+  session:session
+  -> string list -> id -> t Api.t
+val delete_tags :
+  session:session
+  -> string list -> id -> t Api.t
+val all_tags :
+  session:session
+  -> unit -> string list Api.t
 
 (** {6 Icon}                                                                *)
 
-val icon : id -> either_file -> url Api.t
-val delete_icon : id -> unit Api.t
+val icon :
+  session:session
+  -> id -> either_file -> url Api.t
+val delete_icon :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Vote}                                                                  *)
 
-val vote : id -> Vote.vote -> unit Api.t
-val cancel_vote : id -> unit Api.t
+val vote :
+  session:session
+  -> id -> Vote.vote -> unit Api.t
+val cancel_vote :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Comments}                                                              *)
 
-val comments       : ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
-val add_comment    : content:string -> id -> ApiComment.t Api.t
-val edit_comment   : content:string -> id -> ApiComment.t Api.t
-val delete_comment : id -> unit Api.t
-val vote_comment   : id -> Vote.vote -> unit Api.t
-val cancel_vote_comment : id -> unit Api.t
+val comments       :
+  session:session
+  -> ?page: Page.parameters -> id -> ApiComment.t Page.t Api.t
+val add_comment    :
+  session:session
+  -> content:string -> id -> ApiComment.t Api.t
+val edit_comment   :
+  session:session
+  -> content:string -> id -> ApiComment.t Api.t
+val delete_comment :
+  session:session
+  -> id -> unit Api.t
+val vote_comment   :
+  session:session
+  -> id -> Vote.vote -> unit Api.t
+val cancel_vote_comment :
+  session:session
+  -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

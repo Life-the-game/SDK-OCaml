@@ -23,15 +23,27 @@ type t =
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
 
-val get : string -> ?page:Page.parameters -> id -> t Page.t Api.t
-val create : string -> content:string -> id -> t Api.t
-val edit : content:string -> id -> t Api.t
-val delete : id -> unit Api.t
+val get :
+  string -> session:session
+  -> ?page:Page.parameters -> id -> t Page.t Api.t
+val create :
+  string -> session:session
+  -> content:string -> id -> t Api.t
+val edit :
+  session:session
+  -> content:string -> id -> t Api.t
+val delete :
+  session:session
+  -> id -> unit Api.t
 
 (** {6 Vote}                                                                  *)
 
-val vote : id -> Vote.vote -> unit Api.t
-val cancel_vote : id -> unit Api.t
+val vote :
+  session:session
+  -> id -> Vote.vote -> unit Api.t
+val cancel_vote :
+  session:session
+  -> id -> unit Api.t
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

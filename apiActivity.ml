@@ -13,14 +13,14 @@ open Network
 
 type user_activity =
   | NetworkAddition     of ApiUser.t
-  | NewMedia            of (ApiAchievementStatus.t * ApiMedia.t list)
+  | NewMedia            of (ApiAchievementStatus.t * media list)
   | AchievementUnlocked of ApiAchievementStatus.t
   | NewObjective        of ApiAchievementStatus.t
   | LevelReached        of int
   | Other               of (string
 			    * ApiUser.t list
 			    * ApiAchievementStatus.t list
-			    * ApiMedia.t list
+			    * media list
 			    * string option)
   | Failure             of (string * user_activity)
 
@@ -47,7 +47,7 @@ let user_from_json c =
   and achievement_statuses : (string * ApiAchievementStatus.t list) =
     ("achievement_status",
      ApiTypes.convert_each (c |> member "achievement_statuses") ApiAchievementStatus.from_json)
-  and medias = ("medias", ApiTypes.convert_each (c |> member "medias") ApiMedia.from_json)
+  and medias = ("medias", ApiTypes.convert_each (c |> member "medias") media_from_json)
 
   and get_list (_, l) = l
 
@@ -93,8 +93,9 @@ let user_from_json c =
 (* Get User activities                                                        *)
 (* ************************************************************************** *)
 
-let user ?(page = Page.default_parameters) ?(owner = "") ?(feed = "") () =
+let user ~session ?(page = Page.default_parameters) ?(owner = "") ?(feed = "") () =
   Api.go
+    ~session:session
     ~path:["player_activities"]
     ~page:(Some page)
     ~get:(Network.empty_filter [
@@ -107,19 +108,20 @@ let user ?(page = Page.default_parameters) ?(owner = "") ?(feed = "") () =
 (* Get feed                                                                   *)
 (* ************************************************************************** *)
 
-let following ?(page = Page.default_parameters) () =
-  user ~page:page ~feed:"following" ()
+let following ~session?(page = Page.default_parameters) () =
+  user ~session ~page:page ~feed:"following" ()
 
-let hot ?(page = Page.default_parameters) () =
-  user ~page:page ~feed:"hot" ()
+let hot ~session ?(page = Page.default_parameters) () =
+  user ~session:session ~page:page ~feed:"hot" ()
 
 
 (* ************************************************************************** *)
 (* Delete user activity                                                       *)
 (* ************************************************************************** *)
 
-let delete_user id =
+let delete_user ~session id =
   Api.go
+    ~session:session
     ~path:["user_activities"; id_to_string id]
     ~rtype:DELETE
     ~auth_required:true

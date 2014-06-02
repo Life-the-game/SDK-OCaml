@@ -11,14 +11,7 @@ open Network
 (* Type                                                                       *)
 (* ************************************************************************** *)
 
-type t =
-    {
-      access_token  : token;
-      token_type    : string;
-      expires_in    : int;
-      refresh_token : token;
-      scope         : string list;
-    }
+type t = _auth
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -43,26 +36,30 @@ let from_json content =
 (* Logout (delete token)                                                      *)
 (* ************************************************************************** *)
 
-let client_logout () =
-  ApiConf.auth_token := ""
+let client_logout ~session () =
+  session.auth <- None;
+  session.user <- None
 
-let logout ?(token = !ApiConf.auth_token) () =
-  let r = Api.go
-    ~rtype:DELETE
-    ~path:["tokens"; token]
-    Api.noop in
-  if token = !ApiConf.auth_token
-  then match r with
-    | Result auth -> client_logout (); r
-    | _ -> r
-  else r
+let logout ~session () =
+  match session.auth with
+    | None -> Error auth_required
+    | Some auth ->
+      let r = Api.go
+	~session:session
+	~rtype:DELETE
+	~path:["tokens"; auth.access_token]
+	Api.noop in
+      match r with
+	| Result auth -> client_logout ~session:session (); r
+	| _ -> r
 
 (* ************************************************************************** *)
 (* Login (create token)                                                       *)
 (* ************************************************************************** *)
 
-let _login ~oauth_id ~oauth_secret ~scope parameters =
+let _login ~session ~oauth_id ~oauth_secret ~scope parameters =
   let r = Api.go
+    ~session:session
     ~httpauth:(Some (oauth_id, oauth_secret))
     ~rtype:POST
     ~path:["oauth2"; "access_token"]
@@ -71,11 +68,17 @@ let _login ~oauth_id ~oauth_secret ~scope parameters =
     ] @ parameters))
     from_json in
   match r with
-    | Result auth -> ApiConf.auth_token := auth.access_token; r
+    | Result auth ->
+      let user = match ApiUser.get_one ~session:session "me" with
+	| Result r -> r
+	| Error e -> raise (OtherError e) in
+      session.user <- Some user;
+      session.auth <- Some auth;
+      r
     | _ -> r
 
-let login ~oauth_id ~oauth_secret ~scope login password =
-  _login ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [
+let login ~session ~oauth_id ~oauth_secret ~scope login password =
+  _login ~session:session ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [
       ("grant_type", "password");
       ("username", login);
       ("password", password);
@@ -85,14 +88,10 @@ let login ~oauth_id ~oauth_secret ~scope login password =
 (* OAuth Login                                                                *)
 (* ************************************************************************** *)
 
-let oauth ?(refresh_token="") ~oauth_id ~oauth_secret ~scope provider token =
-  _login ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [
+let oauth ~session ?(refresh_token="") ~oauth_id ~oauth_secret ~scope provider token =
+  _login ~session:session ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [
       ("grant_type", "3rdparty_token");
       ("provider", provider);
       ("provider_access_token", token);
       ("provider_refresh_token", refresh_token);
   ]
-
-let facebook ?(refresh_token="") ~oauth_id ~oauth_secret ~scope token =
-  oauth ~refresh_token:refresh_token ~oauth_id:oauth_id
-    ~oauth_secret:oauth_secret ~scope:scope "facebook" token
