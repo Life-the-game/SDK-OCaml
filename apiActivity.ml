@@ -35,7 +35,7 @@ type ('a, 'b) t = {
 type user = (ApiUser.t, user_activity) t
 
 type notification = {
-  info : Info.t;
+  infos : Info.t;
   stype : string;
   read : bool;
   players : ApiUser.t list;
@@ -98,7 +98,7 @@ let user_from_json c =
 
 let notification_from_json c =
   let open Yojson.Basic.Util in {
-    info = Info.from_json c;
+    infos = Info.from_json c;
     stype =  c |> member "type" |> to_string;
     read = c |> member "read" |> to_bool;
     players = ApiTypes.convert_each (c |> member "players") ApiUser.from_json;

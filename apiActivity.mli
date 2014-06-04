@@ -35,7 +35,7 @@ type ('a, 'b) t = {
 type user = (ApiUser.t, user_activity) t
 
 type notification = {
-  info : Info.t;
+  infos : Info.t;
   stype : string;
   read : bool;
   players : ApiUser.t list;
