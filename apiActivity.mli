@@ -34,6 +34,17 @@ type ('a, 'b) t = {
 
 type user = (ApiUser.t, user_activity) t
 
+type notification = {
+  info : Info.t;
+  stype : string;
+  read : bool;
+  players : ApiUser.t list;
+  achievements : ApiAchievement.t list;
+  achievement_statuses : ApiAchievementStatus.t list;
+  comments : ApiComment.t list;
+  data : string;
+}
+
 (* ************************************************************************** *)
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
