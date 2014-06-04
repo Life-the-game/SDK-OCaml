@@ -34,6 +34,17 @@ type ('a, 'b) t = {
 
 type user = (ApiUser.t, user_activity) t
 
+type notification = {
+  info : Info.t;
+  stype : string;
+  read : bool;
+  players : ApiUser.t list;
+  achievements : ApiAchievement.t list;
+  achievement_statuses : ApiAchievementStatus.t list;
+  comments : ApiComment.t list;
+  data : string;
+}
+
 (* ************************************************************************** *)
 (* Tools                                                                      *)
 (* ************************************************************************** *)
@@ -43,7 +54,7 @@ exception InvalidList of string
 let user_from_json c =
   let open Yojson.Basic.Util in
 
-  let users = ("users", ApiTypes.convert_each (c |> member "users") ApiUser.from_json)
+  let users = ("users", ApiTypes.convert_each (c |> member "players") ApiUser.from_json)
   and achievement_statuses : (string * ApiAchievementStatus.t list) =
     ("achievement_status",
      ApiTypes.convert_each (c |> member "achievement_statuses") ApiAchievementStatus.from_json)
@@ -85,6 +96,18 @@ let user_from_json c =
     ) with InvalidList l -> Failure (l, other "failure")
   }
 
+let notification_from_json c =
+  let open Yojson.Basic.Util in {
+    info = Info.from_json c;
+    stype =  c |> member "type" |> to_string;
+    read = c |> member "read" |> to_bool;
+    players = ApiTypes.convert_each (c |> member "players") ApiUser.from_json;
+    achievements = ApiTypes.convert_each (c |> member "achievements") ApiAchievement.from_json;
+    achievement_statuses = ApiTypes.convert_each (c |> member "achievement_statuses") ApiAchievementStatus.from_json;
+    comments = ApiTypes.convert_each (c |> member "comments") ApiComment.from_json;
+    data = c |> member "data" |> ApiTypes.to_string_option;
+  }
+
 (* ************************************************************************** *)
 (* API Methods                                                                *)
 (* ************************************************************************** *)
@@ -114,7 +137,6 @@ let following ~session?(page = Page.default_parameters) () =
 let hot ~session ?(page = Page.default_parameters) () =
   user ~session:session ~page:page ~feed:"hot" ()
 
-
 (* ************************************************************************** *)
 (* Delete user activity                                                       *)
 (* ************************************************************************** *)
@@ -126,3 +148,28 @@ let delete_user ~session id =
     ~rtype:DELETE
     ~auth_required:true
     Api.noop
+
+(* ************************************************************************** *)
+(* Notifications                                                              *)
+(* ************************************************************************** *)
+
+let notifications ~session () =
+  Api.go
+    ~session:session
+    ~path:["notifications"]
+    ~auth_required:true
+    (Page.from_json notification_from_json)
+
+let mark_read ~session id =
+  Api.go
+    ~session:session
+    ~path:["notifications"; id_to_string id; "read"]
+    ~auth_required:true
+    notification_from_json
+
+let mark_unread ~session id =
+  Api.go
+    ~session:session
+    ~path:["notifications"; id_to_string id; "unread"]
+    ~auth_required:true
+    notification_from_json

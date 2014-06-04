@@ -59,6 +59,11 @@ val delete_user :
   session:session
   -> id -> unit Api.t
 
+(** Notifications *)
+val notifications : session:session -> unit -> notification Page.t Api.t
+val mark_read : session:session -> id -> notification Api.t
+val mark_unread : session:session -> id -> notification Api.t
+
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)
 (* ************************************************************************** *)

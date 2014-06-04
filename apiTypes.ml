@@ -775,15 +775,17 @@ struct
   let date =
     CalendarLib.Calendar.make 2013 12 01 9 5 6
   let from_json c =
-    let open Yojson.Basic.Util in {
-    info = (let open Info in {
-      id = 10;
-      creation = date;
-      modification = date;
-    });
-    url_small = c |> to_string;
-    url_big = c |> to_string;
-  }
+    let open Yojson.Basic.Util in
+    let str = !ApiConf.base_url ^ (c |> to_string) in
+    {
+      info = (let open Info in {
+	id = 10;
+	creation = date;
+	modification = date;
+      });
+      url_small = str;
+      url_big = str;
+    }
     (* { *)
     (*   info      = Info.from_json c; *)
     (*   url_small = c |> member "url_small" |> to_string; *)
@@ -960,7 +962,7 @@ type _user =
 (* ************************************************************************** *)
 
 type session = {
-  mutable auth : _auth option;
-  mutable user : _user option;
+  mutable auth : (_auth * _user) option;
   mutable lang : Lang.t;
+  mutable connection : Curl.t option;
 }

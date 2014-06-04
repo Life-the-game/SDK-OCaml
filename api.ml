@@ -11,35 +11,33 @@ open Network
 (* Curl Connection                                                            *)
 (* ************************************************************************** *)
 
-let connection = ref None
-
 let writer accum data =
   Buffer.add_string accum data;
   String.length data
 let result = Buffer.create 4096
 let error_buffer = ref ""
 
-let connect () =
+let connect session =
   Curl.global_init Curl.CURLINIT_GLOBALALL;
   let c = Curl.init () in
-  connection := Some c;
+  session.connection <- Some c;
   Curl.set_errorbuffer c error_buffer;
   Curl.set_writefunction c (writer result);
   Curl.set_followlocation c true;
   Curl.set_useragent c !ApiConf.user_agent;
   c
 
-let disconnect () =
-  match !connection with
+let disconnect session =
+  match session.connection with
     | Some c ->
-      connection := None;
-      Curl.cleanup c;
-      Curl.global_cleanup ()
+      session.connection <- None;
+      Curl.cleanup c(* ; *)
+      (* Curl.global_cleanup () *)
     | _ -> ()
 
-let reconnect () =
-  disconnect ();
-  connect ()
+let reconnect session =
+  disconnect session;
+  connect session
 
 (* ************************************************************************** *)
 (* Curl Method handling                                                       *)
@@ -52,7 +50,7 @@ exception FileNotFound
 
 (* Return a text from a url using Curl and HTTP Auth (if needed).
    Error handling with exceptions to catch                                    *)
-let curl_perform ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string) =
+let curl_perform ~session ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string) =
 
   let parameters_to_string parameters =
     let str =
@@ -63,15 +61,6 @@ let curl_perform ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string)
     if (String.length str) = 0 then str
     else Str.string_after str 1 (* remove last & *) in
 
-  let c =
-    (match !connection with
-      | None -> connect () (* may throw exceptions *)
-      | Some c ->
-	let open Network in
-	    (match post with
-	      | PostMultiPart _ -> reconnect ()
-	      | _ -> c)) in
-
   let url =
     let path = (List.fold_left (fun f s -> f ^ "/" ^ s) "" path) ^ "/"
     and get =
@@ -80,10 +69,22 @@ let curl_perform ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string)
     !ApiConf.base_url ^ path ^ get in
   let _ = ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url) in
 
-  Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string !ApiConf.lang)];
-  (match !ApiConf.auth_token () with
-    | "" -> () | token -> (Curl.set_httpheader c ["Authorization: Bearer " ^ token];
-			   ApiDump.verbose (" ## Authentified with: " ^ token)));
+  let c =
+    (match session.connection with
+      | None -> connect session
+      | Some c ->
+	let open Network in
+	    (match post with
+	      | PostMultiPart _ -> reconnect session
+	      | _ -> c)) in
+
+  Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string session.lang)];
+  (match session.auth with
+    | None -> ()
+    | Some (a, _) ->
+      (Curl.set_httpheader c ["Authorization: Bearer " ^ a.access_token];
+       ApiDump.verbose (" ## Authentified with: " ^ a.access_token)));
+
   Curl.set_postfieldsize c 0;
   let post_string str =
     ApiDump.verbose (" ## POST data: " ^ str);
@@ -139,7 +140,8 @@ let curl_perform ?(httpauth = None) ~path ~get ~post ~rtype () : (code * string)
       let _ =
 	let str = try (* String.sub text 0 800 *) text
 	  with _ -> text in ApiDump.verbose (" ## Response Body: " ^ str) in
-      (match httpauth with | None -> () | Some _ -> ignore (reconnect ()));
+
+      (match httpauth with | None -> () | Some _ -> ignore (reconnect session));
       (code, text)
 
 (* ************************************************************************** *)
@@ -179,8 +181,8 @@ let go
     ?(post = Network.PostEmpty)
     from_json =
 
-  match auth_required, !ApiConf.auth_token () with
-    | false, token | true, token when token != "" ->
+  match auth_required, session.auth with
+    | false, _  | true, Some _ ->
 
       let get = extra_parameters get page
       and post = match post with
@@ -189,7 +191,7 @@ let go
 
       (try
 	 let (code, result) =
-	   curl_perform ~path:path ~httpauth:httpauth
+	   curl_perform ~session:session ~path:path ~httpauth:httpauth
              ~get:get ~post:post ~rtype:rtype () in
 	 if code >= 200 && code < 300
 	 then

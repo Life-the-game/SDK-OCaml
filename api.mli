@@ -10,7 +10,7 @@ open ApiTypes
 type 'a t = 'a ApiTypes.t
 
 (** When you're done using the library, it's nice to disconnect it            *)
-val disconnect : unit -> unit
+val disconnect : session -> unit
 
 (** {e Everything below this line is for library's developers only.}          *)
 

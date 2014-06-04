@@ -453,9 +453,9 @@ type _user =
 (* ************************************************************************** *)
 
 type session = {
-  mutable auth : _auth option;
-  mutable user : _user option;
+  mutable auth : (_auth * _user) option;
   mutable lang : Lang.t;
+  mutable connection : Curl.t option;
 }
 
 (* ************************************************************************** *)

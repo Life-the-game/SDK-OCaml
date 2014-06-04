@@ -9,12 +9,11 @@
 NAME		=	api.cma
 
 SRC		=	\
-			apiTypes.ml \
 			apiConf.ml \
+			apiTypes.ml \
 			apiDump.ml \
 			api.ml \
 			\
-			apiMedia.ml \
 			apiUser.ml \
 			apiComment.ml \
 			apiAuth.ml \
@@ -25,11 +24,11 @@ SRC		=	\
 			\
 
 SRCI		=	\
+			apiConf.mli \
 			apiTypes.mli \
 			apiDump.mli \
 			api.mli \
 			\
-			apiMedia.mli \
 			apiUser.mli \
 			apiComment.mli \
 			apiAuth.mli \

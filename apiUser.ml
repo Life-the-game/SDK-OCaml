@@ -37,6 +37,21 @@ let from_json c =
         url         = c |> member "website_url" |> to_string;
       }
 
+let dummy = {
+	creation    = CalendarLib.Calendar.make 2013 12 01 9 5 6;
+	modification= CalendarLib.Calendar.make 2013 12 01 9 5 6;
+        login       = "dummy";
+        firstname   = "";
+        lastname    = "";
+        name        = "";
+        avatar      = None;
+        gender      = Gender.Undefined;
+        birthday    = None;
+        email       = None;
+	following   = None;
+        url         = "";
+      }
+
 let equal u1 u2 =
   u1.login = u2.login
 
@@ -248,3 +263,4 @@ let message ~session user message =
       ("message", message);
     ])
     Api.noop
+

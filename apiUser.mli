@@ -106,3 +106,4 @@ val unfollow :
 
 val from_json : Yojson.Basic.json -> t
 val equal : t -> t -> bool
+val dummy : t

@@ -38,12 +38,12 @@ let from_json content =
 
 let client_logout ~session () =
   session.auth <- None;
-  session.user <- None
+  Api.disconnect session
 
 let logout ~session () =
   match session.auth with
     | None -> Error auth_required
-    | Some auth ->
+    | Some (auth, _) ->
       let r = Api.go
 	~session:session
 	~rtype:DELETE
@@ -69,12 +69,10 @@ let _login ~session ~oauth_id ~oauth_secret ~scope parameters =
     from_json in
   match r with
     | Result auth ->
-      let user = match ApiUser.get_one ~session:session "me" with
-	| Result r -> r
-	| Error e -> raise (OtherError e) in
-      session.user <- Some user;
-      session.auth <- Some auth;
-      r
+      session.auth <- Some (auth, ApiUser.dummy);
+      (match ApiUser.get_one ~session:session "me" with
+	| Error e -> session.auth <- None; Error e
+	| Result user -> session.auth <- Some (auth, user); r)
     | _ -> r
 
 let login ~session ~oauth_id ~oauth_secret ~scope login password =
