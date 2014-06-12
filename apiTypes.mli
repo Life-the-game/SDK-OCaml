@@ -455,9 +455,8 @@ type _user =
 (* ************************************************************************** *)
 
 type session = {
-  mutable auth : (_auth * _user) option;
-  mutable lang : Lang.t;
-  mutable connection : Curl.t option;
+  auth : (_auth * _user) option;
+  lang : Lang.t;
 }
 
 val default_session : session

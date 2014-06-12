@@ -37,12 +37,14 @@ let from_json content =
 (* ************************************************************************** *)
 
 let client_logout ~session () =
-  session.auth <- None;
-  Api.disconnect session
+  let _ =   Api.disconnect session in {
+    auth = None;
+    lang = session.lang;
+  }
 
 let logout ~session () =
   match session.auth with
-    | None -> Error auth_required
+    | None -> (session, Error auth_required)
     | Some (auth, _) ->
       let r = Api.go
 	~session:session
@@ -50,8 +52,8 @@ let logout ~session () =
 	~path:["tokens"; auth.access_token]
 	Api.noop in
       match r with
-	| Result auth -> client_logout ~session:session (); r
-	| _ -> r
+	| Result auth -> (client_logout ~session:session (), r)
+	| _ -> (session, r)
 
 (* ************************************************************************** *)
 (* Login (create token)                                                       *)
@@ -68,12 +70,16 @@ let _login ~session ~oauth_id ~oauth_secret ~scope parameters =
     ] @ parameters))
     from_json in
   match r with
-    | Result auth ->
-      session.auth <- Some (auth, ApiUser.dummy);
-      (match ApiUser.get_one ~session:session "me" with
-	| Error e -> session.auth <- None; Error e
-	| Result user -> session.auth <- Some (auth, user); r)
-    | _ -> r
+  | Error e -> (session, Error e)
+  | Result auth -> match ApiUser.get_one ~session:{
+    auth = Some (auth, ApiUser.dummy);
+    lang = session.lang;
+  } "me" with
+    | Error e -> (session, Error e)
+    | Result user -> ({
+      auth = Some (auth, user);
+      lang = session.lang;
+    }, r)
 
 let login ~session ~oauth_id ~oauth_secret ~scope login password =
   _login ~session:session ~oauth_id:oauth_id ~oauth_secret:oauth_secret ~scope:scope [

@@ -23,7 +23,7 @@ val login :
   -> oauth_id:login
   -> oauth_secret:password
   -> scope:string list
-  -> login -> password -> t Api.t
+  -> login -> password -> (session * t Api.t)
 
 (** OAuth Login                                                               *)
 val oauth :
@@ -32,14 +32,14 @@ val oauth :
   -> oauth_id:login
   -> oauth_secret:password
   -> scope:string list
-  -> oauth_provider -> oauth_token -> t Api.t
+  -> oauth_provider -> oauth_token -> (session * t Api.t)
 
 (** Logout (delete token), default : the one in ApiConf                       *)
 val logout :
-  session:session -> unit -> unit Api.t
+  session:session -> unit -> (session * unit Api.t)
 
 (** Will only remove the token client-side and not ask the API to revoke it   *)
-val client_logout : session:session -> unit -> unit
+val client_logout : session:session -> unit -> session
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

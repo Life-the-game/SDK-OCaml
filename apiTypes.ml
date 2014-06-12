@@ -969,13 +969,11 @@ type _user =
 (* ************************************************************************** *)
 
 type session = {
-  mutable auth : (_auth * _user) option;
-  mutable lang : Lang.t;
-  mutable connection : Curl.t option;
+  auth : (_auth * _user) option;
+  lang : Lang.t;
 }
 
 let default_session = {
   auth = None;
   lang = Lang.default;
-  connection = None;
 }

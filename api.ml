@@ -11,6 +11,8 @@ open Network
 (* Curl Connection                                                            *)
 (* ************************************************************************** *)
 
+let connection = ref None
+
 let writer accum data =
   Buffer.add_string accum data;
   String.length data
@@ -20,7 +22,7 @@ let error_buffer = ref ""
 let connect session =
   Curl.global_init Curl.CURLINIT_GLOBALALL;
   let c = Curl.init () in
-  session.connection <- Some c;
+  connection := Some c;
   Curl.set_errorbuffer c error_buffer;
   Curl.set_writefunction c (writer result);
   Curl.set_followlocation c true;
@@ -28,11 +30,11 @@ let connect session =
   c
 
 let disconnect session =
-  match session.connection with
+  match !connection with
     | Some c ->
-      session.connection <- None;
-      Curl.cleanup c(* ; *)
-      (* Curl.global_cleanup () *)
+      connection := None;
+      Curl.cleanup c;
+      Curl.global_cleanup ()
     | _ -> ()
 
 let reconnect session =
@@ -61,6 +63,9 @@ let curl_perform ~session ?(httpauth = None) ~path ~get ~post ~rtype () : (code 
     if (String.length str) = 0 then str
     else Str.string_after str 1 (* remove last & *) in
 
+  (*************************************)
+  (* Generate URL                      *)
+  (*************************************)
   let url =
     let path = (List.fold_left (fun f s -> f ^ "/" ^ s) "" path) ^ "/"
     and get =
@@ -69,8 +74,11 @@ let curl_perform ~session ?(httpauth = None) ~path ~get ~post ~rtype () : (code 
     !ApiConf.base_url ^ path ^ get in
   let _ = ApiDump.verbose (" ## URI: " ^ (Network.to_string rtype) ^ " " ^ url) in
 
+  (*************************************)
+  (* Curl Connect                      *)
+  (*************************************)
   let c =
-    (match session.connection with
+    (match !connection with
       | None -> connect session
       | Some c ->
 	let open Network in
@@ -78,19 +86,16 @@ let curl_perform ~session ?(httpauth = None) ~path ~get ~post ~rtype () : (code 
 	      | PostMultiPart _ -> reconnect session
 	      | _ -> c)) in
 
-  Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string session.lang)];
-  (match session.auth with
-    | None -> ()
-    | Some (a, _) ->
-      (Curl.set_httpheader c ["Authorization: Bearer " ^ a.access_token];
-       ApiDump.verbose (" ## Authentified with: " ^ a.access_token)));
-
-  Curl.set_postfieldsize c 0;
+  (*************************************)
+  (* POST data                         *)
+  (*************************************)
   let post_string str =
     ApiDump.verbose (" ## POST data: " ^ str);
     Curl.set_postfieldsize c (String.length str);
     Curl.set_postfields c str in
+
   let post_list l = post_string (parameters_to_string l)
+
   and post_multipart (parameters, files, checker) =
     ApiDump.verbose " ## POST multi-part data:";
     let parameter (name, value) =
@@ -112,37 +117,54 @@ let curl_perform ~session ?(httpauth = None) ~path ~get ~post ~rtype () : (code 
       @ (List.map file files)
       @ [parameter ("padding", "padding")] in
     Curl.set_httppost c l in
+
   let open Network in
-      (match post with
-	| PostEmpty  -> ()
-	| PostText s -> post_string s
-	| PostList l -> post_list l
-	| PostMultiPart (p, f, c) -> if List.length f = 0
-	  then post_list p else post_multipart (p, f, c));
+  Curl.set_postfieldsize c 0;
+  (match post with
+  | PostEmpty  -> ()
+  | PostText s -> post_string s
+  | PostList l -> post_list l
+  | PostMultiPart (p, f, c) -> if List.length f = 0
+    then post_list p else post_multipart (p, f, c));
 
-      Buffer.reset result;
+  (*************************************)
+  (* Curl Settings                     *)
+  (*************************************)
+  (* Reset buffer *)
+  Buffer.reset result;
+  (* Language *)
+  Curl.set_httpheader c ["Accept-Language: " ^ (Lang.to_string session.lang)];
+  (* HTTP Auth *)
+  (match httpauth with
+  | None -> ()
+  | Some (login, password) ->
+    Curl.set_httpauth c [Curl.CURLAUTH_BASIC];
+    Curl.set_userpwd c (login ^ ":" ^ password);
+    ApiDump.verbose (" ## HTTPAuth: " ^ login ^ " : " ^ password));
+  (* Auth token *)
+  (match session.auth with
+  | None -> ()
+  | Some (a, _) ->
+    (Curl.set_httpheader c ["Authorization: Bearer " ^ a.access_token];
+     ApiDump.verbose (" ## Authentified with: " ^ a.access_token)));
 
-      (match httpauth with
-	| None -> ()
-	| Some (login, password) ->
-	  Curl.set_httpauth c [Curl.CURLAUTH_BASIC];
-	  Curl.set_userpwd c (login ^ ":" ^ password);
-	  ApiDump.verbose (" ## HTTPAuth: " ^ login ^ " : " ^ password);
-      );
+  (* Set type*)
+  Curl.set_customrequest c (Network.to_string rtype);
+  (* Set url *)
+  Curl.set_url c url;
 
-      Curl.set_customrequest c (Network.to_string rtype);
-      Curl.set_url c url;
-      Curl.perform c;
+  Curl.perform c;
+(*  Curl.cleanup c; *)
 
-      let text = Buffer.contents result
-      and code = Curl.get_responsecode c in
-      let _ = ApiDump.verbose (" ## Response Code: " ^ (string_of_int code)) in
-      let _ =
-	let str = try (* String.sub text 0 800 *) text
-	  with _ -> text in ApiDump.verbose (" ## Response Body: " ^ str) in
+  let text = Buffer.contents result
+  and code = Curl.get_responsecode c in
+  let _ = ApiDump.verbose (" ## Response Code: " ^ (string_of_int code)) in
+  let _ =
+    let str = try (* String.sub text 0 800 *) text
+      with _ -> text in ApiDump.verbose (" ## Response Body: " ^ str) in
 
-      (match httpauth with | None -> () | Some _ -> ignore (reconnect session));
-      (code, text)
+  (match httpauth with | None -> () | Some _ -> ignore (reconnect session));
+  (code, text)
 
 (* ************************************************************************** *)
 (* Internal tools for extra parameters                                        *)
