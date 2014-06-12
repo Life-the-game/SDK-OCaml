@@ -25,7 +25,7 @@ type t =
       comments           : int;
       name               : string;
       description        : string option;
-      icon               : Picture.t option;
+      mutable icon       : Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
@@ -98,7 +98,7 @@ val all_tags :
 
 val icon :
   session:session
-  -> id -> either_file -> url Api.t
+  -> id -> either_file -> Picture.t Api.t
 val delete_icon :
   session:session
   -> id -> unit Api.t

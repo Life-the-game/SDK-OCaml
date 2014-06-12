@@ -13,6 +13,11 @@ open ApiTypes
 
 type t = _user
 
+type settings = {
+  email_weekly : bool;
+  email_instant : bool;
+}
+
 (* ************************************************************************** *)
 (** {3 API Methods}                                                           *)
 (* ************************************************************************** *)
@@ -21,30 +26,6 @@ val get :
   session:session
   -> ?term:string list
   -> ?page:Page.parameters
-  (* -> ?with_avatar:
-  session:session
-  -> bool option *)
-  (* -> ?genders:
-  session:session
-  -> Gender.t list *)
-  (* -> ?lang:
-  session:session
-  -> Lang.t list *)
-  (* -> ?min_score:
-  session:session
-  -> int option *)
-  (* -> ?max_score:
-  session:session
-  -> int option *)
-  (* -> ?min_level:
-  session:session
-  -> int option *)
-  (* -> ?max_level:
-  session:session
-  -> int option *)
-  (* -> ?is_in_network:
-  session:session
-  -> bool option *)
   -> unit -> t Page.t Api.t
 
 val get_one :
@@ -76,7 +57,7 @@ val edit :
 
 val avatar :
   session:session
-  -> login -> either_file -> url Api.t
+  -> login -> either_file -> Picture.t Api.t
 val delete_avatar :
   session:session
   -> login -> unit Api.t
@@ -99,6 +80,25 @@ val follow :
 val unfollow :
   session:session
   -> login -> unit Api.t
+
+(** {6 Challenge}                                                             *)
+val challenge :
+  session:session
+  -> login -> id -> unit Api.t
+
+(** {6 Message}                                                               *)
+val message :
+  session:session
+  -> login -> string -> unit Api.t
+
+(** {6 Settings}                                                              *)
+val settings : session:session -> unit -> settings Api.t
+val edit_settings :
+  session:session
+  -> ?email_weekly:bool option
+  -> ?email_instant:bool option
+  -> unit -> settings Api.t
+
 
 (* ************************************************************************** *)
 (** {3 Tools}                                                                 *)

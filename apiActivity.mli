@@ -71,7 +71,9 @@ val delete_user :
   -> id -> unit Api.t
 
 (** Notifications *)
-val notifications : session:session -> unit -> notification Page.t Api.t
+val notifications :
+  session:session
+  -> ?page:Page.parameters -> unit -> notification Page.t Api.t
 val mark_read : session:session -> id -> notification Api.t
 val mark_unread : session:session -> id -> notification Api.t
 

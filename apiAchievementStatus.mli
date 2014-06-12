@@ -19,7 +19,7 @@ type t =
       achievement      : ApiAchievement.t;
       status           : Status.t;
       message          : string option;
-      medias           : media list;
+      mutable medias   : media list;
       total_comments   : int;
       url              : url;
     }

@@ -153,10 +153,11 @@ let delete_user ~session id =
 (* Notifications                                                              *)
 (* ************************************************************************** *)
 
-let notifications ~session () =
+let notifications ~session ?(page = Page.default_parameters) () =
   Api.go
     ~session:session
     ~path:["notifications"]
+    ~page:(Some page)
     ~auth_required:true
     (Page.from_json notification_from_json)
 

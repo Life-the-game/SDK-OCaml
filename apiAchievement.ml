@@ -26,7 +26,7 @@ type t =
       comments           : int;
       name               : string;
       description        : string option;
-      icon               : Picture.t option;
+      mutable icon       : Picture.t option;
       color              : color option;
       tags               : string list;
       achievement_status : achievement_status option;
@@ -54,12 +54,12 @@ let rec from_json c =
                                 |> to_option Picture.from_json);
         color              = c |> member "color" |> to_string_option;
         tags               = ApiTypes.convert_each (c |> member "tags") to_string;
-        achievement_status = None;(* c |> member "achievement_status" |> to_option *)
-            (* (fun c -> { *)
-            (*   id     = c |> member "id" |> to_int; *)
-            (*   status = Status.of_string (c |> member "status" |> to_string); *)
-            (*  } *)
-            (* ); *)
+        achievement_status = c |> member "achievement_status" |> to_option
+            (fun c -> {
+              id     = c |> member "id" |> to_int;
+              status = Status.of_string (c |> member "status" |> to_string);
+             }
+            );
         location           = (try (Some (Location.from_json c)) with _ -> None);
         secret             = c |> member "secret" |> to_bool_option;
         visibility         = Visibility.of_string
@@ -83,7 +83,7 @@ let get ~session ?(page = Page.default_parameters)
     ~path:["achievements"]
     ~page:(Some page)
     ~get:(Network.option_filter
-            [("terms", Some (Network.list_parameter terms));
+            [("search", Some (Network.list_parameter terms));
              ("tags", Some (Network.list_parameter tags));
              ("location", Option.map Location.to_string location);
             ])
@@ -228,14 +228,12 @@ let icon ~session id icon =
     ~post:post
     (fun c ->
       let open Yojson.Basic.Util in
-	  c |> member "icon" |> to_string) in
+      (c |> member "icon" |> Picture.from_json)) in
   match icon with
     | FileUrl url -> go (PostList [("icon", url)])
     | File file -> go (PostMultiPart ([], [("icon", file)],
 				      Picture.checker))
-    | NoFile -> match delete_icon ~session:session id with
-	| Error e -> Error e
-	| Result () -> Result ""
+    | NoFile -> Error requirement_missing
 
 (* ************************************************************************** *)
 (* Vote                                                                       *)

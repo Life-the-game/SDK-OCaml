@@ -151,13 +151,13 @@ let curl_perform ~session ?(httpauth = None) ~path ~get ~post ~rtype () : (code 
 let page_parameters (parameters : parameters) (page : Page.parameters option)
     : parameters =
   match page with
-    | Some (number, size, order) ->
+    | Some (number, size, order, filter) ->
       (Network.option_filter
 	 [("page", match number with 1 -> None
 	   | number -> Some (string_of_int number));
           ("page_size", Option.map string_of_int size);
           ("ordering", order);
-	 ]) @ parameters
+	 ]) @ filter @ parameters
     | None -> parameters
 
 let extra_parameters (parameters : parameters)

@@ -362,6 +362,7 @@ end
 module type PAGE =
 sig
   type order = string
+  type filter = (string * string) list
   type size = int
   type number = int
   type 'a t =
@@ -371,14 +372,15 @@ sig
 	number      : number;
 	next        : number option;
 	previous    : number option;
+	last        : number;
         items       : 'a list;
       }
-  type parameters = (number * size option * order option)
+  type parameters = (number * size option * order option * filter)
   val default_parameters : parameters
   (** Take a page and return the arguments to get the next one,
       or None if there's no next page *)
-  val next : ?order:string -> 'a t -> parameters option
-  val previous : ?order:string -> 'a t -> parameters option
+  val next : ?order:string -> ?filter:filter -> 'a t -> parameters option
+  val previous : ?order:string -> ?filter:filter -> 'a t -> parameters option
   (** Generate a page from the JSON tree using a converter function *)
   val from_json :
     (Yojson.Basic.json -> 'a)
@@ -390,6 +392,7 @@ end
 module Page : PAGE =
 struct
   type order = string
+  type filter = (string * string) list
   type size = int
   type number = int
   type 'a t =
@@ -399,18 +402,19 @@ struct
 	number   : number;
 	next     : number option;
 	previous : number option;
+	last     : number;
         items    : 'a list;
       }
-  type parameters = (number * size option * order option)
-  let default_parameters = (1, None, None)
-  let next ?(order = "") page =
+  type parameters = (number * size option * order option * filter)
+  let default_parameters = (1, None, None, [])
+  let next ?(order = "") ?(filter = []) page =
     Option.map (fun number ->
       (number, Some page.size,
-       match order with "" -> None | o -> Some o)) page.next
-  let previous ?(order = "") page =
+       (match order with "" -> None | o -> Some o), filter)) page.next
+  let previous ?(order = "") ?(filter = []) page =
     Option.map (fun number ->
       (number, Some page.size,
-       match order with "" -> None | o -> Some o)) page.previous
+       (match order with "" -> None | o -> Some o), filter)) page.previous
   let from_json f c =
     let open Yojson.Basic.Util in {
       total       = c |> member "total"    |> to_int_option_;
@@ -418,9 +422,10 @@ struct
       number      = c |> member "number"   |> to_int_option_;
       next        = c |> member "next"     |> to_int_option;
       previous    = c |> member "previous" |> to_int_option;
+      last        = c |> member "last"     |> to_int_option_;
       items       = convert_each_ (c |> member "items") f;
     }
-  let just_limit limit = (1, Some limit, None)
+  let just_limit limit = (1, Some limit, None, [])
   let get_total page = page.total
 end
 
@@ -758,7 +763,7 @@ sig
       url_small : url;
       url_big   : url;
     }
-  val from_json : Yojson.Basic.json -> t
+  val from_json : ?id:id -> Yojson.Basic.json -> t
   val contenttypes : contenttype list
   val checker : contenttype -> bool
 end
@@ -774,12 +779,12 @@ struct
 
   let date =
     CalendarLib.Calendar.make 2013 12 01 9 5 6
-  let from_json c =
+  let from_json ?(id = (id_of_string "0")) c =
     let open Yojson.Basic.Util in
     let str = !ApiConf.base_url ^ (c |> to_string) in
     {
       info = (let open Info in {
-	id = 10;
+	id = id;
 	creation = date;
 	modification = date;
       });
@@ -903,7 +908,9 @@ type media =
 let media_from_json c =
   let open Yojson.Basic.Util in
   match c |> member "type" |> to_string with
-    | "picture" -> Picture (Picture.from_json (c |> member "picture"))
+    | "picture" -> Picture (Picture.from_json
+			      ~id:(c |> member "id" |> to_int)
+			      (c |> member "picture"))
     | _ -> Id (c |> to_string)
 
 let checker = checker (Picture.contenttypes @ Video.contenttypes)
@@ -947,7 +954,7 @@ type _user =
       firstname                : string;
       lastname                 : string;
       name                     : string;
-      avatar                   : Picture.t option;
+      mutable avatar           : Picture.t option;
       gender                   : Gender.t;
       birthday                 : Date.t option;
       email                    : email option;
@@ -965,4 +972,10 @@ type session = {
   mutable auth : (_auth * _user) option;
   mutable lang : Lang.t;
   mutable connection : Curl.t option;
+}
+
+let default_session = {
+  auth = None;
+  lang = Lang.default;
+  connection = None;
 }

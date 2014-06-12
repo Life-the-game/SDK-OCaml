@@ -24,7 +24,7 @@ let _ =
 (* ************************************************************************** *)
 
 let print_success = false
-let stop_on_error = true
+let stop_on_error = false
 
 (* ************************************************************************** *)
 (* Tools                                                                      *)
@@ -142,6 +142,8 @@ let test
 (* It's testing time \o/                                                      *)
 (* ************************************************************************** *)
 
+let session = default_session
+
 let _ =
 
   ApiDump.lprint_endline "#################################################";
@@ -175,51 +177,72 @@ let _ =
   print_title "Create a new user with all infos";
   let user = ref
     (test (ApiUser.create
-              ~login:login
-              ~email:("prefix" ^ email)
-              ~lang:lang
-              ~firstname:(random_string 10)
-              ~lastname:(random_string 10)
-              ~gender:Gender.Male
-              ~birthday:(Some birthday2)
-              (Password old_password))) in
+	     ~session:session
+             ~login:login
+             ~email:("prefix" ^ email)
+             ~lang:lang
+             ~firstname:(random_string 10)
+             ~lastname:(random_string 10)
+             ~gender:Gender.Male
+             ~birthday:(Some birthday2)
+             (Password old_password))) in
 
   print_title "Authenticate using a login and a password";
-  ignore (test (ApiAuth.login ~oauth_id:oauth_id ~oauth_secret:oauth_secret
+  ignore (test (ApiAuth.login ~session:session ~oauth_id:oauth_id ~oauth_secret:oauth_secret
   		  ~scope:["life-fe-only--all"] login old_password));
 
   print_title "Upload an avatar";
-  ignore (test (ApiUser.avatar login (File picture2)));
+  ignore (test (ApiUser.avatar ~session:session login (File picture2)));
 
-  ignore (test (ApiUser.get_one login));
+  ignore (test (ApiUser.get_one ~session:session login));
 
   (* print_title "Delete avatar"; *)
   (* ignore (test (ApiUser.delete_avatar login)); *)
 
-  ignore (test (ApiUser.get_one login));
+  ignore (test (ApiUser.get_one ~session:session login));
 
   (* TODO real logout *)
-  ignore (ApiAuth.client_logout ());
+  ignore (ApiAuth.client_logout ~session:session ());
 
   print_title "Create a user with just the minimum";
-  ignore (test (ApiUser.create ~login:friend ~email:(friend ^ "@email.com")
+  ignore (test (ApiUser.create ~session:session ~login:friend ~email:(friend ^ "@email.com")
                   (Password password)));
 
   for i = 0 to Random.int 20 do
     (* Create a bunch of users that will follow the main user *)
     let tmpuser = (random_string 5) in
-    ignore (test (ApiUser.create ~login:tmpuser
+    ignore (test (ApiUser.create ~session:session ~login:tmpuser
               ~email:(tmpuser ^ "@email.com")
               (Password password)));
-    ignore (test (ApiAuth.login ~oauth_id:oauth_id ~oauth_secret:oauth_secret
+    ignore (test (ApiAuth.login ~session:session ~oauth_id:oauth_id ~oauth_secret:oauth_secret
   		    ~scope:["life-fe-only--all"] tmpuser password));
-    ignore (test (ApiUser.follow login));
+    ignore (test (ApiUser.follow ~session:session login));
     (* ignore (test (ApiAuth.logout ())); *)
-    ignore (ApiAuth.client_logout ());
+    ignore (ApiAuth.client_logout ~session:session ());
   done;
+
+  print_title "Get one user";
+  ignore (test (ApiUser.get_one ~session:session login));
+
+  print_title "Get users";
+  let users = test ~f:pageprint (ApiUser.get ~session:session ()) in
+
+  print_title "Get next page of users";
+  (match users with (* Check the previous page *)
+    | Error e -> impossible "the previous page failed"
+    | Result users ->
+      match Page.next users with (* Check if there is a next page *)
+        | None -> ApiDump.lprint_endline "It was the last page"
+        | Some nextpage ->
+          ignore (test ~f:pageprint (ApiUser.get ~session:session ~page:nextpage ())));
+
+  print_title "Authenticate using a login and a password";
+  ignore (test (ApiAuth.login ~session:session ~oauth_id:oauth_id ~oauth_secret:oauth_secret
+  		  ~scope:["life-fe-only--all"] login old_password));
 
   print_title "Edit a user";
   user := test (ApiUser.edit
+		  ~session:session
                   ~email:email
                   ~firstname:firstname
                   ~lastname:lastname
@@ -229,42 +252,23 @@ let _ =
                   login
   );
 
-  print_title "Get one user";
-  ignore (test (ApiUser.get_one login));
-
-  print_title "Get users";
-  let users = test ~f:pageprint (ApiUser.get ()) in
-
-  print_title "Get next page of users";
-  (match users with (* Check the previous page *)
-    | Error e -> impossible "the previous page failed"
-    | Result users ->
-      match Page.next users with (* Check if there is a next page *)
-        | None -> ApiDump.lprint_endline "It was the last page"
-        | Some nextpage ->
-          ignore (test ~f:pageprint (ApiUser.get ~page:nextpage ())));
-
-  print_title "Authenticate using a login and a password";
-  ignore (test (ApiAuth.login ~oauth_id:oauth_id ~oauth_secret:oauth_secret
-  		  ~scope:["life-fe-only--all"] login password));
-
   print_title "Get users after being authentified (info about following)";
-  ignore (test ~f:pageprint (ApiUser.get ()));
+  ignore (test ~f:pageprint (ApiUser.get ~session:session ()));
 
   print_title "Get followers";
-  ignore (test ~f:pageprint (ApiUser.get_followers login));
+  ignore (test ~f:pageprint (ApiUser.get_followers ~session:session login));
 
   print_title "Follow someone";
-  ignore (test (ApiUser.follow friend));
+  ignore (test (ApiUser.follow ~session:session friend));
 
   print_title "Get following";
-  ignore (test ~f:pageprint (ApiUser.get_following login));
+  ignore (test ~f:pageprint (ApiUser.get_following ~session:session login));
 
   print_title "Unfollow someone";
-  ignore (test (ApiUser.unfollow friend));
+  ignore (test (ApiUser.unfollow ~session:session friend));
 
   print_title "Get following again to check previous unfollow";
-  ignore (test ~f:pageprint (ApiUser.get_followers login));
+  ignore (test ~f:pageprint (ApiUser.get_followers ~session:session login));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -274,11 +278,12 @@ let _ =
   print_title "Create an achievement with just a name and a description";
   ignore (test (ApiAchievement.create
                   ~name:achievement_name
-                    ~description:achievement_description ()));
+                    ~description:achievement_description ~session:session ()));
 
   print_title "Create an achievement with all the fields";
   let achievement = test
     (ApiAchievement.create
+       ~session:session
        ~name:achievement_name2
        ~description:achievement_description2
        ~color:color
@@ -289,7 +294,7 @@ let _ =
 
   print_title "Get achievements";
   let achievements = test ~f:pageprint
-    (ApiAchievement.get ~page:(Page.just_limit 2) ()) in
+    (ApiAchievement.get ~session:session ~page:(Page.just_limit 2) ()) in
 
   print_title "Get next page of achievements";
   (match achievements with (* Check the previous page *)
@@ -298,67 +303,68 @@ let _ =
       match Page.next achievements with (* Check if there is a next page *)
         | None -> ApiDump.lprint_endline "It was the last page"
         | Some nextpage ->
-          ignore (test ~f:pageprint (ApiAchievement.get ~page:nextpage ())));
+          ignore (test ~f:pageprint (ApiAchievement.get ~session:session ~page:nextpage ())));
 
   print_title "Get achievements with terms";
-  ignore (test ~f:pageprint (ApiAchievement.get ~terms:["chick"] ()));
+  ignore (test ~f:pageprint (ApiAchievement.get ~session:session ~terms:["chick"] ()));
 
   print_title "Get achievements with tags";
-  ignore (test ~f:pageprint (ApiAchievement.get ~tags:["usa"] ()));
+  ignore (test ~f:pageprint (ApiAchievement.get ~session:session ~tags:["usa"] ()));
 
   print_title "Get achievements with a location";
-  ignore (test ~f:pageprint (ApiAchievement.get ~location:(Some paris_location) ()));
+  ignore (test ~f:pageprint (ApiAchievement.get ~session:session ~location:(Some paris_location) ()));
 
   print_title "Get one achievement";
   (match achievement with (* Check if the list exists *)
     | Error e -> impossible "the previous test (get achievements) failed"
     | Result achievement ->
       let achievement_id = achievement.ApiAchievement.info.Info.id in
-      ignore (test (ApiAchievement.get_one achievement_id));
+      ignore (test (ApiAchievement.get_one ~session:session achievement_id));
 
       print_title "Add icon to achieement";
-      ignore (test (ApiAchievement.icon achievement_id (File picture)));
+      ignore (test (ApiAchievement.icon ~session:session achievement_id (File picture)));
 
-      ignore (test (ApiAchievement.get_one achievement_id));
+      ignore (test (ApiAchievement.get_one ~session:session achievement_id));
 
       (* print_title "Delete icon on achieement"; *)
       (* ignore (test (ApiAchievement.delete_icon achievement_id)); *)
 
-      ignore (test (ApiAchievement.get_one achievement_id));
+      ignore (test (ApiAchievement.get_one ~session:session achievement_id));
 
       print_title "Add tags to achievement";
-      ignore (test (ApiAchievement.add_tags ["usa"; "travel"; "play"; "fox"] achievement_id));
+      ignore (test (ApiAchievement.add_tags ~session:session ["usa"; "travel"; "play"; "fox"] achievement_id));
 
       print_title "Delete tags on achievement";
-      ignore (test (ApiAchievement.delete_tags ["usa"; "play"] achievement_id));
+      ignore (test (ApiAchievement.delete_tags ~session:session ["usa"; "play"] achievement_id));
 
       print_title "Edit one achievement";
       ignore (test
                 (ApiAchievement.edit
+		   ~session:session
                    ~description:achievement_description3
                    ~icon:(File picture2)
                    ~color:color2
                    achievement_id));
 
       print_title "Vote (approve)";
-      ignore (test (ApiAchievement.vote achievement_id Vote.Up));
+      ignore (test (ApiAchievement.vote ~session:session achievement_id Vote.Up));
 
       print_title "Change Vote (disapprove)";
-      ignore (test (ApiAchievement.vote achievement_id Vote.Down));
+      ignore (test (ApiAchievement.vote ~session:session achievement_id Vote.Down));
 
       print_title "Cancel vote";
-      ignore (test (ApiAchievement.cancel_vote achievement_id));
+      ignore (test (ApiAchievement.cancel_vote ~session:session achievement_id));
 
       print_title "Add a comment";
       let comment = test
-        (ApiAchievement.add_comment ~content:(random_string 25) 94) in
+        (ApiAchievement.add_comment ~session:session ~content:(random_string 25) 94) in
 
       print_title "Add a comment";
       let comment = test
-        (ApiAchievement.add_comment ~content:(random_string 25) achievement_id) in
+        (ApiAchievement.add_comment ~session:session ~content:(random_string 25) achievement_id) in
 
       for i = 0 to Random.int 20 do
-        ignore (ApiAchievement.add_comment ~content:(random_string (Random.int 25)) achievement_id);
+        ignore (ApiAchievement.add_comment ~session:session ~content:(random_string (Random.int 25)) achievement_id);
       done;
 
       (match comment with
@@ -366,25 +372,25 @@ let _ =
         | Result comment ->
           let comment_id = comment.ApiComment.info.Info.id in
           print_title "Edit comment";
-          ignore (test (ApiAchievement.edit_comment
+          ignore (test (ApiAchievement.edit_comment ~session:session
                           ~content:(comment.ApiComment.content ^ (random_string 10))
                           comment_id));
 
           print_title "Vote Comment (approve)";
-          ignore (test (ApiAchievement.vote_comment comment_id Vote.Up));
+          ignore (test (ApiAchievement.vote_comment ~session:session comment_id Vote.Up));
 
           print_title "Change Vote Comment (disapprove)";
-          ignore (test (ApiAchievement.vote_comment comment_id Vote.Down));
+          ignore (test (ApiAchievement.vote_comment ~session:session comment_id Vote.Down));
 
           print_title "Cancel vote comment";
-          ignore (test (ApiAchievement.cancel_vote_comment comment_id));
+          ignore (test (ApiAchievement.cancel_vote_comment ~session:session comment_id));
 
           (* print_title "Delete comment"; *)
           (* ignore (test (ApiAchievement.delete_comment comment_id)); *)
       );
 
       print_title "Get comments";
-      ignore (test ~f:pageprint (ApiAchievement.comments achievement_id));
+      ignore (test ~f:pageprint (ApiAchievement.comments ~session:session achievement_id));
 
       (* print_title "Delete this achievement"; *)
       (* ignore (test (ApiAchievement.delete achievement_id)); *)
@@ -404,6 +410,7 @@ let _ =
       print_title "Create an achievement status";
       let achievement_status =
         test (ApiAchievementStatus.create
+		~session:session
                 ~achievement:achievement_id
                 ~status:Status.Objective
                 ()) in
@@ -413,36 +420,36 @@ let _ =
   	| Result achievement_status ->
   	  let achievement_status_id = achievement_status.ApiAchievementStatus.info.Info.id in
   	  print_title "Edit an achievement status";
-  	  ignore (test (ApiAchievementStatus.edit
+  	  ignore (test (ApiAchievementStatus.edit ~session:session
   	  		  ~status:(Some Status.Unlocked)
   	  		  ~message:(random_string 20)
   	  		  achievement_status_id
   	  ));
 
 	  print_title "Upload a media to an achievement status";
-	  ignore (test (ApiAchievementStatus.add_media (File picture) achievement_status_id));
+	  ignore (test (ApiAchievementStatus.add_media ~session:session (File picture) achievement_status_id));
 
 	  print_title "Upload a media to an achievement status";
-	  ignore (test (ApiAchievementStatus.add_media (File picture2) achievement_status_id));
+	  ignore (test (ApiAchievementStatus.add_media ~session:session (File picture2) achievement_status_id));
 
       	  print_title "Get one achievement status";
-      	  ignore (test (ApiAchievementStatus.get_one achievement_status_id));
+      	  ignore (test (ApiAchievementStatus.get_one ~session:session achievement_status_id));
 
       	  print_title "Vote (approve)";
-      	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Up));
+      	  ignore (test (ApiAchievementStatus.vote ~session:session achievement_status_id Vote.Up));
 
       	  print_title "Change Vote (disapprove)";
-      	  ignore (test (ApiAchievementStatus.vote achievement_status_id Vote.Down));
+      	  ignore (test (ApiAchievementStatus.vote ~session:session achievement_status_id Vote.Down));
 
       	  print_title "Cancel vote";
-      	  ignore (test (ApiAchievementStatus.cancel_vote achievement_status_id));
+      	  ignore (test (ApiAchievementStatus.cancel_vote ~session:session achievement_status_id));
 
       	  print_title "Add a comment";
       	  let comment = test
-            (ApiAchievementStatus.add_comment ~content:(random_string 25) achievement_status_id) in
+            (ApiAchievementStatus.add_comment ~session:session ~content:(random_string 25) achievement_status_id) in
 
       	  for i = 0 to Random.int 20 do
-            ignore (ApiAchievementStatus.add_comment ~content:(random_string (Random.int 25)) achievement_status_id);
+            ignore (ApiAchievementStatus.add_comment ~session:session ~content:(random_string (Random.int 25)) achievement_status_id);
       	  done;
 
       	  (match comment with
@@ -450,32 +457,32 @@ let _ =
             | Result comment ->
               let comment_id = comment.ApiComment.info.Info.id in
               print_title "Edit comment";
-              ignore (test (ApiAchievementStatus.edit_comment
+              ignore (test (ApiAchievementStatus.edit_comment ~session:session
                               ~content:(comment.ApiComment.content ^ (random_string 10))
                               comment_id));
 
               print_title "Vote Comment (approve)";
-              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Up));
+              ignore (test (ApiAchievementStatus.vote_comment~session:session  comment_id Vote.Up));
 
               print_title "Change Vote Comment (disapprove)";
-              ignore (test (ApiAchievementStatus.vote_comment comment_id Vote.Down));
+              ignore (test (ApiAchievementStatus.vote_comment ~session:session comment_id Vote.Down));
 
               print_title "Cancel vote comment";
-              ignore (test (ApiAchievementStatus.cancel_vote_comment comment_id));
+              ignore (test (ApiAchievementStatus.cancel_vote_comment ~session:session comment_id));
 
               (* print_title "Delete comment"; *)
               (* ignore (test (ApiAchievementStatus.delete_comment comment_id)); *)
       	  );
 
       	  print_title "Get comments";
-      	  ignore (test ~f:pageprint (ApiAchievementStatus.comments achievement_status_id));
+      	  ignore (test ~f:pageprint (ApiAchievementStatus.comments ~session:session achievement_status_id));
 
       	  (* print_title "Delete this achievement status"; *)
       	  (* ignore (test (ApiAchievementStatus.delete achievement_status_id)); *)
       );
 
       print_title "Get achievement statuses with achievements";
-      ignore (test ~f:pageprint (ApiAchievementStatus.get ~achievements:[achievement_id] ()));
+      ignore (test ~f:pageprint (ApiAchievementStatus.get ~session:session ~achievements:[achievement_id] ()));
 
   );
 
@@ -484,7 +491,7 @@ let _ =
     | Error e -> ()
     | Result achievements ->
       List.iter (fun achievement ->
-        ignore (ApiAchievementStatus.create
+        ignore (ApiAchievementStatus.create ~session:session
   		  ~achievement:achievement.ApiAchievement.info.Info.id
   		  ~status:(if Random.bool () then Status.Objective else Status.Unlocked)
   		  ())
@@ -492,7 +499,7 @@ let _ =
   );
 
   print_title "Get achievement statuses";
-  let achievement_statuses = test ~f:pageprint (ApiAchievementStatus.get ()) in
+  let achievement_statuses = test ~f:pageprint (ApiAchievementStatus.get ~session:session ()) in
 
   print_title "Get next page of achievement statuses";
   (match achievement_statuses with (* Check the previous page *)
@@ -501,16 +508,16 @@ let _ =
       match Page.next achievement_statuses with (* Check if there is a next page *)
         | None -> ApiDump.lprint_endline "It was the last page"
         | Some nextpage ->
-          ignore (test ~f:pageprint (ApiAchievementStatus.get ~page:nextpage ())));
+          ignore (test ~f:pageprint (ApiAchievementStatus.get ~session:session ~page:nextpage ())));
 
   print_title "Get achievement statuses with owners";
-  ignore (test ~f:pageprint (ApiAchievementStatus.get ~owners:[login] ()));
+  ignore (test ~f:pageprint (ApiAchievementStatus.get ~session:session ~owners:[login] ()));
 
   print_title "Get all objectives";
-  ignore (test ~f:pageprint (ApiAchievementStatus.get ~statuses:[Status.Objective] ()));
+  ignore (test ~f:pageprint (ApiAchievementStatus.get ~session:session ~statuses:[Status.Objective] ()));
 
   print_title "Get achievement statuses with terms (a)";
-  ignore (test ~f:pageprint (ApiAchievementStatus.get ~terms:["a"] ()));
+  ignore (test ~f:pageprint (ApiAchievementStatus.get ~session:session ~terms:["a"] ()));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
@@ -518,7 +525,7 @@ let _ =
   ApiDump.lprint_endline "#################################################";
 
   print_title "Get all user activities (hot feed)";
-  let activities = test ~f:pageprint (ApiActivity.user ()) in
+  let activities = test ~f:pageprint (ApiActivity.user ~session:session ()) in
 
   print_title "Get next page of activities";
   (match activities with (* Check the previous page *)
@@ -527,23 +534,33 @@ let _ =
       match Page.next activities with (* Check if there is a next page *)
         | None -> ApiDump.lprint_endline "It was the last page"
         | Some nextpage ->
-          ignore (test ~f:pageprint (ApiActivity.user ~page:nextpage ())));
+          ignore (test ~f:pageprint (ApiActivity.user ~session:session ~page:nextpage ())));
 
   print_title "Get user activities of a user";
-  ignore (test ~f:pageprint (ApiActivity.user ~owner:friend ()));
+  ignore (test ~f:pageprint (ApiActivity.user ~session:session ~owner:friend ()));
 
   print_title "Get user activities of a user";
-  ignore (test ~f:pageprint (ApiActivity.user ~owner:login ()));
+  ignore (test ~f:pageprint (ApiActivity.user ~session:session ~owner:login ()));
 
   print_title "Get feed (following)";
-  ignore (test ~f:pageprint (ApiActivity.following ()));
+  ignore (test ~f:pageprint (ApiActivity.following ~session:session ()));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";
   ApiDump.lprint_endline "# Notifications tests                           #";
   ApiDump.lprint_endline "#################################################";
 
-  ApiDump.lprint_endline "No test";
+  print_title "Get notifications";
+  let notifications = test ~f:pageprint (ApiActivity.notifications ~session:session ()) in
+
+  print_title "Get next page of notifications";
+  (match notifications with (* Check the previous page *)
+    | Error e -> impossible "the previous page failed"
+    | Result notifications ->
+      match Page.next notifications with (* Check if there is a next page *)
+        | None -> ApiDump.lprint_endline "It was the last page"
+        | Some nextpage ->
+          ignore (test ~f:pageprint (ApiActivity.notifications ~session:session ~page:nextpage ())));
 
   ApiDump.lprint_endline "\n";
   ApiDump.lprint_endline "#################################################";

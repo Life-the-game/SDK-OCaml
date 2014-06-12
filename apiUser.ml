@@ -13,6 +13,11 @@ open Network
 
 type t = _user
 
+type settings = {
+  email_weekly : bool;
+  email_instant : bool;
+}
+
 (* ************************************************************************** *)
 (* Tools                                                                      *)
 (* ************************************************************************** *)
@@ -36,6 +41,12 @@ let from_json c =
 	following   = c |> member "following" |> to_bool_option;
         url         = c |> member "website_url" |> to_string;
       }
+
+let settings_from_json c =
+  let open Yojson.Basic.Util in {
+    email_weekly   = c |> member "email_weekly" |> to_bool;
+    email_instant   = c |> member "email_instant" |> to_bool;
+  }
 
 let dummy = {
 	creation    = CalendarLib.Calendar.make 2013 12 01 9 5 6;
@@ -73,7 +84,7 @@ let get ~session ?(term = []) ?(page = Page.default_parameters) () =
     ~path:["players"]
     ~page:(Some page)
     ~get:(Network.option_filter
-            [("term", Some (Network.list_parameter term));
+            [("search", Some (Network.list_parameter term));
              (* ("with_avatar", Option.map string_of_bool with_avatar); *)
              (* ("genders", Some (Network.list_parameter *)
              (*                     (List.map Gender.to_string genders))); *)
@@ -141,8 +152,8 @@ let edit
    let post_parameters =
     Network.option_filter
       ([("email", Some email);
-	("firstname", Some firstname);
-	("lastname", Some lastname);
+	("first_name", Some firstname);
+	("last_name", Some lastname);
 	("gender", Some (Gender.to_string gender));
 	("birthday", Option.map Date.to_string birthday);
        ]
@@ -183,14 +194,12 @@ let avatar ~session user avatar =
     ~post:post
     (fun c ->
       let open Yojson.Basic.Util in
-	  c |> member "avatar" |> to_string) in
+	  c |> member "avatar" |> Picture.from_json) in
   match avatar with
     | FileUrl url -> go (PostList [("avatar", url)])
     | File file -> go (PostMultiPart ([], [("avatar", file)],
 				      Picture.checker))
-    | NoFile -> match delete_avatar ~session:session user with
-	| Error e -> Error e
-	| Result () -> Result ""
+    | NoFile -> Error requirement_missing
 
 (* ************************************************************************** *)
 (* Get followers                                                              *)
@@ -245,7 +254,7 @@ let challenge ~session user achievement =
     ~rtype:POST
     ~path:["players"; user; "challenge"]
     ~post:(PostList [
-      ("achievement", achievement);
+      ("achievement", id_to_string achievement);
     ])
     Api.noop
 
@@ -264,3 +273,27 @@ let message ~session user message =
     ])
     Api.noop
 
+(* ************************************************************************** *)
+(* Settings                                                                   *)
+(* ************************************************************************** *)
+
+let settings ~session () =
+  Api.go
+    ~session:session
+    ~path:["players"; "me"]
+    ~auth_required:true
+    settings_from_json
+
+let edit_settings ~session ?(email_weekly = None) ?(email_instant = None) () =
+   let post =
+     PostList (Network.option_filter [
+       ("email_weekly", Option.map string_of_bool email_weekly);
+       ("email_instant", Option.map string_of_bool email_instant);
+     ]) in
+  Api.go
+    ~session:session
+    ~rtype:PATCH
+    ~path:["players"; "me"]
+    ~auth_required:true
+    ~post:post
+    settings_from_json

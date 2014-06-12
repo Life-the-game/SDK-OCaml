@@ -205,6 +205,7 @@ module Vote : VOTE
 module type PAGE =
 sig
   type order = string
+  type filter = (string * string) list
   type size = int
   type number = int
   type 'a t =
@@ -214,14 +215,15 @@ sig
 	number      : number;
 	next        : number option;
 	previous    : number option;
+	last        : number;
         items       : 'a list;
       }
-  type parameters = (number * size option * order option)
+  type parameters = (number * size option * order option * filter)
   val default_parameters : parameters
   (** Take a page and return the arguments to get the next one,
       or None if there's no next page *)
-  val next : ?order:string -> 'a t -> parameters option
-  val previous : ?order:string -> 'a t -> parameters option
+  val next : ?order:string -> ?filter:filter -> 'a t -> parameters option
+  val previous : ?order:string -> ?filter:filter -> 'a t -> parameters option
   (** Generate a page from the JSON tree using a converter function *)
   val from_json :
     (Yojson.Basic.json -> 'a)
@@ -357,7 +359,7 @@ sig
       url_small : url;
       url_big   : url;
     }
-  val from_json : Yojson.Basic.json -> t
+  val from_json : ?id:id -> Yojson.Basic.json -> t
   val contenttypes : contenttype list
   val checker : contenttype -> bool
 end
@@ -438,7 +440,7 @@ type _user =
       firstname                : string;
       lastname                 : string;
       name                     : string;
-      avatar                   : Picture.t option;
+      mutable avatar           : Picture.t option;
       gender                   : Gender.t;
       birthday                 : Date.t option;
       email                    : email option;
@@ -457,6 +459,8 @@ type session = {
   mutable lang : Lang.t;
   mutable connection : Curl.t option;
 }
+
+val default_session : session
 
 (* ************************************************************************** *)
 (** {3 API Response}                                                          *)
