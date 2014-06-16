@@ -25,7 +25,7 @@ type t =
       owner              : ApiUser.t;
       comments           : int;
       name               : string;
-      description        : string option;
+      description        : string;
       mutable icon       : Picture.t option;
       color              : color option;
       tags               : string list;
@@ -49,7 +49,7 @@ let rec from_json c =
 	owner              = ApiUser.from_json (c |> member "owner");
 	comments           = c |> member "comments" |> ApiTypes.to_int_option;
         name               = c |> member "name" |> to_string;
-        description        = c |> member "description" |> to_string_option;
+        description        = c |> member "description" |> ApiTypes.to_string_option;
         icon               = (c |> member "icon"
                                 |> to_option Picture.from_json);
         color              = c |> member "color" |> to_string_option;

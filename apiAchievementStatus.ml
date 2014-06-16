@@ -18,7 +18,7 @@ type t =
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
       status           : Status.t;
-      message          : string option;
+      message          : string;
       mutable medias   : media list;
       total_comments   : int;
       url              : url;
@@ -36,7 +36,7 @@ let from_json c =
     owner            = ApiUser.from_json (c |> member "owner");
     achievement      = ApiAchievement.from_json (c |> member "achievement");
     status           = Status.of_string (c |> member "status" |> to_string);
-    message          = c |> member "message" |> to_string_option;
+    message          = c |> member "message" |> ApiTypes.to_string_option;
     medias           = ApiTypes.convert_each (c |> member "medias") media_from_json;
     total_comments   = c |> member "total_comments" |> ApiTypes.to_int_option;
     url              = c |> member "website_url" |> to_string;

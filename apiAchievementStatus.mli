@@ -18,7 +18,7 @@ type t =
       owner            : ApiUser.t;
       achievement      : ApiAchievement.t;
       status           : Status.t;
-      message          : string option;
+      message          : string;
       mutable medias   : media list;
       total_comments   : int;
       url              : url;

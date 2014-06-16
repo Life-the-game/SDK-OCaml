@@ -24,7 +24,7 @@ type t =
       owner              : ApiUser.t;
       comments           : int;
       name               : string;
-      description        : string option;
+      description        : string;
       mutable icon       : Picture.t option;
       color              : color option;
       tags               : string list;
