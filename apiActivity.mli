@@ -12,7 +12,8 @@ open ApiTypes
 (* ************************************************************************** *)
 
 type user_activity =
-  | NetworkAddition     of ApiUser.t
+  | NewFollowing        of ApiUser.t
+  | NewFollower         of ApiUser.t
   | NewMedia            of (ApiAchievementStatus.t * media list)
   | AchievementUnlocked of ApiAchievementStatus.t
   | NewObjective        of ApiAchievementStatus.t

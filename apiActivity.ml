@@ -12,7 +12,8 @@ open Network
 (* ************************************************************************** *)
 
 type user_activity =
-  | NetworkAddition     of ApiUser.t
+  | NewFollowing        of ApiUser.t
+  | NewFollower         of ApiUser.t
   | NewMedia            of (ApiAchievementStatus.t * media list)
   | AchievementUnlocked of ApiAchievementStatus.t
   | NewObjective        of ApiAchievementStatus.t
@@ -90,7 +91,9 @@ let user_from_json c =
 
       | "level_reached" -> LevelReached (c |> member "data" |> to_int)
 
-      | "new_following" -> NetworkAddition (get_first users)
+      | "new_follower" -> NewFollower (get_first users)
+
+      | "new_following" -> NewFollowing (get_first users)
 
       | stype -> other stype
     ) with InvalidList l -> Failure (l, other "failure")
