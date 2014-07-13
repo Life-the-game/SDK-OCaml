@@ -166,6 +166,7 @@ let notifications ~session ?(page = Page.default_parameters) () =
 
 let mark_read ~session id =
   Api.go
+    ~rtype:PUT
     ~session:session
     ~path:["notifications"; id_to_string id; "read"]
     ~auth_required:true
@@ -173,6 +174,7 @@ let mark_read ~session id =
 
 let mark_unread ~session id =
   Api.go
+    ~rtype:PUT
     ~session:session
     ~path:["notifications"; id_to_string id; "unread"]
     ~auth_required:true
