@@ -205,7 +205,9 @@ let all_tags ~session () =
     ~session:session
     ~path:["tags"]
     (fun c -> ApiTypes.convert_each c
-      (fun c -> let open Yojson.Basic.Util in c |> member "tag" |> to_string))
+      (fun c -> let open Yojson.Basic.Util in
+		(c |> member "tag" |> to_string,
+		 c |> member "total_achievements" |> ApiTypes.to_int_option)))
 
 (* ************************************************************************** *)
 (* Icon                                                                       *)

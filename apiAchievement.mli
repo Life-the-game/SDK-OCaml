@@ -92,7 +92,7 @@ val delete_tags :
   -> string list -> id -> t Api.t
 val all_tags :
   session:session
-  -> unit -> string list Api.t
+  -> unit -> (string * int) list Api.t
 
 (** {6 Icon}                                                                *)
 
