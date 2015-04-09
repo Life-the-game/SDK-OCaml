@@ -33,6 +33,7 @@ type t =
       secret             : bool option;
       visibility         : Visibility.t;
       total_comments     : int;
+      difficulty         : int;
       url                : url;
     }
 
@@ -62,6 +63,7 @@ val create :
   -> ?tags:string list
   -> ?location:Location.parameters option
   -> ?radius:int
+  -> ?difficulty:int
   -> unit -> t Api.t
 
 val edit :
@@ -73,6 +75,7 @@ val edit :
   -> ?secret:bool option
   -> ?add_tags:string list
   -> ?delete_tags:string list
+  -> ?difficulty: int
   -> id -> t Api.t
 
 val delete :

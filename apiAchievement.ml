@@ -34,6 +34,7 @@ type t =
       secret             : bool option;
       visibility         : Visibility.t;
       total_comments     : int;
+      difficulty         : int;
       url                : url;
     }
 
@@ -64,7 +65,8 @@ let rec from_json c =
         secret             = c |> member "secret" |> to_bool_option;
         visibility         = Visibility.of_string
           (match c |> member "visibility" |> to_string_option with Some s -> s | None -> "");
-	total_comments     = c |> member "total_comments" |> ApiTypes.to_int_option;
+	      total_comments    = c |> member "total_comments" |> ApiTypes.to_int_option;
+	      difficulty        = c |> member "difficulty" |> ApiTypes.to_int_option;
         url                = c |> member "website_url" |> to_string;
       }
 
@@ -104,7 +106,7 @@ let get_one ~session id =
 (* ************************************************************************** *)
 
 let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
-    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) () =
+    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) ?(difficulty = 1) ()  =
   let radius = if radius > 0 then string_of_int radius else ""
   and location = match location with
     | Some l -> Location.to_string l | None -> "" in
@@ -115,6 +117,7 @@ let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
        ("tags", Network.list_parameter tags);
+       ("difficulty", (string_of_int difficulty));
        ("secret", if secret then "1" else "0");
        ("location", location);
        ("radius", radius);
@@ -136,13 +139,14 @@ let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
 (* ************************************************************************** *)
 
 let edit ~session ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
-    ?(secret = None) ?(add_tags = []) ?(delete_tags = []) id =
+    ?(secret = None) ?(add_tags = []) ?(delete_tags = []) ?(difficulty = 1) id =
   let post_parameters =
     Network.empty_filter
       [("name", name);
        ("description", description);
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("difficulty", (string_of_int difficulty));
        ("add_tags", Network.list_parameter add_tags);
        ("delete_tags", Network.list_parameter delete_tags);
        ("secret", match secret with Some b -> string_of_bool b | None -> "");
