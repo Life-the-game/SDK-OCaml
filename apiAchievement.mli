@@ -25,8 +25,10 @@ type t =
       comments           : int;
       name               : string;
       description        : string;
+      credit             : string;
       mutable icon       : Picture.t option;
       color              : color option;
+      icon_color         : color option;
       tags               : string list;
       achievement_status : achievement_status option;
       location           : Location.t option;
@@ -59,11 +61,13 @@ val create :
   -> description:string
   -> ?icon:either_file
   -> ?color:color
+  -> ?icon_color:color
   -> ?secret:bool
   -> ?tags:string list
   -> ?location:Location.parameters option
   -> ?radius:int
   -> ?difficulty:int
+  -> ?credit:string
   -> unit -> t Api.t
 
 val edit :
@@ -72,10 +76,12 @@ val edit :
   -> ?description:string
   -> ?icon:either_file
   -> ?color:color
+  -> ?icon_color:color
   -> ?secret:bool option
   -> ?add_tags:string list
   -> ?delete_tags:string list
   -> ?difficulty: int
+  -> ?credit: string
   -> id -> t Api.t
 
 val delete :

@@ -26,8 +26,10 @@ type t =
       comments           : int;
       name               : string;
       description        : string;
+      credit        	 : string;
       mutable icon       : Picture.t option;
       color              : color option;
+      icon_color	 : color option;
       tags               : string list;
       achievement_status : achievement_status option;
       location           : Location.t option;
@@ -51,9 +53,11 @@ let rec from_json c =
 	comments           = c |> member "comments" |> ApiTypes.to_int_option;
         name               = c |> member "name" |> to_string;
         description        = c |> member "description" |> ApiTypes.to_string_option;
+        credit             = c |> member "credit" |> ApiTypes.to_string_option;
         icon               = (c |> member "icon"
                                 |> to_option Picture.from_json);
         color              = c |> member "color" |> to_string_option;
+        icon_color              = c |> member "icon_color" |> to_string_option;
         tags               = ApiTypes.convert_each (c |> member "tags") to_string;
         achievement_status = c |> member "achievement_status" |> to_option
             (fun c -> {
@@ -105,8 +109,8 @@ let get_one ~session id =
 (* Create a new Achievement                                                   *)
 (* ************************************************************************** *)
 
-let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
-    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) ?(difficulty = 1) ()  =
+let create ~session ~name ~description ?(icon = NoFile) ?(color = "") ?(icon_color = "#ffffff")
+    ?(secret = false) ?(tags = []) ?(location = None) ?(radius = 0) ?(difficulty = 1) ?(credit = "") ()  =
   let radius = if radius > 0 then string_of_int radius else ""
   and location = match location with
     | Some l -> Location.to_string l | None -> "" in
@@ -116,7 +120,9 @@ let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
        ("description", description);
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("icon_color", icon_color);
        ("tags", Network.list_parameter tags);
+       ("credit", credit);
        ("difficulty", (string_of_int difficulty));
        ("secret", if secret then "1" else "0");
        ("location", location);
@@ -138,14 +144,16 @@ let create ~session ~name ~description ?(icon = NoFile) ?(color = "")
 (* Edit an Achievement                                                        *)
 (* ************************************************************************** *)
 
-let edit ~session ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "")
-    ?(secret = None) ?(add_tags = []) ?(delete_tags = []) ?(difficulty = 1) id =
+let edit ~session ?(name = "") ?(description = "") ?(icon = NoFile) ?(color = "") ?(icon_color = "#ffffff")
+    ?(secret = None) ?(add_tags = []) ?(delete_tags = []) ?(difficulty = 1) ?(credit = "") id =
   let post_parameters =
     Network.empty_filter
       [("name", name);
        ("description", description);
        ("icon", match icon with FileUrl url -> url | _ -> "");
        ("color", color);
+       ("icon_color", icon_color);
+       ("credit", credit);
        ("difficulty", (string_of_int difficulty));
        ("add_tags", Network.list_parameter add_tags);
        ("delete_tags", Network.list_parameter delete_tags);
